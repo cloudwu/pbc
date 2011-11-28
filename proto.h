@@ -3,6 +3,7 @@
 
 #include "pbc.h"
 #include "map.h"
+#include "array.h"
 
 #include <stdbool.h>
 #include <stddef.h>

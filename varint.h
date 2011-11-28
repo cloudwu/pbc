@@ -3,7 +3,10 @@
 
 #include <stdint.h>
 
-struct longlong;
+struct longlong {
+	uint32_t low;
+	uint32_t hi;
+};
 
 int varint_encode32(uint32_t number, uint8_t buffer[10]);
 int varint_encode(uint64_t number, uint8_t buffer[10]);

@@ -187,7 +187,7 @@ push_value_array(pbc_array array, struct _field *f, struct atom * a, uint8_t *bu
 		return;
 	}
 
-	pbc_array_push(array,v);
+	_pbcA_push(array,v);
 }
 
 static void
@@ -214,7 +214,7 @@ _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buf
 				if (*vv == NULL) {
 					v = malloc(SIZE_ARRAY);
 					v->type = f;
-					pbc_array_open(v->v.array);
+					_pbcA_open(v->v.array);
 					*vv = v;
 				} else {
 					v= *vv;
@@ -253,24 +253,24 @@ static void
 _free_array(pbc_array array , int type) {
 	if (type == PTYPE_MESSAGE) {
 		int i;
-		int sz = pbc_array_size(array);
+		int sz = _pbcA_size(array);
 		for (i=0;i<sz;i++) {
 			pbc_var var;
-			pbc_array_index(array,i,var);
+			_pbcA_index(array,i,var);
 			_free_message((struct pbc_rmessage *)(var->p));
 		}
 	} else if (type == PTYPE_STRING) {
 		int i;
-		int sz = pbc_array_size(array);
+		int sz = _pbcA_size(array);
 		for (i=0;i<sz;i++) {
 			pbc_var var;
-			pbc_array_index(array,i,var);
+			_pbcA_index(array,i,var);
 			if (var->s.len < 0) {
 				free((void *)(var->s.str));
 			}
 		}
 	}
-	pbc_array_close(array);
+	_pbcA_close(array);
 }
 
 static void
@@ -309,7 +309,7 @@ pbc_rmessage_string(struct pbc_rmessage * m , const char *key , int index, int *
 		proto_message_default(m->msg, key, var);
 	} else {
 		if (v->type->label == LABEL_REPEATED) {
-			pbc_array_index(v->v.array, index, var);
+			_pbcA_index(v->v.array, index, var);
 		} else {
 			var[0] = v->v.var[0];
 		}
@@ -342,7 +342,7 @@ pbc_rmessage_integer(struct pbc_rmessage *m , const char *key , int index, uint3
 		proto_message_default(m->msg, key, var);
 	} else {
 		if (v->type->label == LABEL_REPEATED) {
-			pbc_array_index(v->v.array, index, var);
+			_pbcA_index(v->v.array, index, var);
 		} else {
 			var[0] = v->v.var[0];
 		}
@@ -370,7 +370,7 @@ pbc_rmessage_real(struct pbc_rmessage * m, const char *key , int index) {
 		proto_message_default(m->msg, key, var);
 	} else {
 		if (v->type->label == LABEL_REPEATED) {
-			pbc_array_index(v->v.array, index, var);
+			_pbcA_index(v->v.array, index, var);
 		} else {
 			return v->v.var->real;
 		}
@@ -398,7 +398,7 @@ pbc_rmessage_message(struct pbc_rmessage * rm, const char *key, int index) {
 		return m->def;
 	} else {
 		if (v->type->label == LABEL_REPEATED) {
-			return pbc_array_index_p(v->v.array,index);
+			return _pbcA_index_p(v->v.array,index);
 		} else {
 			return &(v->v.message);
 		}
@@ -412,7 +412,7 @@ pbc_rmessage_size(struct pbc_rmessage *m, const char *key) {
 		return 0;
 	}
 	if (v->type->label == LABEL_REPEATED) {
-		return pbc_array_size(v->v.array);
+		return _pbcA_size(v->v.array);
 	} else {
 		return 1;
 	}

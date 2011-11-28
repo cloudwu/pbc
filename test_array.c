@@ -1,5 +1,6 @@
 #include "pbc.h"
 #include "alloc.h"
+#include "array.h"
 
 #include <stdio.h>
 
@@ -9,24 +10,24 @@ main()
 	pbc_array array;
 	pbc_var v;
 
-	pbc_array_open(array);
+	_pbcA_open(array);
 
 	int i ;
 
 	for (i=0;i<100;i++) {
 		v->real = (double)i;
 		printf("push %d\n",i);
-		pbc_array_push(array, v);
+		_pbcA_push(array, v);
 	}
 
-	int s = pbc_array_size(array);
+	int s = _pbcA_size(array);
 
 	for (i=0;i<s;i++) {
-		pbc_array_index(array, i , v);
+		_pbcA_index(array, i , v);
 		printf("%lf\n",v->real);
 	}
 
-	pbc_array_close(array);
+	_pbcA_close(array);
 
 	return 0;
 }

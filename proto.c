@@ -105,7 +105,7 @@ proto_push_message(struct pbc_env * p, const char *name, struct _field *f , pbc_
 	pbc_var atom;
 	atom->m.buffer = field;
 	if (f->type == PTYPE_MESSAGE || f->type == PTYPE_ENUM) {
-		pbc_array_push(queue, atom);
+		_pbcA_push(queue, atom);
 	}
 }
 

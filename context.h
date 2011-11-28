@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "array.h"
+
 #define PBC_CONTEXT_CAP 256
 
 // wiretype

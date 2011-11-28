@@ -25,7 +25,7 @@ _wmessage_new(struct _message *msg) {
 	m->buffer = malloc(WMESSAGE_SIZE);
 	m->ptr = m->buffer;
 	m->endptr = m->buffer + WMESSAGE_SIZE;
-	pbc_array_open(m->sub);
+	_pbcA_open(m->sub);
 
 	return m;
 }
@@ -40,14 +40,14 @@ pbc_wmessage_new(struct pbc_env * env, const char *typename) {
 
 void 
 pbc_wmessage_delete(struct pbc_wmessage *m) {
-	int sz = pbc_array_size(m->sub);
+	int sz = _pbcA_size(m->sub);
 	int i;
 	for (i=0;i<sz;i++) {
 		pbc_var var;
-		pbc_array_index(m->sub,i,var);
+		_pbcA_index(m->sub,i,var);
 		pbc_wmessage_delete(var->p[0]);
 	}
-	pbc_array_close(m->sub);
+	_pbcA_close(m->sub);
 	free(m->buffer);
 	free(m);
 }
@@ -268,7 +268,7 @@ pbc_wmessage_message(struct pbc_wmessage *m, const char *key) {
 	pbc_var var;
 	var->p[0] = _wmessage_new(f->type_name.m);
 	var->p[1] = f;
-	pbc_array_push(m->sub , var);
+	_pbcA_push(m->sub , var);
 	return var->p[0];
 }
 
@@ -278,10 +278,10 @@ pbc_wmessage_buffer(struct pbc_wmessage *m, int *sz) {
 		return NULL;
 	*sz = m->ptr - m->buffer;
 	int i;
-	int n = pbc_array_size(m->sub);
+	int n = _pbcA_size(m->sub);
 	for (i=0;i<n;i++) {
 		pbc_var var;
-		pbc_array_index(m->sub, i , var);
+		_pbcA_index(m->sub, i , var);
 		int size;
 		void * buf = pbc_wmessage_buffer(var->p[0] , &size);
 		if (buf) {

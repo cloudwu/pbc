@@ -3,6 +3,7 @@
 
 #include "pbc.h"
 #include "context.h"
+#include "array.h"
 
 struct _pattern_field {
 	int id;

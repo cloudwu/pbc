@@ -146,7 +146,7 @@ _register(struct pbc_env *p, struct pbc_rmessage * file, struct _stringpool *poo
 	const char *package = pbc_rmessage_string(file, "package", 0, &package_sz);
 
 	pbc_array queue;
-	pbc_array_open(queue);
+	_pbcA_open(queue);
 
 	int enum_count = pbc_rmessage_size(file, "enum_type");
 	int i;
@@ -164,7 +164,7 @@ _register(struct pbc_env *p, struct pbc_rmessage * file, struct _stringpool *poo
 
 	_pbcB_register_fields(p, queue);
 
-	pbc_array_close(queue);
+	_pbcA_close(queue);
 }
 
 static const char *

@@ -1,4 +1,5 @@
 #include "pbc.h"
+#include "array.h"
 #include "alloc.h"
 
 #include <stdlib.h>
@@ -12,14 +13,14 @@ struct array {
 #define INNER_FIELD ((PBC_ARRAY_CAP - sizeof(struct array)) / sizeof(pbc_var))
 
 void 
-pbc_array_open(pbc_array _array) {
+_pbcA_open(pbc_array _array) {
 	struct array * a = (struct array *)_array;
 	a->number = 0;
 	a->a = (union _pbc_var *)(a+1);
 }
 
 void 
-pbc_array_close(pbc_array _array) {
+_pbcA_close(pbc_array _array) {
 	struct array * a = (struct array *)_array;
 	if (a->a != NULL && (union _pbc_var *)(a+1) != a->a) {
 		free(a->a);
@@ -28,7 +29,7 @@ pbc_array_close(pbc_array _array) {
 }
 
 void 
-pbc_array_push(pbc_array _array, pbc_var var) {
+_pbcA_push(pbc_array _array, pbc_var var) {
 	struct array * a = (struct array *)_array;
 	if (a->number >= INNER_FIELD) {
 		if (a->number == INNER_FIELD) {
@@ -50,21 +51,21 @@ pbc_array_push(pbc_array _array, pbc_var var) {
 }
 
 void 
-pbc_array_index(pbc_array _array, int idx, pbc_var var)
+_pbcA_index(pbc_array _array, int idx, pbc_var var)
 {
 	struct array * a = (struct array *)_array;
 	var[0] = a->a[idx];
 }
 
 void *
-pbc_array_index_p(pbc_array _array, int idx)
+_pbcA_index_p(pbc_array _array, int idx)
 {
 	struct array * a = (struct array *)_array;
 	return &(a->a[idx]);
 }
 
 int 
-pbc_array_size(pbc_array _array) {
+_pbcA_size(pbc_array _array) {
 	struct array * a = (struct array *)_array;
 	return a->number;
 }

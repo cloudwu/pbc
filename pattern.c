@@ -3,6 +3,7 @@
 #include "context.h"
 #include "varint.h"
 #include "pattern.h"
+#include "array.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -46,7 +47,7 @@ set_default(struct pbc_pattern *pat, uint8_t * output) {
 	for (i=0;i<pat->count;i++) {
 		if (pat->f[i].ctype == CTYPE_ARRAY) {
 			struct _pbc_array *array = (struct _pbc_array *)(output + pat->f[i].offset);
-			pbc_array_open(array);
+			_pbcA_open(array);
 			continue;
 		} else if (pat->f[i].ptype == PTYPE_MESSAGE) {
 			struct _pbc_ctx *ctx = (struct _pbc_ctx *)(output + pat->f[i].offset);
@@ -182,7 +183,7 @@ unpack_array(int ptype, char *buffer, struct atom * a, pbc_array _array) {
 	int r = unpack_field(CTYPE_VAR, ptype, buffer, a , var);
 	if (r !=0 )
 		return r;
-	pbc_array_push(_array , var);
+	_pbcA_push(_array , var);
 
 	return 0;
 }
@@ -193,7 +194,7 @@ pbc_pattern_close(struct pbc_pattern *pat, void * data) {
 	for (i=0;i<pat->count;i++) {
 		if (pat->f[i].ctype == CTYPE_ARRAY) {
 			void *array = (char *)data + pat->f[i].offset;
-			pbc_array_close(array);
+			_pbcA_close(array);
 		}
 	}
 }

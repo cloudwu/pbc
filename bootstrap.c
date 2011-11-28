@@ -6,6 +6,7 @@
 #include "alloc.h"
 #include "bootstrap.h"
 #include "stringpool.h"
+#include "array.h"
 #include "descriptor.pbc.h"
 
 #include <stdlib.h>
@@ -81,11 +82,11 @@ check_file_name(struct pbc_env * p , struct file_t *file) {
 	if (_pbcM_sp_query(p->files, file->name->s.str)) {
 		return file->name->s.str;
 	}
-	int sz = pbc_array_size(file->dependency); 
+	int sz = _pbcA_size(file->dependency); 
 	int i;
 	for (i=0;i<sz;i++) {
 		pbc_var var;
-		pbc_array_index(file->dependency,i,var);
+		_pbcA_index(file->dependency,i,var);
 		if (_pbcM_sp_query(p->files, var->s.str) == NULL) {
 			return var->s.str;
 		}
@@ -101,8 +102,8 @@ set_enum_one(struct pbc_env *p, struct file_t *file, const char *name, int start
 	for (i=0;i<sz;i++) {
 		pbc_var id;
 		pbc_var string;
-		pbc_array_index(file->enum_id, start+i, id);
-		pbc_array_index(file->enum_string, start+i, string);
+		_pbcA_index(file->enum_id, start+i, id);
+		_pbcA_index(file->enum_string, start+i, string);
 		table[i].id = (int)id->integer.low;
 		table[i].pointer = (void *)string->s.str;
 	}
@@ -113,14 +114,14 @@ set_enum_one(struct pbc_env *p, struct file_t *file, const char *name, int start
 
 static void
 set_enums(struct pbc_env *p, struct file_t *file) {
-	int n = pbc_array_size(file->enum_size);
+	int n = _pbcA_size(file->enum_size);
 	int i;
 	int start = 0;
 	for (i=0;i<n;i++) {
 		pbc_var name;
-		pbc_array_index(file->enum_name,i,name);
+		_pbcA_index(file->enum_name,i,name);
 		pbc_var var;
-		pbc_array_index(file->enum_size,i,var);
+		_pbcA_index(file->enum_size,i,var);
 		set_enum_one(p, file, name->s.str, start , (int)var->integer.low);
 		start += var->integer.low;
 	}
@@ -148,7 +149,7 @@ set_msg_one(struct pbc_pattern * FIELD_T, struct pbc_env *p, struct file_t *file
 	int i;
 	for (i=0;i<sz;i++) {
 		pbc_var _field;
-		pbc_array_index(file->message_field, start+i, _field);
+		_pbcA_index(file->message_field, start+i, _field);
 		struct field_t field;
 
 		int ret = pbc_pattern_unpack(FIELD_T, _field->m.buffer, _field->m.len, &field);
@@ -172,14 +173,14 @@ set_msg_one(struct pbc_pattern * FIELD_T, struct pbc_env *p, struct file_t *file
 
 static void
 set_msgs(struct pbc_pattern * FIELD_T, struct pbc_env *p, struct file_t *file , pbc_array queue) {
-	int n = pbc_array_size(file->message_size);
+	int n = _pbcA_size(file->message_size);
 	int i;
 	int start = 0;
 	for (i=0;i<n;i++) {
 		pbc_var name;
-		pbc_array_index(file->message_name,i,name);
+		_pbcA_index(file->message_name,i,name);
 		pbc_var sz;
-		pbc_array_index(file->message_size,i,sz);
+		_pbcA_index(file->message_size,i,sz);
 		set_msg_one(FIELD_T, p, file, name->s.str, start , (int)sz->integer.low , queue);
 		start += sz->integer.low;
 	}
@@ -208,11 +209,11 @@ set_field_one(struct pbc_env *p, struct _field *f) {
 
 void
 _pbcB_register_fields(struct pbc_env *p, pbc_array queue) {
-	int sz = pbc_array_size(queue);
+	int sz = _pbcA_size(queue);
 	int i;
 	for (i=0;i<sz;i++) {
 		pbc_var atom;
-		pbc_array_index(queue,i,atom);
+		_pbcA_index(queue,i,atom);
 		struct _field * f = atom->m.buffer;
 		set_field_one(p, f);
 	}
@@ -313,13 +314,13 @@ register_internal(struct pbc_env * p, void *buffer, int size) {
 	_pbcM_sp_insert(p->files , file.name->s.str, _pbcS_new());
 
 	pbc_array queue;
-	pbc_array_open(queue);
+	_pbcA_open(queue);
 
 	set_enums(p, &file);
 	set_msgs(FIELD_T, p, &file, queue);
 	_pbcB_register_fields(p, queue);
 
-	pbc_array_close(queue);
+	_pbcA_close(queue);
 	pbc_pattern_close(FILE_T, &file);
 
 _return:
