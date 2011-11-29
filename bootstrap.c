@@ -77,24 +77,6 @@ struct file_t {
 	pbc_array enum_id;	// int32
 };
 
-static const char *
-check_file_name(struct pbc_env * p , struct file_t *file) {
-	if (_pbcM_sp_query(p->files, file->name->s.str)) {
-		return file->name->s.str;
-	}
-	int sz = pbc_array_size(file->dependency); 
-	int i;
-	for (i=0;i<sz;i++) {
-		pbc_var var;
-		_pbcA_index(file->dependency,i,var);
-		if (_pbcM_sp_query(p->files, var->s.str) == NULL) {
-			return var->s.str;
-		}
-	}
-
-	return NULL;
-}
-
 static void
 set_enum_one(struct pbc_env *p, struct file_t *file, const char *name, int start, int sz) {
 	struct map_kv *table = malloc(sz * sizeof(struct map_kv));
@@ -305,13 +287,8 @@ register_internal(struct pbc_env * p, void *buffer, int size) {
 		ret = 1;
 		goto _return;
 	}
-	if (check_file_name(p,&file)) {
-		pbc_pattern_close_arrays(FILE_T, &file);
-		ret = 1;
-		goto _return;
-	}
 
-	_pbcM_sp_insert(p->files , file.name->s.str, _pbcS_new());
+	_pbcM_sp_insert(p->files , file.name->s.str, NULL);
 
 	pbc_array queue;
 	_pbcA_open(queue);
