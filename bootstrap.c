@@ -306,7 +306,7 @@ register_internal(struct pbc_env * p, void *buffer, int size) {
 		goto _return;
 	}
 	if (check_file_name(p,&file)) {
-		pbc_pattern_close(FILE_T, &file);
+		pbc_pattern_close_arrays(FILE_T, &file);
 		ret = 1;
 		goto _return;
 	}
@@ -321,7 +321,7 @@ register_internal(struct pbc_env * p, void *buffer, int size) {
 	_pbcB_register_fields(p, queue);
 
 	_pbcA_close(queue);
-	pbc_pattern_close(FILE_T, &file);
+	pbc_pattern_close_arrays(FILE_T, &file);
 
 _return:
 	free(FIELD_T);

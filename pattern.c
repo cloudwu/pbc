@@ -189,7 +189,7 @@ unpack_array(int ptype, char *buffer, struct atom * a, pbc_array _array) {
 }
 
 void 
-pbc_pattern_close(struct pbc_pattern *pat, void * data) {
+pbc_pattern_close_arrays(struct pbc_pattern *pat, void * data) {
 	int i;
 	for (i=0;i<pat->count;i++) {
 		if (pat->f[i].ctype == CTYPE_ARRAY) {
@@ -218,7 +218,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, void *buffer, int sz, void * output)
 		if (f) {
 			char * out = (char *)output + f->offset;
 			if (unpack_field(f->ctype , f->ptype , ctx->buffer , &ctx->a[i], out) != 0) {
-				pbc_pattern_close(pat, output);
+				pbc_pattern_close_arrays(pat, output);
 				_pbcC_close(_ctx);
 				return -i-1;
 			}
@@ -228,4 +228,14 @@ pbc_pattern_unpack(struct pbc_pattern *pat, void *buffer, int sz, void * output)
 	return 0;
 }
 
+struct pbc_pattern * 
+pbc_pattern_new(struct pbc_env * env , const char * format) {
+	// todo
+	return NULL;
+}
+
+void 
+pbc_pattern_delete(struct pbc_pattern * pat) {
+	// todo
+}
 
