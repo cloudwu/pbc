@@ -100,18 +100,33 @@ test_pattern(struct pbc_env *env, void *buffer, int size) {
 	pbc_pattern_delete(pat_phone);
 }
 
-int
-main()
+static void
+test_rmessage(struct pbc_env *env, void *buffer, int size) {
+	struct pbc_rmessage * m = pbc_rmessage_new(env, "tutorial.Person", buffer , size);
+	printf("name = %s\n", pbc_rmessage_string(m , "name" , 0 , NULL));
+	printf("id = %d\n", pbc_rmessage_integer(m , "id" , 0 , NULL));
+	printf("email = %s\n", pbc_rmessage_string(m , "email" , 0 , NULL));
+
+	int phone_n = pbc_rmessage_size(m, "phone");
+	int i;
+
+	for (i=0;i<phone_n;i++) {
+		struct pbc_rmessage * p = pbc_rmessage_message(m , "phone", i);
+		printf("\tnumber[%d] = %s\n",i,pbc_rmessage_string(p , "number", i ,NULL));
+		printf("\ttype[%d] = %s\n",i,pbc_rmessage_string(p, "type", i, NULL));
+	}
+
+	int n = pbc_rmessage_size(m , "test");
+
+	for (i=0;i<n;i++) {
+		printf("test[%d] = %d\n",i, pbc_rmessage_integer(m , "test" , i , NULL));
+	}
+	pbc_rmessage_delete(m);
+}
+
+static struct pbc_wmessage *
+test_wmessage(struct pbc_env * env)
 {
-	int sz = 0;
-	void *buffer = read_file("addressbook.pb", &sz);
-	if (buffer == NULL)
-		return 1;
-	struct pbc_env * env = pbc_new();
-	pbc_register(env, buffer, sz);
-
-	free(buffer);
-
 	struct pbc_wmessage * msg = pbc_wmessage_new(env, "tutorial.Person");
 
 	pbc_wmessage_string(msg, "name", "Alice", -1);
@@ -129,9 +144,28 @@ main()
 	pbc_wmessage_integer(msg, "test", 2,0);
 	pbc_wmessage_integer(msg, "test", 3,0);
 
+	return msg;
+}
+
+int
+main()
+{
+	int sz = 0;
+	void *buffer = read_file("addressbook.pb", &sz);
+	if (buffer == NULL)
+		return 1;
+	struct pbc_env * env = pbc_new();
+	pbc_register(env, buffer, sz);
+
+	free(buffer);
+
+	struct pbc_wmessage *msg = test_wmessage(env);
+
 	buffer = pbc_wmessage_buffer(msg, &sz);
-	
+
 	dump(buffer, sz);
+
+	test_rmessage(env, buffer, sz);
 
 	test_pattern(env, buffer, sz);
 

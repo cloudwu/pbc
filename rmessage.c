@@ -132,6 +132,74 @@ read_value(struct _field *f, struct atom * a, uint8_t *buffer) {
 }
 
 static void
+push_value_packed(pbc_array array, struct _field *f, struct atom * aa, uint8_t *buffer) {
+	pbc_ctx packed;
+	struct context * ctx = (struct context *)packed;
+	int n = _pbcC_open_packed(packed , f->type, 
+			(uint8_t *)buffer + aa->v.s.start, aa->v.s.end - aa->v.s.start);
+	if (n<=0) {
+		// todo  : error
+		return;
+	}
+	int i;
+	pbc_var v;
+
+	switch(f->type) {
+	case PTYPE_DOUBLE:
+		for (i=0;i<n;i++) {
+			v->real = read_double(&ctx->a[i]);
+			_pbcA_push(array,v);
+		}
+		break;
+	case PTYPE_FLOAT:
+		for (i=0;i<n;i++) {
+			v->real = read_float(&ctx->a[i]);
+			_pbcA_push(array,v);
+		}
+		break;
+	case PTYPE_ENUM:
+		for (i=0;i<n;i++) {
+			struct atom *a = &ctx->a[i];
+			v->e.id = a->v.i.low;
+			v->e.name = _pbcM_ip_query(f->type_name.e->id , a->v.i.low);
+			_pbcA_push(array,v);
+		}
+		break;
+	case PTYPE_INT64:
+	case PTYPE_UINT64:
+	case PTYPE_INT32:
+	case PTYPE_UINT32:
+	case PTYPE_FIXED32:
+	case PTYPE_FIXED64:
+	case PTYPE_SFIXED32:
+	case PTYPE_SFIXED64:
+	case PTYPE_BOOL:
+		for (i=0;i<n;i++) {
+			struct atom *a = &ctx->a[i];
+			v->integer = a->v.i;
+			_pbcA_push(array,v);
+		}
+		break;
+	case PTYPE_SINT32: 
+		for (i=0;i<n;i++) {
+			struct atom *a = &ctx->a[i];
+			v->integer = a->v.i;
+			varint_dezigzag32(&(v->integer));
+			_pbcA_push(array,v);
+		}
+		break;
+	case PTYPE_SINT64:
+		for (i=0;i<n;i++) {
+			struct atom *a = &ctx->a[i];
+			v->integer = a->v.i;
+			varint_dezigzag64(&(v->integer));
+			_pbcA_push(array,v);
+		}
+		break;
+	}
+}
+
+static void
 push_value_array(pbc_array array, struct _field *f, struct atom * a, uint8_t *buffer) {
 	pbc_var v;
 
@@ -208,7 +276,7 @@ _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buf
 		int id = ctx->a[i].id;
 		struct _field * f = _pbcM_ip_query(type->id , id);
 		if (f) {
-			if (f->label == LABEL_REPEATED) {
+			if (f->label == LABEL_REPEATED || f->label == LABEL_PACKED) {
 				struct value * v;
 				void ** vv = _pbcM_sp_query_insert(ret->index, f->name);
 				if (*vv == NULL) {
@@ -219,7 +287,11 @@ _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buf
 				} else {
 					v= *vv;
 				}
-				push_value_array(v->v.array , f, &(ctx->a[i]), buffer);
+				if (f->label == LABEL_PACKED) {
+					push_value_packed(v->v.array , f , &(ctx->a[i]), buffer);
+				} else {
+					push_value_array(v->v.array , f, &(ctx->a[i]), buffer);
+				}
 			} else {
 				struct value * v = read_value(f, &(ctx->a[i]), buffer);
 				if (v) {
@@ -306,9 +378,9 @@ pbc_rmessage_string(struct pbc_rmessage * m , const char *key , int index, int *
 	int type = 0;
 	pbc_var var;
 	if (v == NULL) {
-		_pbcP_message_default(m->msg, key, var);
+		type = _pbcP_message_default(m->msg, key, var);
 	} else {
-		if (v->type->label == LABEL_REPEATED) {
+		if (v->type->label == LABEL_REPEATED || v->type->label == LABEL_PACKED) {
 			_pbcA_index(v->v.array, index, var);
 		} else {
 			var[0] = v->v.var[0];
@@ -339,9 +411,9 @@ pbc_rmessage_integer(struct pbc_rmessage *m , const char *key , int index, uint3
 	pbc_var var;
 	int type = 0;
 	if (v == NULL) {
-		_pbcP_message_default(m->msg, key, var);
+		type = _pbcP_message_default(m->msg, key, var);
 	} else {
-		if (v->type->label == LABEL_REPEATED) {
+		if (v->type->label == LABEL_REPEATED || v->type->label == LABEL_PACKED) {
 			_pbcA_index(v->v.array, index, var);
 		} else {
 			var[0] = v->v.var[0];
@@ -369,7 +441,7 @@ pbc_rmessage_real(struct pbc_rmessage * m, const char *key , int index) {
 	if (v == NULL) {
 		_pbcP_message_default(m->msg, key, var);
 	} else {
-		if (v->type->label == LABEL_REPEATED) {
+		if (v->type->label == LABEL_REPEATED || v->type->label == LABEL_PACKED) {
 			_pbcA_index(v->v.array, index, var);
 		} else {
 			return v->v.var->real;
@@ -411,7 +483,7 @@ pbc_rmessage_size(struct pbc_rmessage *m, const char *key) {
 	if (v == NULL) {
 		return 0;
 	}
-	if (v->type->label == LABEL_REPEATED) {
+	if (v->type->label == LABEL_REPEATED || v->type->label == LABEL_PACKED) {
 		return pbc_array_size(v->v.array);
 	} else {
 		return 1;

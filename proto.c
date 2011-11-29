@@ -145,14 +145,16 @@ _pbcP_init_message(struct pbc_env * p, const char *name) {
 	return m;
 }
 
-void 
+int 
 _pbcP_message_default(struct _message * m, const char * name, pbc_var defv) {
 	struct _field * f= _pbcM_sp_query(m->name, name);
 	if (f==NULL) {
 		// invalid key
 		defv->p[0] = NULL;
 		defv->p[1] = NULL;
+		return -1;
 	}
 	*defv = *(f->default_v);
+	return f->type;
 }
 

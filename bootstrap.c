@@ -180,7 +180,7 @@ set_field_one(struct pbc_env *p, struct _field *f) {
 		const char * str = f->default_v->s.str;
 		if (str) {
 			f->default_v->e.id = _pbcM_si_query(f->type_name.e->name, str);
-			f->default_v->e.name = str;
+			f->default_v->e.name = _pbcM_ip_query(f->type_name.e->id, f->default_v->e.id);
 //			printf("[%s %d]\n",str,f->default_v->e.id);
 		} else {
 			memcpy(f->default_v, f->type_name.e->default_v, sizeof(pbc_var));
