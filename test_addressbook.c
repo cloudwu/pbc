@@ -70,6 +70,7 @@ main()
 	dump(buffer, sz);
 
 	pbc_wmessage_delete(msg);
+	pbc_delete(env);
 
 	return 0;
 }
