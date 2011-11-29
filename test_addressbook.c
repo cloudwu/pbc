@@ -90,6 +90,7 @@ test_pattern(struct pbc_env *env, void *buffer, int size) {
 	}
 
 	pbc_pattern_delete(pat);
+	pbc_pattern_delete(pat_phone);
 }
 
 int
