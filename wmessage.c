@@ -215,6 +215,9 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 	}
 	if (len == 0) {
 		len = strlen(v);
+	} else if (len<0) {
+		// -1 for add '\0'
+		len = strlen(v) - len;
 	}
 	if (f->label != LABEL_REPEATED) {
 		if (f->type == PTYPE_ENUM) {

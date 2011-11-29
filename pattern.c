@@ -4,12 +4,15 @@
 #include "varint.h"
 #include "pattern.h"
 #include "array.h"
+#include "proto.h"
+#include "map.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdarg.h>
 
 static void
 set_default_v(void * output, int ctype, pbc_var defv) {
@@ -152,7 +155,7 @@ unpack_field(int ctype, int ptype, char * buffer, struct atom * a, void *out) {
 	case PTYPE_FIXED64:
 	case PTYPE_SFIXED32:
 	case PTYPE_SFIXED64:
-	case PTYPE_ENUM:	// todo
+	case PTYPE_ENUM:	// enum must be integer type in pattern mode
 	case PTYPE_BOOL:
 		return write_integer(ctype, a , out);
 	case PTYPE_SINT32: {
@@ -228,14 +231,188 @@ pbc_pattern_unpack(struct pbc_pattern *pat, void *buffer, int sz, void * output)
 	return 0;
 }
 
+/*
+#define CTYPE_INT32 1
+#define CTYPE_INT64 2
+#define CTYPE_DOUBLE 3
+#define CTYPE_FLOAT 4
+#define CTYPE_POINTER 5
+#define CTYPE_BOOL 6
+#define CTYPE_INT8 7
+#define CTYPE_INT16 8
+#define CTYPE_ARRAY 9
+#define CTYPE_VAR 10
+*/
+
+/* 
+	format : key %type
+	%f float
+	%F double
+	%d int32
+	%D int64
+	%b bool
+	%h int16
+	%c int8
+	%s slice
+	%a array
+*/
+
+static int
+_ctype(const char * ctype) {
+	if (ctype[0]!='%')
+		return -1;
+	switch (ctype[1]) {
+	case 'f':
+		return CTYPE_FLOAT;
+	case 'F':
+		return CTYPE_DOUBLE;
+	case 'd':
+		return CTYPE_INT32;
+	case 'D':
+		return CTYPE_INT64;
+	case 'b':
+		return CTYPE_BOOL;
+	case 'h':
+		return CTYPE_INT16;
+	case 'c':
+		return CTYPE_INT8;
+	case 's':
+		return CTYPE_VAR;
+	case 'a':
+		return CTYPE_ARRAY;
+	default:
+		return -1;
+	}
+}
+
+static const char *
+_copy_string(const char *format , char ** temp) {
+	char * output = *temp;
+	while (*format == ' ' || *format == '\t' || *format == '\n' || *format == '\r') {
+		++format;
+	}
+	while (*format != '\0' &&
+		*format != ' ' &&
+		*format != '\t' &&
+		*format != '\n' &&
+		*format != '\r') {
+		*output = *format;
+		++output;
+		++format;
+	}
+	*output = '\0';
+	++output;
+	*temp = output;
+
+	return format;
+}
+
+static int
+_scan_pattern(const char * format , char * temp) {
+	int n = 0;
+	for(;;) {
+		format = _copy_string(format , &temp);
+		if (format[0] == '\0')
+			return 0;
+		++n;
+		format = _copy_string(format , &temp);
+		if (format[0] == '\0')
+			return n;
+	} 
+}
+
+static int 
+_comp_field(const void * a, const void * b) {
+	const struct _pattern_field * fa = a;
+	const struct _pattern_field * fb = b;
+
+	return fa->id - fb->id;
+}
+
+struct pbc_pattern *
+_pbcP_new(int n)
+{
+	size_t sz = sizeof(struct pbc_pattern) + (sizeof(struct _pattern_field)) * (n-1);
+	struct pbc_pattern * ret = malloc(sz);
+	memset(ret, 0 , sz);
+	ret->count = n;
+	return ret;
+}
+
+static int
+_check_ctype(struct _field * field, struct _pattern_field *f) {
+	if (field->label == LABEL_REPEATED) {
+		return f->ctype != CTYPE_ARRAY;
+	}
+	if (field->type == PTYPE_STRING || field->type == PTYPE_MESSAGE) {
+		return f->ctype != CTYPE_VAR;
+	}
+	if (field->type == PTYPE_FLOAT || field->type == PTYPE_DOUBLE) {
+		return !(f->ctype == CTYPE_DOUBLE || f->ctype == CTYPE_FLOAT);
+	}
+	if (field->type == PTYPE_ENUM) {
+		return !(f->ctype == CTYPE_INT8 || 
+			f->ctype == CTYPE_INT8 || 
+			f->ctype == CTYPE_INT16 ||
+			f->ctype == CTYPE_INT32 ||
+			f->ctype == CTYPE_INT64);
+	}
+
+	return f->ctype == CTYPE_VAR || f->ctype == CTYPE_ARRAY ||
+		f->ctype == CTYPE_DOUBLE || f->ctype ==CTYPE_FLOAT;
+}
+
 struct pbc_pattern * 
-pbc_pattern_new(struct pbc_env * env , const char * format) {
-	// todo
+pbc_pattern_new(struct pbc_env * env , const char * message, const char * format, ... ) {
+	struct _message *m = proto_get_message(env, message);
+	if (m==NULL) {
+		return NULL;
+	}
+	int len = strlen(format);
+	char temp[len+1];
+	int n = _scan_pattern(format, temp);
+	struct pbc_pattern * pat = _pbcP_new(n);
+	int i;
+	va_list ap;
+	va_start(ap , format);
+
+	const char *ptr = temp;
+
+	for (i=0;i<n;i++) {
+		struct _pattern_field * f = &(pat->f[i]);
+		struct _field * field = _pbcM_sp_query(m->name, ptr);
+		if (field == NULL)
+			goto _error;
+		f->id = field->id;
+		f->ptype = field->type;
+		*f->defv = *field->default_v;
+		f->offset = va_arg(ap, int);
+
+		ptr += strlen(ptr) + 1;
+
+		f->ctype = _ctype(ptr);
+		if (f->ctype < 0)
+			goto _error;
+		if (_check_ctype(field, f))
+			goto _error;
+
+		ptr += strlen(ptr) + 1;
+	}
+
+	va_end(ap);
+
+	pat->count = n;
+
+	qsort(pat->f , n , sizeof(struct _pattern_field), _comp_field);
+
+	return pat;
+_error:
+	free(pat);
 	return NULL;
 }
 
 void 
 pbc_pattern_delete(struct pbc_pattern * pat) {
-	// todo
+	free(pat);
 }
 

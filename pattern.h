@@ -18,4 +18,6 @@ struct pbc_pattern {
 	struct _pattern_field f[1];
 };
 
+struct pbc_pattern * _pbcP_new(int n);
+
 #endif

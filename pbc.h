@@ -10,7 +10,7 @@ typedef struct _pbc_array { char _data[PBC_ARRAY_CAP]; } pbc_array[1];
 
 struct pbc_slice {
 	void *buffer;
-	int sz;
+	int len;
 };
 
 struct pbc_pattern;
@@ -51,7 +51,7 @@ struct pbc_slice * pbc_array_bytes(pbc_array array, int index);
 
 // todo : pattern api
 
-struct pbc_pattern * pbc_pattern_new(struct pbc_env * , const char *);
+struct pbc_pattern * pbc_pattern_new(struct pbc_env * , const char * message, const char *format, ...);
 void pbc_pattern_delete(struct pbc_pattern *);
 
 int pbc_pattern_unpack(struct pbc_pattern *, void *buffer, int sz , void * output);

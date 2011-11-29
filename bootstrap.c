@@ -201,16 +201,6 @@ _pbcB_register_fields(struct pbc_env *p, pbc_array queue) {
 	}
 }
 
-static struct pbc_pattern *
-_pattern_new(int n)
-{
-	size_t sz = sizeof(struct pbc_pattern) + (sizeof(struct _pattern_field) - 1) * (n-1);
-	struct pbc_pattern * ret = malloc(sz);
-	memset(ret, 0 , sz);
-	ret->count = n;
-	return ret;
-}
-
 static void
 _set_string(struct _pattern_field * f) {
 	f->ptype = PTYPE_STRING;
@@ -257,7 +247,7 @@ _set_int32_array(struct _pattern_field * f) {
 
 static int
 register_internal(struct pbc_env * p, void *buffer, int size) {
-	struct pbc_pattern * FIELD_T =  _pattern_new(8);
+	struct pbc_pattern * FIELD_T =  _pbcP_new(8);
 	F(0,name,string);
 	F(1,id,int32);
 	F(2,label,int32);
@@ -267,7 +257,7 @@ register_internal(struct pbc_env * p, void *buffer, int size) {
 	F(6,default_string,string);
 	F(7,default_real,double);
 
-	struct pbc_pattern * FILE_T =  _pattern_new(10);
+	struct pbc_pattern * FILE_T =  _pbcP_new(10);
 
 	D(0,name,string);
 	D(1,dependency,string_array);
