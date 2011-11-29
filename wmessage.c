@@ -276,7 +276,6 @@ void *
 pbc_wmessage_buffer(struct pbc_wmessage *m, int *sz) {
 	if (m->ptr == m->buffer)
 		return NULL;
-	*sz = m->ptr - m->buffer;
 	int i;
 	int n = pbc_array_size(m->sub);
 	for (i=0;i<n;i++) {
@@ -296,6 +295,7 @@ pbc_wmessage_buffer(struct pbc_wmessage *m, int *sz) {
 			m->ptr += size;
 		}
 	}
-	return m->ptr;
+	*sz = m->ptr - m->buffer;
+	return m->buffer;
 }
 
