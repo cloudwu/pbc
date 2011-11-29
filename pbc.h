@@ -8,6 +8,11 @@
 
 typedef struct _pbc_array { char _data[PBC_ARRAY_CAP]; } pbc_array[1];
 
+struct pbc_slice {
+	void *buffer;
+	int sz;
+};
+
 struct pbc_pattern;
 struct pbc_env;
 struct pbc_rmessage;
@@ -37,9 +42,17 @@ void pbc_wmessage_string(struct pbc_wmessage *, const char *key, const char * v,
 struct pbc_wmessage * pbc_wmessage_message(struct pbc_wmessage *, const char *key);
 void * pbc_wmessage_buffer(struct pbc_wmessage *, int *sz);
 
-// todo : pattern api 
+// array api 
 
+int pbc_array_size(pbc_array);
+uint32_t pbc_array_integer(pbc_array array, int index, uint32_t *hi);
+double pbc_array_real(pbc_array array, int index);
+struct pbc_slice * pbc_array_bytes(pbc_array array, int index);
+
+// todo : pattern api
+
+struct pbc_pattern * pbc_pattern_new(struct pbc_env * , const char *);
 int pbc_pattern_unpack(struct pbc_pattern *, void *buffer, int sz , void * output);
-void pbc_pattern_close(struct pbc_pattern *, void * data);
+void pbc_pattern_close(struct pbc_pattern *, void *data);
 
 #endif

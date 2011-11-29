@@ -23,7 +23,6 @@ typedef union _pbc_var {
 
 void _pbcA_open(pbc_array);
 void _pbcA_close(pbc_array);
-int _pbcA_size(pbc_array);
 
 void _pbcA_push(pbc_array, pbc_var var);
 void _pbcA_index(pbc_array , int idx, pbc_var var);

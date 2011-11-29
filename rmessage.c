@@ -253,7 +253,7 @@ static void
 _free_array(pbc_array array , int type) {
 	if (type == PTYPE_MESSAGE) {
 		int i;
-		int sz = _pbcA_size(array);
+		int sz = pbc_array_size(array);
 		for (i=0;i<sz;i++) {
 			pbc_var var;
 			_pbcA_index(array,i,var);
@@ -261,7 +261,7 @@ _free_array(pbc_array array , int type) {
 		}
 	} else if (type == PTYPE_STRING) {
 		int i;
-		int sz = _pbcA_size(array);
+		int sz = pbc_array_size(array);
 		for (i=0;i<sz;i++) {
 			pbc_var var;
 			_pbcA_index(array,i,var);
@@ -412,7 +412,7 @@ pbc_rmessage_size(struct pbc_rmessage *m, const char *key) {
 		return 0;
 	}
 	if (v->type->label == LABEL_REPEATED) {
-		return _pbcA_size(v->v.array);
+		return pbc_array_size(v->v.array);
 	} else {
 		return 1;
 	}

@@ -20,7 +20,7 @@ main()
 		_pbcA_push(array, v);
 	}
 
-	int s = _pbcA_size(array);
+	int s = pbc_array_size(array);
 
 	for (i=0;i<s;i++) {
 		_pbcA_index(array, i , v);

@@ -65,7 +65,33 @@ _pbcA_index_p(pbc_array _array, int idx)
 }
 
 int 
-_pbcA_size(pbc_array _array) {
+pbc_array_size(pbc_array _array) {
 	struct array * a = (struct array *)_array;
 	return a->number;
+}
+
+uint32_t 
+pbc_array_integer(pbc_array array, int index, uint32_t *hi) {
+	pbc_var var;
+	_pbcA_index(array , index , var);
+	if (hi) {
+		*hi = var->integer.hi;
+	}
+	return var->integer.low;
+}
+
+double 
+pbc_array_real(pbc_array array, int index) {
+	pbc_var var;
+	_pbcA_index(array , index , var);
+	return var->real;
+}
+
+struct pbc_slice *
+pbc_array_bytes(pbc_array _array, int index) {
+	struct array * a = (struct array *)_array;
+	if (index <0 || index > a->number) {
+		return NULL;
+	}
+	return (struct pbc_slice *) &(a->a[index]);
 }

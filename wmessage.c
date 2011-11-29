@@ -40,7 +40,7 @@ pbc_wmessage_new(struct pbc_env * env, const char *typename) {
 
 void 
 pbc_wmessage_delete(struct pbc_wmessage *m) {
-	int sz = _pbcA_size(m->sub);
+	int sz = pbc_array_size(m->sub);
 	int i;
 	for (i=0;i<sz;i++) {
 		pbc_var var;
@@ -278,7 +278,7 @@ pbc_wmessage_buffer(struct pbc_wmessage *m, int *sz) {
 		return NULL;
 	*sz = m->ptr - m->buffer;
 	int i;
-	int n = _pbcA_size(m->sub);
+	int n = pbc_array_size(m->sub);
 	for (i=0;i<n;i++) {
 		pbc_var var;
 		_pbcA_index(m->sub, i , var);
