@@ -24,6 +24,7 @@
 #define CTYPE_INT16 8
 #define CTYPE_ARRAY 9
 #define CTYPE_VAR 10
+#define CTYPE_PACKED 11
 
 #define PTYPE_DOUBLE   1
 #define PTYPE_FLOAT    2
@@ -67,6 +68,7 @@ struct context {
 typedef struct _pbc_ctx { char _data[PBC_CONTEXT_CAP]; } pbc_ctx[1];
 
 int _pbcC_open(pbc_ctx , void *buffer, int size);	// <=0 failed
+int _pbcC_open_packed(pbc_ctx _ctx, int ptype, void *buffer, int size);
 void _pbcC_close(pbc_ctx);
 
 static inline double

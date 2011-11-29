@@ -17,6 +17,7 @@ struct _enum;
 #define LABEL_OPTIONAL 0
 #define LABEL_LABEL_REQUIRED 1
 #define LABEL_REPEATED 2
+#define LABEL_PACKED 3
 
 struct _field {
 	int id;

@@ -48,7 +48,7 @@ static void
 set_default(struct pbc_pattern *pat, uint8_t * output) {
 	int i;
 	for (i=0;i<pat->count;i++) {
-		if (pat->f[i].ctype == CTYPE_ARRAY) {
+		if (pat->f[i].ctype == CTYPE_ARRAY || pat->f[i].ctype == CTYPE_PACKED) {
 			struct _pbc_array *array = (struct _pbc_array *)(output + pat->f[i].offset);
 			_pbcA_open(array);
 			continue;
@@ -142,6 +142,23 @@ unpack_field(int ctype, int ptype, char * buffer, struct atom * a, void *out) {
 	if (ctype == CTYPE_ARRAY) {
 		return unpack_array(ptype, buffer, a , out);
 	}
+	if (ctype == CTYPE_PACKED) {
+		pbc_ctx packed;
+		struct context * ctx = (struct context *)packed;
+
+		int n = _pbcC_open_packed(packed , ptype, 
+			(uint8_t *)buffer + a->v.s.start, a->v.s.end - a->v.s.start);
+		if (n<=0)
+			return -1;
+		int i;
+		int r =0;
+		for (i=0;i<n;i++) {
+			r |= unpack_array(ptype , buffer , &(ctx->a[i]) , out);
+		}
+		if (r)
+			return -1;
+		return 0;
+	}
 	switch(ptype) {
 	case PTYPE_DOUBLE:
 		return write_real(ctype, read_double(a), out);
@@ -195,7 +212,7 @@ void
 pbc_pattern_close_arrays(struct pbc_pattern *pat, void * data) {
 	int i;
 	for (i=0;i<pat->count;i++) {
-		if (pat->f[i].ctype == CTYPE_ARRAY) {
+		if (pat->f[i].ctype == CTYPE_ARRAY || pat->f[i].ctype == CTYPE_PACKED) {
 			void *array = (char *)data + pat->f[i].offset;
 			_pbcA_close(array);
 		}
@@ -230,19 +247,6 @@ pbc_pattern_unpack(struct pbc_pattern *pat, void *buffer, int sz, void * output)
 	_pbcC_close(_ctx);
 	return 0;
 }
-
-/*
-#define CTYPE_INT32 1
-#define CTYPE_INT64 2
-#define CTYPE_DOUBLE 3
-#define CTYPE_FLOAT 4
-#define CTYPE_POINTER 5
-#define CTYPE_BOOL 6
-#define CTYPE_INT8 7
-#define CTYPE_INT16 8
-#define CTYPE_ARRAY 9
-#define CTYPE_VAR 10
-*/
 
 /* 
 	format : key %type
@@ -343,6 +347,9 @@ static int
 _check_ctype(struct _field * field, struct _pattern_field *f) {
 	if (field->label == LABEL_REPEATED) {
 		return f->ctype != CTYPE_ARRAY;
+	} 
+	if (field->label == LABEL_PACKED) {
+		return f->ctype != CTYPE_PACKED;
 	}
 	if (field->type == PTYPE_STRING || field->type == PTYPE_MESSAGE) {
 		return f->ctype != CTYPE_VAR;
@@ -358,7 +365,7 @@ _check_ctype(struct _field * field, struct _pattern_field *f) {
 			f->ctype == CTYPE_INT64);
 	}
 
-	return f->ctype == CTYPE_VAR || f->ctype == CTYPE_ARRAY ||
+	return f->ctype == CTYPE_VAR || f->ctype == CTYPE_ARRAY || f->ctype == CTYPE_PACKED ||
 		f->ctype == CTYPE_DOUBLE || f->ctype ==CTYPE_FLOAT;
 }
 
@@ -393,6 +400,9 @@ pbc_pattern_new(struct pbc_env * env , const char * message, const char * format
 		f->ctype = _ctype(ptr);
 		if (f->ctype < 0)
 			goto _error;
+		if (f->ctype == CTYPE_ARRAY && field->label == LABEL_PACKED) {
+			f->ctype = CTYPE_PACKED;
+		}
 		if (_check_ctype(field, f))
 			goto _error;
 

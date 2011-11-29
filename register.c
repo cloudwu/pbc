@@ -111,6 +111,13 @@ _register_message(struct pbc_env *p, struct _stringpool *pool, struct pbc_rmessa
 		f.name = _pbcS_build(pool,field_name,field_name_sz);
 		f.type = pbc_rmessage_integer(field, "type", 0 , 0);	// enum
 		f.label = pbc_rmessage_integer(field, "label", 0, 0) - 1; // LABEL_OPTIONAL = 0
+		if (pbc_rmessage_size(field , "options") > 0) {
+			struct pbc_rmessage * options = pbc_rmessage_message(field, "options" , 0);
+			int packed = pbc_rmessage_integer(options , "packed" , 0 , NULL);
+			if (packed) {
+				f.label = LABEL_PACKED;
+			}
+		}
 		f.type_name.n = pbc_rmessage_string(field, "type_name", 0 , NULL) +1;	// abandon prefix '.' 
 		int vsz;
 		const char * default_value = pbc_rmessage_string(field, "default_value", 0 , &vsz);

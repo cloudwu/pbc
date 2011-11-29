@@ -53,16 +53,18 @@ struct person {
 	int32_t id;
 	struct pbc_slice email;
 	pbc_array phone;
+	pbc_array test;
 };
 
 static void
 test_pattern(struct pbc_env *env, void *buffer, int size) {
 	struct pbc_pattern * pat = pbc_pattern_new(env, "tutorial.Person" , 
-		"name %s id %d email %s phone %a",
+		"name %s id %d email %s phone %a test %a",
 		offsetof(struct person, name) , 
 		offsetof(struct person, id) ,
 		offsetof(struct person, email) ,
-		offsetof(struct person, phone));
+		offsetof(struct person, phone) ,
+		offsetof(struct person, test));
 
 	// enum must be integer
 	struct pbc_pattern * pat_phone = pbc_pattern_new(env, "tutorial.Person.PhoneNumber",
@@ -84,6 +86,11 @@ test_pattern(struct pbc_env *env, void *buffer, int size) {
 			pbc_pattern_unpack(pat_phone , bytes->buffer, bytes->len , &pp);
 			printf("\tnumber = %s\n" , (const char*)pp.number.buffer);
 			printf("\ttype = %d\n" , pp.type);
+		}
+
+		n = pbc_array_size(p.test);
+		for (i=0;i<n;i++) {
+			printf("test[%d] = %d\n",i, pbc_array_integer(p.test, i , NULL));
 		}
 
 		pbc_pattern_close_arrays(pat,&p);
@@ -117,6 +124,10 @@ main()
 	phone = pbc_wmessage_message(msg , "phone");
 	pbc_wmessage_string(phone , "number", "13901234567" , -1);
 	pbc_wmessage_string(phone , "type" , "MOBILE" , 0);
+
+	pbc_wmessage_integer(msg, "test", 1,0);
+	pbc_wmessage_integer(msg, "test", 2,0);
+	pbc_wmessage_integer(msg, "test", 3,0);
 
 	buffer = pbc_wmessage_buffer(msg, &sz);
 	

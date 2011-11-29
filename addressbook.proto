@@ -22,6 +22,7 @@ message Person {
   }
 
   repeated PhoneNumber phone = 4;
+  repeated int32 test = 5 [packed=true];
 }
 
 // Our address book file is just one of these.
