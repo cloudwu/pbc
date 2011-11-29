@@ -234,7 +234,7 @@ _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buf
 
 struct pbc_rmessage * 
 pbc_rmessage_new(struct pbc_env * env, const char * typename , void *buffer, int size) {
-	struct _message * msg = proto_get_message(env, typename);
+	struct _message * msg = _pbcP_get_message(env, typename);
 	if (msg == NULL)
 		return NULL;
 	struct pbc_rmessage temp;
@@ -306,7 +306,7 @@ pbc_rmessage_string(struct pbc_rmessage * m , const char *key , int index, int *
 	int type = 0;
 	pbc_var var;
 	if (v == NULL) {
-		proto_message_default(m->msg, key, var);
+		_pbcP_message_default(m->msg, key, var);
 	} else {
 		if (v->type->label == LABEL_REPEATED) {
 			_pbcA_index(v->v.array, index, var);
@@ -339,7 +339,7 @@ pbc_rmessage_integer(struct pbc_rmessage *m , const char *key , int index, uint3
 	pbc_var var;
 	int type = 0;
 	if (v == NULL) {
-		proto_message_default(m->msg, key, var);
+		_pbcP_message_default(m->msg, key, var);
 	} else {
 		if (v->type->label == LABEL_REPEATED) {
 			_pbcA_index(v->v.array, index, var);
@@ -367,7 +367,7 @@ pbc_rmessage_real(struct pbc_rmessage * m, const char *key , int index) {
 	struct value * v = _pbcM_sp_query(m->index,key);
 	pbc_var var;
 	if (v == NULL) {
-		proto_message_default(m->msg, key, var);
+		_pbcP_message_default(m->msg, key, var);
 	} else {
 		if (v->type->label == LABEL_REPEATED) {
 			_pbcA_index(v->v.array, index, var);

@@ -36,7 +36,7 @@ _register_enum(struct pbc_env *p, struct _stringpool *pool, struct pbc_rmessage 
 	const char * name = pbc_rmessage_string(enum_type, "name", 0 , &name_sz);
 	const char *temp = _concat_name(pool, prefix , prefix_sz , name , name_sz);
 
-	proto_push_enum(p,temp,table,field_count);
+	_pbcP_push_enum(p,temp,table,field_count);
 	free(table);
 }
 
@@ -115,10 +115,10 @@ _register_message(struct pbc_env *p, struct _stringpool *pool, struct pbc_rmessa
 		int vsz;
 		const char * default_value = pbc_rmessage_string(field, "default_value", 0 , &vsz);
 		_set_default(pool , &f , f.type, default_value , vsz);
-		proto_push_message(p, temp , &f , queue);
+		_pbcP_push_message(p, temp , &f , queue);
 	}
 	if (field_count > 0) {
-		proto_init_message(p, temp);
+		_pbcP_init_message(p, temp);
 	}
 
 	// todo: extension

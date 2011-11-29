@@ -364,7 +364,7 @@ _check_ctype(struct _field * field, struct _pattern_field *f) {
 
 struct pbc_pattern * 
 pbc_pattern_new(struct pbc_env * env , const char * message, const char * format, ... ) {
-	struct _message *m = proto_get_message(env, message);
+	struct _message *m = _pbcP_get_message(env, message);
 	if (m==NULL) {
 		return NULL;
 	}

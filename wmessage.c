@@ -32,7 +32,7 @@ _wmessage_new(struct _message *msg) {
 
 struct pbc_wmessage * 
 pbc_wmessage_new(struct pbc_env * env, const char *typename) {
-	struct _message * msg = proto_get_message(env, typename);
+	struct _message * msg = _pbcP_get_message(env, typename);
 	if (msg == NULL)
 		return NULL;
 	return _wmessage_new(msg);

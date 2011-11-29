@@ -51,13 +51,10 @@ struct pbc_env {
 	struct map_sp * msgs;	// string -> _message
 };
 
-void proto_push_message(struct pbc_env * p, const char *name, struct _field *f , pbc_array queue);
-struct _message * proto_init_message(struct pbc_env * p, const char *name);
-struct _enum * proto_push_enum(struct pbc_env * p, const char *name, struct map_kv *table, int sz );
-void proto_message_default(struct _message * m, const char * name, pbc_var defv);
-
-struct _message * proto_get_message(struct pbc_env * p, const char *name);
-struct _enum * proto_get_enum(struct pbc_env * p, const char *name);
-void * pbc_array_index_p(pbc_array _array, int idx);
+struct _message * _pbcP_init_message(struct pbc_env * p, const char *name);
+void _pbcP_push_message(struct pbc_env * p, const char *name, struct _field *f , pbc_array queue);
+struct _enum * _pbcP_push_enum(struct pbc_env * p, const char *name, struct map_kv *table, int sz );
+void _pbcP_message_default(struct _message * m, const char * name, pbc_var defv);
+struct _message * _pbcP_get_message(struct pbc_env * p, const char *name);
 
 #endif

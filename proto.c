@@ -10,15 +10,9 @@
 #include <string.h>
 
 struct _message * 
-proto_get_message(struct pbc_env * p , const char *name) {
+_pbcP_get_message(struct pbc_env * p , const char *name) {
 	return _pbcM_sp_query(p->msgs, name);
 }
-
-struct _enum * 
-proto_get_enum(struct pbc_env * p, const char *name) {
-	return _pbcM_sp_query(p->enums, name);
-}
-
 
 struct pbc_env * 
 pbc_new(void) {
@@ -73,7 +67,7 @@ pbc_delete(struct pbc_env *p) {
 }
 
 struct _enum *
-proto_push_enum(struct pbc_env * p, const char *name, struct map_kv *table, int sz) {
+_pbcP_push_enum(struct pbc_env * p, const char *name, struct map_kv *table, int sz) {
 	void * check = _pbcM_sp_query(p->enums, name);
 	if (check)
 		return NULL;
@@ -89,7 +83,7 @@ proto_push_enum(struct pbc_env * p, const char *name, struct map_kv *table, int 
 }
 
 void 
-proto_push_message(struct pbc_env * p, const char *name, struct _field *f , pbc_array queue) {
+_pbcP_push_message(struct pbc_env * p, const char *name, struct _field *f , pbc_array queue) {
 	struct _message * m = _pbcM_sp_query(p->msgs, name);
 	if (m==NULL) {
 		m = malloc(sizeof(*m));
@@ -130,7 +124,7 @@ _set_table(void *p, void *ud) {
 }
 
 struct _message * 
-proto_init_message(struct pbc_env * p, const char *name) {
+_pbcP_init_message(struct pbc_env * p, const char *name) {
 	struct _message * m = _pbcM_sp_query(p->msgs, name);
 	if (m == NULL) {
 		return NULL;
@@ -152,7 +146,7 @@ proto_init_message(struct pbc_env * p, const char *name) {
 }
 
 void 
-proto_message_default(struct _message * m, const char * name, pbc_var defv) {
+_pbcP_message_default(struct _message * m, const char * name, pbc_var defv) {
 	struct _field * f= _pbcM_sp_query(m->name, name);
 	if (f==NULL) {
 		// invalid key

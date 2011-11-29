@@ -89,7 +89,7 @@ set_enum_one(struct pbc_env *p, struct file_t *file, const char *name, int start
 		table[i].id = (int)id->integer.low;
 		table[i].pointer = (void *)string->s.str;
 	}
-	proto_push_enum(p,name,table,sz);
+	_pbcP_push_enum(p,name,table,sz);
 
 	free(table);
 }
@@ -146,11 +146,11 @@ set_msg_one(struct pbc_pattern * FIELD_T, struct pbc_env *p, struct file_t *file
 		f.type_name.n = field.type_name->s.str;
 		set_default(&f, &field);
 
-		proto_push_message(p,name, &f , queue);
+		_pbcP_push_message(p,name, &f , queue);
 
 		// don't need to close pattern since no array
 	}
-	proto_init_message(p, name);
+	_pbcP_init_message(p, name);
 }
 
 static void
