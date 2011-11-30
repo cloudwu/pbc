@@ -64,6 +64,8 @@ test_rmessage(struct pbc_env *env, struct pbc_slice *slice) {
 	for (i=0;i<n;i++) {
 		printf("test[%d] = %d\n",i, pbc_rmessage_integer(m , "test" , i , NULL));
 	}
+
+	printf("tutorial.Ext.test = %d\n", pbc_rmessage_integer(m,"tutorial.Ext.test",0,NULL));
 	pbc_rmessage_delete(m);
 }
 
@@ -86,6 +88,8 @@ test_wmessage(struct pbc_env * env)
 	pbc_wmessage_integer(msg, "test", -123,0);
 	pbc_wmessage_integer(msg, "test", 12345,0);
 	pbc_wmessage_integer(msg, "test", 1234567,0);
+
+	pbc_wmessage_integer(msg, "tutorial.Ext.test", 54321 , 0);
 
 	return msg;
 }

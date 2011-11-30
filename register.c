@@ -95,6 +95,56 @@ _set_default(struct _stringpool *pool, struct _field *f , int ptype, const char 
 }
 
 static void
+_register_field(struct pbc_rmessage * field, struct _field * f, struct _stringpool *pool) {
+	f->id = pbc_rmessage_integer(field, "number", 0 , 0);
+	f->type = pbc_rmessage_integer(field, "type", 0 , 0);	// enum
+	f->label = pbc_rmessage_integer(field, "label", 0, 0) - 1; // LABEL_OPTIONAL = 0
+	if (pbc_rmessage_size(field , "options") > 0) {
+		struct pbc_rmessage * options = pbc_rmessage_message(field, "options" , 0);
+		int packed = pbc_rmessage_integer(options , "packed" , 0 , NULL);
+		if (packed) {
+			f->label = LABEL_PACKED;
+		}
+	}
+	f->type_name.n = pbc_rmessage_string(field, "type_name", 0 , NULL) +1;	// abandon prefix '.' 
+	int vsz;
+	const char * default_value = pbc_rmessage_string(field, "default_value", 0 , &vsz);
+	_set_default(pool , f , f->type, default_value , vsz);
+}
+
+static void
+_register_extension(struct pbc_env *p, struct _stringpool *pool , const char * prefix, int prefix_sz, struct pbc_rmessage * msg, pbc_array queue) {
+	int extension_count = pbc_rmessage_size(msg , "extension");
+	if (extension_count <= 0) 
+		return;
+	int i;
+
+	const char * last = NULL;
+
+	for (i=0;i<extension_count;i++) {
+		struct pbc_rmessage * extension = pbc_rmessage_message(msg, "extension", i);
+		int field_name_sz = 0;
+		struct _field f;
+		const char * field_name = pbc_rmessage_string(extension , "name" , 0, &field_name_sz);
+		f.name =  _concat_name(pool, prefix, prefix_sz, field_name, field_name_sz);
+
+		_register_field(extension, &f , pool);
+
+		const char * extendee = pbc_rmessage_string(extension , "extendee" , 0, NULL);
+
+		_pbcP_push_message(p, extendee + 1 , &f , queue);
+
+		if (last == NULL) {
+			last = extendee;
+		} else if (strcmp(extendee,last) != 0) {
+			_pbcP_init_message(p, last+1);
+			last = extendee;
+		} 
+	}
+	_pbcP_init_message(p, last+1);
+}
+
+static void
 _register_message(struct pbc_env *p, struct _stringpool *pool, struct pbc_rmessage * message_type, const char *prefix, int prefix_sz, pbc_array queue) {
 	int name_sz;
 	const char * name = pbc_rmessage_string(message_type, "name", 0 , &name_sz);
@@ -105,30 +155,19 @@ _register_message(struct pbc_env *p, struct _stringpool *pool, struct pbc_rmessa
 	for (i=0;i<field_count;i++) {
 		struct pbc_rmessage * field = pbc_rmessage_message(message_type, "field" , i);
 		struct _field f;
-		f.id = pbc_rmessage_integer(field, "number", 0 , 0);
 		int field_name_sz;
 		const char * field_name = pbc_rmessage_string(field, "name", 0 , &field_name_sz);
 		f.name = _pbcS_build(pool,field_name,field_name_sz);
-		f.type = pbc_rmessage_integer(field, "type", 0 , 0);	// enum
-		f.label = pbc_rmessage_integer(field, "label", 0, 0) - 1; // LABEL_OPTIONAL = 0
-		if (pbc_rmessage_size(field , "options") > 0) {
-			struct pbc_rmessage * options = pbc_rmessage_message(field, "options" , 0);
-			int packed = pbc_rmessage_integer(options , "packed" , 0 , NULL);
-			if (packed) {
-				f.label = LABEL_PACKED;
-			}
-		}
-		f.type_name.n = pbc_rmessage_string(field, "type_name", 0 , NULL) +1;	// abandon prefix '.' 
-		int vsz;
-		const char * default_value = pbc_rmessage_string(field, "default_value", 0 , &vsz);
-		_set_default(pool , &f , f.type, default_value , vsz);
+
+		_register_field(field, &f , pool);
+
 		_pbcP_push_message(p, temp , &f , queue);
 	}
 	if (field_count > 0) {
 		_pbcP_init_message(p, temp);
 	}
 
-	// todo: extension
+	_register_extension(p, pool, temp, prefix_sz + name_sz + 1,message_type, queue);
 
 	// nested enum
 
@@ -168,6 +207,8 @@ _register(struct pbc_env *p, struct pbc_rmessage * file, struct _stringpool *poo
 		struct pbc_rmessage * message_type = pbc_rmessage_message(file, "message_type", i);
 		_register_message(p, pool, message_type, package, package_sz, queue);
 	}
+
+	_register_extension(p, pool, package, package_sz, file , queue);
 
 	_pbcB_register_fields(p, queue);
 

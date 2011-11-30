@@ -130,7 +130,8 @@ _pbcP_init_message(struct pbc_env * p, const char *name) {
 		return NULL;
 	}
 	if (m->id) {
-		return NULL;
+		// extend message, delete old id map.
+		_pbcM_ip_delete(m->id);
 	}
 	struct _iter iter = { 0, NULL };
 	_pbcM_sp_foreach_ud(m->name, _count, &iter);

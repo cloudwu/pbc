@@ -23,6 +23,14 @@ message Person {
 
   repeated PhoneNumber phone = 4;
   repeated int32 test = 5 [packed=true];
+
+  extensions 10 to max; 
+}
+
+message Ext {
+  extend Person {
+    optional int32 test = 10;
+  }
 }
 
 // Our address book file is just one of these.
