@@ -220,9 +220,9 @@ pbc_pattern_close_arrays(struct pbc_pattern *pat, void * data) {
 }
 
 int 
-pbc_pattern_unpack(struct pbc_pattern *pat, void *buffer, int sz, void * output) {
+pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) {
 	pbc_ctx _ctx;
-	int r = _pbcC_open(_ctx, buffer, sz);
+	int r = _pbcC_open(_ctx, s->buffer, s->len);
 	if (r <= 0) {
 		_pbcC_close(_ctx);
 		return r+1;

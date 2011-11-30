@@ -80,7 +80,7 @@ _expand(struct pbc_wmessage *m, int sz) {
 		sz = m->ptr + sz - m->buffer;
 		do {
 			cap = cap * 2;
-		} while ( sz <= cap ) ;
+		} while ( sz > cap ) ;
 		uint8_t * buffer = realloc(m->buffer, cap);
 		m->ptr = buffer + (m->ptr - m->buffer);
 		m->endptr = buffer + cap;
@@ -166,13 +166,12 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 	}
 	int id = f->id << 3;
 
-	_expand(m,10);
+	_expand(m,20);
 	switch (f->type) {
 	case PTYPE_INT64:
 	case PTYPE_UINT64: 
 		id |= WT_VARINT;
 		m->ptr += varint_encode32(id, m->ptr);
-		_expand(m,10);
 		m->ptr += varint_encode((uint64_t)low | (uint64_t)hi << 32 , m->ptr);
 		break;
 	case PTYPE_INT32:
@@ -181,33 +180,28 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 	case PTYPE_BOOL:
 		id |= WT_VARINT;
 		m->ptr += varint_encode32(id, m->ptr);
-		_expand(m,10);
 		m->ptr += varint_encode32(low, m->ptr);
 		break;
 	case PTYPE_FIXED64:
 	case PTYPE_SFIXED64:
 		id |= WT_BIT64;
 		m->ptr += varint_encode32(id, m->ptr);
-		_expand(m,8);
 		int64_encode(low,hi,m->ptr);
 		break;
 	case PTYPE_FIXED32:
 	case PTYPE_SFIXED32:
 		id |= WT_BIT32;
 		m->ptr += varint_encode32(id, m->ptr);
-		_expand(m,4);
 		int32_encode(low,m->ptr);
 		break;
 	case PTYPE_SINT32:
 		id |= WT_VARINT;
 		m->ptr += varint_encode32(id, m->ptr);
-		_expand(m,10);
 		m->ptr += varint_zigzag32(low, m->ptr);
 		break;
 	case PTYPE_SINT64:
 		id |= WT_VARINT;
 		m->ptr += varint_encode32(id, m->ptr);
-		_expand(m,10);
 		m->ptr += varint_zigzag((uint64_t)low | (uint64_t)hi << 32 , m->ptr);
 		break;
 	}
@@ -260,12 +254,11 @@ pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
 			return;
 	}
 	int id = f->id << 3;
-	_expand(m,10);
+	_expand(m,18);
 	switch (f->type) {
 	case PTYPE_FLOAT: {
 		id |= WT_BIT32;
 		m->ptr += varint_encode32(id, m->ptr);
-		_expand(m,4);
 		float_encode(v , m->ptr);
 		m->ptr += 4;
 		break;
@@ -273,7 +266,6 @@ pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
 	case PTYPE_DOUBLE:
 		id |= WT_BIT32;
 		m->ptr += varint_encode32(id, m->ptr);
-		_expand(m,8);
 		double_encode(v , m->ptr);
 		m->ptr += 8;
 		break;
@@ -326,7 +318,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		}
 	}
 	int id = f->id << 3;
-	_expand(m,10);
+	_expand(m,20);
 	switch (f->type) {
 	case PTYPE_ENUM : {
 		char temp[len+1];
@@ -515,7 +507,7 @@ _pack_packed(void *p, void *ud) {
 }
 
 void * 
-pbc_wmessage_buffer(struct pbc_wmessage *m, int *sz) {
+pbc_wmessage_buffer(struct pbc_wmessage *m, struct pbc_slice *slice) {
 	if (m->packed) {
 		_pbcM_sp_foreach_ud(m->packed , _pack_packed, m);
 	}
@@ -524,21 +516,21 @@ pbc_wmessage_buffer(struct pbc_wmessage *m, int *sz) {
 	for (i=0;i<n;i++) {
 		pbc_var var;
 		_pbcA_index(m->sub, i , var);
-		int size;
-		void * buf = pbc_wmessage_buffer(var->p[0] , &size);
-		if (buf) {
+		struct pbc_slice s;
+		pbc_wmessage_buffer(var->p[0] , &s);
+		if (s.buffer) {
 			struct _field * f = var->p[1];
 			int id = f->id << 3 | WT_LEND;
-			_expand(m,10);
+			_expand(m,20+s.len);
 			m->ptr += varint_encode32(id, m->ptr);
-			_expand(m,10);
-			m->ptr += varint_encode32(size, m->ptr);
-			_expand(m,size);
-			memcpy(m->ptr, buf,size);
-			m->ptr += size;
+			m->ptr += varint_encode32(s.len, m->ptr);
+			memcpy(m->ptr, s.buffer, s.len);
+			m->ptr += s.len;
 		}
 	}
-	*sz = m->ptr - m->buffer;
+	slice->buffer = m->buffer;
+	slice->len = m->ptr - m->buffer;
+
 	return m->buffer;
 }
 

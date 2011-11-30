@@ -2,6 +2,7 @@
 #define PROTOBUF_C_ARRAY_H
 
 #include "varint.h"
+#include "pbc.h"
 
 typedef union _pbc_var {
 	struct longlong integer;
@@ -14,10 +15,7 @@ typedef union _pbc_var {
 		int id;
 		const char * name;
 	} e;
-	struct {
-		void * buffer;
-		int len;
-	} m;
+	struct pbc_slice m;
 	void * p[2];
 } pbc_var[1];
 

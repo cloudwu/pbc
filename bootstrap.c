@@ -134,7 +134,7 @@ set_msg_one(struct pbc_pattern * FIELD_T, struct pbc_env *p, struct file_t *file
 		_pbcA_index(file->message_field, start+i, _field);
 		struct field_t field;
 
-		int ret = pbc_pattern_unpack(FIELD_T, _field->m.buffer, _field->m.len, &field);
+		int ret = pbc_pattern_unpack(FIELD_T, &_field->m, &field);
 		if (ret != 0) {
 			continue;
 		}
@@ -246,7 +246,7 @@ _set_int32_array(struct _pattern_field * f) {
 #define D(idx,field_name,type) SET_PATTERN(FILE_T, idx, file_t ,field_name, type)
 
 static int
-register_internal(struct pbc_env * p, void *buffer, int size) {
+register_internal(struct pbc_env * p, struct pbc_slice *slice) {
 	struct pbc_pattern * FIELD_T =  _pbcP_new(8);
 	F(0,name,string);
 	F(1,id,int32);
@@ -272,7 +272,7 @@ register_internal(struct pbc_env * p, void *buffer, int size) {
 	int ret = 0;
 
 	struct file_t file;
-	int r = pbc_pattern_unpack(FILE_T, buffer, size, &file);
+	int r = pbc_pattern_unpack(FILE_T, slice, &file);
 	if (r != 0) {
 		ret = 1;
 		goto _return;
@@ -298,5 +298,6 @@ _return:
 
 void 
 _pbcB_init(struct pbc_env * p) {
-	register_internal(p,pbc_descriptor,sizeof(pbc_descriptor));
+	struct pbc_slice slice = { pbc_descriptor,sizeof(pbc_descriptor) };
+	register_internal(p,&slice);
 }

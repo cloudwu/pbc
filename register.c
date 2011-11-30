@@ -194,8 +194,8 @@ _check_file_name(struct pbc_env * p , struct pbc_rmessage * file, void *data) {
 }
 
 int
-pbc_register(struct pbc_env * p, void *buffer, int size) {
-	struct pbc_rmessage * message = pbc_rmessage_new(p, "google.protobuf.FileDescriptorSet", buffer,size);
+pbc_register(struct pbc_env * p, struct pbc_slice *slice) {
+	struct pbc_rmessage * message = pbc_rmessage_new(p, "google.protobuf.FileDescriptorSet", slice);
 	if (message == NULL) {
 		return 1;
 	}

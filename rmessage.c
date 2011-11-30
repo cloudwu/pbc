@@ -68,7 +68,7 @@ read_string_var(pbc_var var,struct atom *a,struct _field *f,uint8_t *buffer) {
 	}
 }
 
-static void _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buffer, int size);
+static void _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type ,  void *buffer, int size);
 
 static struct value *
 read_value(struct _field *f, struct atom * a, uint8_t *buffer) {
@@ -305,12 +305,12 @@ _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buf
 }
 
 struct pbc_rmessage * 
-pbc_rmessage_new(struct pbc_env * env, const char * typename , void *buffer, int size) {
+pbc_rmessage_new(struct pbc_env * env, const char * typename ,  struct pbc_slice * slice) {
 	struct _message * msg = _pbcP_get_message(env, typename);
 	if (msg == NULL)
 		return NULL;
 	struct pbc_rmessage temp;
-	_pbc_rmessage_new(&temp, msg , buffer, size);
+	_pbc_rmessage_new(&temp, msg , slice->buffer, slice->len);
 	if (temp.msg == NULL)
 		return NULL;
 

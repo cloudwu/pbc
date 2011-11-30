@@ -4,37 +4,36 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static void*
-read_file (const char *filename , int * size) {
+static void
+read_file (const char *filename , struct pbc_slice *slice) {
 	FILE *f = fopen(filename, "rb");
-	if (f == NULL)
-		return NULL;
+	if (f == NULL) {
+		slice->buffer = NULL;
+		slice->len = 0;
+		return;
+	}
 	fseek(f,0,SEEK_END);
-	long sz = ftell(f);
+	slice->len = ftell(f);
 	fseek(f,0,SEEK_SET);
-	void * buffer = malloc(sz);
-	fread(buffer, 1 , sz , f);
+	slice->buffer = malloc(slice->len);
+	fread(slice->buffer, 1 , slice->len , f);
 	fclose(f);
-
-	*size = sz;
-
-	return buffer;
 }
 
 void
 test_des(struct pbc_env * env)
 {
-	int sz = 0;
-	void *buffer = read_file("descriptor.pb", &sz);
+	struct pbc_slice slice;
+	read_file("descriptor.pb", &slice);
 
-	struct pbc_rmessage * msg = pbc_rmessage_new(env, "google.protobuf.FileDescriptorSet", buffer, sz);
+	struct pbc_rmessage * msg = pbc_rmessage_new(env, "google.protobuf.FileDescriptorSet", &slice);
 
 	struct pbc_rmessage * file = pbc_rmessage_message(msg,"file",0);
 
 	printf("name = %s\n",pbc_rmessage_string(file, "name", 0 , NULL));
 	printf("package = %s\n",pbc_rmessage_string(file, "package", 0 , NULL));
 
-	sz = pbc_rmessage_size(file, "dependency");
+	int sz = pbc_rmessage_size(file, "dependency");
 	printf("dependency[%d] =\n" , sz);
 	int i;
 	for (i=0;i<sz;i++) {
@@ -49,7 +48,7 @@ test_des(struct pbc_env * env)
 
 
 	pbc_rmessage_delete(msg);
-	free(buffer);
+	free(slice.buffer);
 
 	struct pbc_wmessage * wmsg = pbc_wmessage_new(env , "google.protobuf.EnumDescriptorProto");
 	pbc_wmessage_string(wmsg,"name","test",0);

@@ -5,22 +5,22 @@
 #include <stdint.h>
 #include <stddef.h>
 
-static void*
-read_file (const char *filename , int * size) {
+static void
+read_file (const char *filename , struct pbc_slice *slice) {
 	FILE *f = fopen(filename, "rb");
-	if (f == NULL)
-		return NULL;
+	if (f == NULL) {
+		slice->buffer = NULL;
+		slice->len = 0;
+		return;
+	}
 	fseek(f,0,SEEK_END);
-	long sz = ftell(f);
+	slice->len = ftell(f);
 	fseek(f,0,SEEK_SET);
-	void * buffer = malloc(sz);
-	fread(buffer, 1 , sz , f);
+	slice->buffer = malloc(slice->len);
+	fread(slice->buffer, 1 , slice->len , f);
 	fclose(f);
-
-	*size = sz;
-
-	return buffer;
 }
+
 
 static void
 dump(uint8_t *buffer, int sz) {
@@ -57,7 +57,7 @@ struct person {
 };
 
 static void
-test_pattern(struct pbc_env *env, void *buffer, int size) {
+test_pattern(struct pbc_env *env, struct pbc_slice * slice) {
 	struct pbc_pattern * pat = pbc_pattern_new(env, "tutorial.Person" , 
 		"name %s id %d email %s phone %a test %a",
 		offsetof(struct person, name) , 
@@ -73,7 +73,7 @@ test_pattern(struct pbc_env *env, void *buffer, int size) {
 		offsetof(struct person_phone, type));
 
 	struct person p;
-	int r = pbc_pattern_unpack(pat, buffer, size, &p);
+	int r = pbc_pattern_unpack(pat, slice, &p);
 	if (r>=0) {
 		printf("name = %s\n",(const char *)p.name.buffer);
 		printf("id = %d\n",p.id);
@@ -83,7 +83,7 @@ test_pattern(struct pbc_env *env, void *buffer, int size) {
 		for (i=0;i<n;i++) {
 			struct pbc_slice * bytes = pbc_array_bytes(p.phone, i);
 			struct person_phone pp;
-			pbc_pattern_unpack(pat_phone , bytes->buffer, bytes->len , &pp);
+			pbc_pattern_unpack(pat_phone , bytes , &pp);
 			printf("\tnumber = %s\n" , (const char*)pp.number.buffer);
 			printf("\ttype = %d\n" , pp.type);
 		}
@@ -101,8 +101,8 @@ test_pattern(struct pbc_env *env, void *buffer, int size) {
 }
 
 static void
-test_rmessage(struct pbc_env *env, void *buffer, int size) {
-	struct pbc_rmessage * m = pbc_rmessage_new(env, "tutorial.Person", buffer , size);
+test_rmessage(struct pbc_env *env, struct pbc_slice *slice) {
+	struct pbc_rmessage * m = pbc_rmessage_new(env, "tutorial.Person", slice);
 	printf("name = %s\n", pbc_rmessage_string(m , "name" , 0 , NULL));
 	printf("id = %d\n", pbc_rmessage_integer(m , "id" , 0 , NULL));
 	printf("email = %s\n", pbc_rmessage_string(m , "email" , 0 , NULL));
@@ -150,24 +150,24 @@ test_wmessage(struct pbc_env * env)
 int
 main()
 {
-	int sz = 0;
-	void *buffer = read_file("addressbook.pb", &sz);
-	if (buffer == NULL)
+	struct pbc_slice slice;
+	read_file("addressbook.pb", &slice);
+	if (slice.buffer == NULL)
 		return 1;
 	struct pbc_env * env = pbc_new();
-	pbc_register(env, buffer, sz);
+	pbc_register(env, &slice);
 
-	free(buffer);
+	free(slice.buffer);
 
 	struct pbc_wmessage *msg = test_wmessage(env);
 
-	buffer = pbc_wmessage_buffer(msg, &sz);
+	pbc_wmessage_buffer(msg, &slice);
 
-	dump(buffer, sz);
+	dump(slice.buffer, slice.len);
 
-	test_rmessage(env, buffer, sz);
+	test_rmessage(env, &slice);
 
-	test_pattern(env, buffer, sz);
+	test_pattern(env, &slice);
 
 	pbc_wmessage_delete(msg);
 	pbc_delete(env);

@@ -20,11 +20,11 @@ struct pbc_wmessage;
 
 struct pbc_env * pbc_new(void);
 void pbc_delete(struct pbc_env *);
-int pbc_register(struct pbc_env *, void *buffer, int size);
+int pbc_register(struct pbc_env *, struct pbc_slice * slice);
 
 // message api
 
-struct pbc_rmessage * pbc_rmessage_new(struct pbc_env * env, const char * typename , void *buffer, int size);
+struct pbc_rmessage * pbc_rmessage_new(struct pbc_env * env, const char * typename , struct pbc_slice * slice);
 void pbc_rmessage_delete(struct pbc_rmessage *);
 
 uint32_t pbc_rmessage_integer(struct pbc_rmessage * , const char *key , int index, uint32_t *hi);
@@ -40,7 +40,7 @@ void pbc_wmessage_integer(struct pbc_wmessage *, const char *key, uint32_t low, 
 void pbc_wmessage_real(struct pbc_wmessage *, const char *key, double v);
 void pbc_wmessage_string(struct pbc_wmessage *, const char *key, const char * v, int len);
 struct pbc_wmessage * pbc_wmessage_message(struct pbc_wmessage *, const char *key);
-void * pbc_wmessage_buffer(struct pbc_wmessage *, int *sz);
+void * pbc_wmessage_buffer(struct pbc_wmessage *, struct pbc_slice * slice);
 
 // array api 
 
@@ -54,7 +54,7 @@ struct pbc_slice * pbc_array_bytes(pbc_array array, int index);
 struct pbc_pattern * pbc_pattern_new(struct pbc_env * , const char * message, const char *format, ...);
 void pbc_pattern_delete(struct pbc_pattern *);
 
-int pbc_pattern_unpack(struct pbc_pattern *, void *buffer, int sz , void * output);
+int pbc_pattern_unpack(struct pbc_pattern *, struct pbc_slice * s , void * output);
 void pbc_pattern_close_arrays(struct pbc_pattern *, void *data);
 
 #endif
