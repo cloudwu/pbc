@@ -54,8 +54,6 @@ void pbc_array_push_integer(pbc_array array, uint32_t low, uint32_t hi);
 void pbc_array_push_slice(pbc_array array, struct pbc_slice *);
 void pbc_array_push_real(pbc_array array, double v);
 
-// todo : pattern api
-
 struct pbc_pattern * pbc_pattern_new(struct pbc_env * , const char * message, const char *format, ...);
 void pbc_pattern_delete(struct pbc_pattern *);
 

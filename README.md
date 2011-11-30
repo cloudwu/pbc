@@ -2,8 +2,28 @@
 
 PBC is a google protocol buffers library for C without code generation.
 
-Working in progress.
+## Message API
 
-## Todo
+You can use *wmessage* for encoding , and *rmessage* for decoding.
 
-* extension support
+See test_addressbook.c for detail.
+
+## Pattern API
+
+If you need higher performance , you can use pbc_pattern_xxx api .
+
+See test_pattern.c for detail.
+
+pattern api is faster, and less memory used, and you can access data from native C struct . 
+
+## Extension
+
+PBC support extension with a simple way . It add prefix to the extension field name. 
+
+## Service
+
+Not supported
+
+## Enum
+
+With message API , you can use both string and integer as the enum type , and with pattern api it must be integer. 
