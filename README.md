@@ -27,3 +27,5 @@ Not supported
 ## Enum
 
 With message API , you can use both string and integer as the enum type , and with pattern api it must be integer. 
+
+* http://blog.codingnow.com/2011/12/protocol_buffers_for_c.html (in Chinese)
