@@ -88,10 +88,32 @@ pbc_array_real(pbc_array array, int index) {
 }
 
 struct pbc_slice *
-pbc_array_bytes(pbc_array _array, int index) {
+pbc_array_slice(pbc_array _array, int index) {
 	struct array * a = (struct array *)_array;
 	if (index <0 || index > a->number) {
 		return NULL;
 	}
 	return (struct pbc_slice *) &(a->a[index]);
+}
+
+void 
+pbc_array_push_integer(pbc_array array, uint32_t low, uint32_t hi) {
+	pbc_var var;
+	var->integer.low = low;
+	var->integer.hi = hi;
+	_pbcA_push(array,var);
+}
+
+void 
+pbc_array_push_slice(pbc_array array, struct pbc_slice *s) {
+	pbc_var var;
+	var->m = *s;
+	_pbcA_push(array,var);
+}
+
+void 
+pbc_array_push_real(pbc_array array, double v) {
+	pbc_var var;
+	var->real = v;
+	_pbcA_push(array,var);
 }

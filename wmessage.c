@@ -170,11 +170,11 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 	switch (f->type) {
 	case PTYPE_INT64:
 	case PTYPE_UINT64: 
+	case PTYPE_INT32:
 		id |= WT_VARINT;
 		m->ptr += varint_encode32(id, m->ptr);
 		m->ptr += varint_encode((uint64_t)low | (uint64_t)hi << 32 , m->ptr);
 		break;
-	case PTYPE_INT32:
 	case PTYPE_UINT32:
 	case PTYPE_ENUM:
 	case PTYPE_BOOL:
@@ -205,36 +205,6 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 		m->ptr += varint_zigzag((uint64_t)low | (uint64_t)hi << 32 , m->ptr);
 		break;
 	}
-}
-
-static inline void
-float_encode(float v , uint8_t * buffer) {
-	union {
-		float v;
-		uint32_t e;
-	} u;
-	u.v = v;
-	buffer[0] = (uint8_t) (u.e & 0xff);
-	buffer[1] = (uint8_t) (u.e >> 8 & 0xff);
-	buffer[2] = (uint8_t) (u.e >> 16 & 0xff);
-	buffer[3] = (uint8_t) (u.e >> 24 & 0xff);
-}
-
-static inline void
-double_encode(double v , uint8_t * buffer) {
-	union {
-		float v;
-		uint64_t e;
-	} u;
-	u.v = v;
-	buffer[0] = (uint8_t) (u.e & 0xff);
-	buffer[1] = (uint8_t) (u.e >> 8 & 0xff);
-	buffer[2] = (uint8_t) (u.e >> 16 & 0xff);
-	buffer[3] = (uint8_t) (u.e >> 24 & 0xff);
-	buffer[4] = (uint8_t) (u.e >> 32 & 0xff);
-	buffer[5] = (uint8_t) (u.e >> 40 & 0xff);
-	buffer[6] = (uint8_t) (u.e >> 48 & 0xff);
-	buffer[7] = (uint8_t) (u.e >> 56 & 0xff);
 }
 
 void 
@@ -334,7 +304,6 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		}
 		id |= WT_VARINT;
 		m->ptr += varint_encode32(id, m->ptr);
-		_expand(m,10);
 		m->ptr += varint_encode32(enum_id, m->ptr);
 		break;
 	}
@@ -342,7 +311,6 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 	case PTYPE_BYTES:
 		id |= WT_LEND;
 		m->ptr += varint_encode32(id, m->ptr);
-		_expand(m,10);
 		m->ptr += varint_encode32(len, m->ptr);
 		_expand(m,len);
 		memcpy(m->ptr , v , len);

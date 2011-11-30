@@ -2,7 +2,7 @@
 
 all : test addressbook.pb descriptor.pb
 
-test : test_pbc.exe test_array.exe test_varint.exe test_map.exe test_addressbook.exe
+test : test_pbc.exe test_array.exe test_varint.exe test_map.exe test_addressbook.exe test_pattern.exe
 
 clean :
 	rm -f *.exe *.o *.pb
@@ -28,3 +28,5 @@ descriptor.pb : descriptor.proto
 test_addressbook.exe : test_addressbook.c context.c varint.c array.c pattern.c register.c proto.c map.c alloc.c rmessage.c wmessage.c bootstrap.c stringpool.c
 	gcc -g -Wall -o $@ $^
 
+test_pattern.exe : test_pattern.c context.c varint.c array.c pattern.c register.c proto.c map.c alloc.c rmessage.c wmessage.c bootstrap.c stringpool.c
+	gcc -g -Wall -o $@ $^

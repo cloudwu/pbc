@@ -19,5 +19,6 @@ struct pbc_pattern {
 };
 
 struct pbc_pattern * _pbcP_new(int n);
+int _pbcP_unpack_packed(uint8_t *buffer, int size, int ptype, pbc_array array);
 
 #endif

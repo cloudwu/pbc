@@ -44,8 +44,8 @@ set_default_v(void * output, int ctype, pbc_var defv) {
 	}
 }
 
-static void
-set_default(struct pbc_pattern *pat, uint8_t * output) {
+void
+pbc_pattern_set_default(struct pbc_pattern *pat, void *output) {
 	int i;
 	for (i=0;i<pat->count;i++) {
 		if (pat->f[i].ctype == CTYPE_ARRAY || pat->f[i].ctype == CTYPE_PACKED) {
@@ -137,27 +137,156 @@ write_integer(int ctype, struct atom *a, void *out) {
 
 static int unpack_array(int ptype, char *buffer, struct atom *, pbc_array _array);
 
+int
+_pbcP_unpack_packed(uint8_t *buffer, int size, int ptype, pbc_array array) {
+	pbc_var var;
+	var->integer.hi = 0;
+	int i;
+	switch(ptype) {
+	case PTYPE_DOUBLE:
+		if (size % 8 != 0)
+			return -1;
+		for (i=0;i<size;i+=8) {
+			union {
+				double d;
+				uint64_t i64;
+			} u;
+			u.i64 = (uint64_t)buffer[i] |
+				(uint64_t)buffer[i+1] << 8 |
+				(uint64_t)buffer[i+2] << 16 |
+				(uint64_t)buffer[i+3] << 24 |
+				(uint64_t)buffer[i+4] << 32 |
+				(uint64_t)buffer[i+5] << 40 |
+				(uint64_t)buffer[i+6] << 48 |
+				(uint64_t)buffer[i+7] << 56;
+			var->real = u.d;
+			_pbcA_push(array, var);
+		}
+		return size/8;
+	case PTYPE_FLOAT:
+		if (size % 4 != 0)
+			return -1;
+		for (i=0;i<size;i+=4) {
+			union {
+				float f;
+				uint32_t i32;
+			} u;
+			u.i32 = (uint32_t)buffer[i] |
+				(uint32_t)buffer[i+1] << 8 |
+				(uint32_t)buffer[i+2] << 16 |
+				(uint32_t)buffer[i+3] << 24;
+			var->real = (double)u.f;
+			_pbcA_push(array, var);
+		}
+		return size/4;
+	case PTYPE_FIXED32:
+	case PTYPE_SFIXED32:
+		if (size % 4 != 0)
+			return -1;
+		for (i=0;i<size;i+=4) {
+			var->integer.low = (uint32_t)buffer[i] |
+				(uint32_t)buffer[i+1] << 8 |
+				(uint32_t)buffer[i+2] << 16 |
+				(uint32_t)buffer[i+3] << 24;
+			_pbcA_push(array, var);
+		}
+		return size/4;
+	case PTYPE_FIXED64:
+	case PTYPE_SFIXED64:
+		if (size % 8 != 0)
+			return -1;
+		for (i=0;i<size;i+=8) {
+			var->integer.low = (uint32_t)buffer[i] |
+				(uint32_t)buffer[i+1] << 8 |
+				(uint32_t)buffer[i+2] << 16 |
+				(uint32_t)buffer[i+3] << 24;
+			var->integer.hi = (uint32_t)buffer[i+4] |
+				(uint32_t)buffer[i+5] << 8 |
+				(uint32_t)buffer[i+6] << 16 |
+				(uint32_t)buffer[i+7] << 24;
+			_pbcA_push(array, var);
+		}
+		return size/8;
+	case PTYPE_INT64:
+	case PTYPE_UINT64:
+	case PTYPE_INT32:
+	case PTYPE_UINT32:
+	case PTYPE_ENUM:	// enum must be integer type in pattern mode
+	case PTYPE_BOOL: {
+		int n = 0;
+		while (size > 0) {
+			int len;
+			if (size >= 10) {
+				len = varint_decode(buffer, &(var->integer));
+			} else {
+				uint8_t temp[10];
+				memcpy(temp, buffer, size);
+				len = varint_decode(buffer, &(var->integer));
+				if (len > size)
+					return -1;
+			}
+			_pbcA_push(array, var);
+			buffer += len;
+			size -= len;
+			++n;
+		}
+		return n;
+	}
+	case PTYPE_SINT32: {
+		int n = 0;
+		while (size > 0) {
+			int len;
+			if (size >= 10) {
+				len = varint_decode(buffer, &(var->integer));
+				varint_dezigzag32(&(var->integer));
+			} else {
+				uint8_t temp[10];
+				memcpy(temp, buffer, size);
+				len = varint_decode(buffer, &(var->integer));
+				if (len > size)
+					return -1;
+				varint_dezigzag32(&(var->integer));
+			}
+			_pbcA_push(array, var);
+			buffer += len;
+			size -= len;
+			++n;
+		}
+		return n;
+	}
+	case PTYPE_SINT64: {
+		int n = 0;
+		while (size > 0) {
+			int len;
+			if (size >= 10) {
+				len = varint_decode(buffer, &(var->integer));
+				varint_dezigzag64(&(var->integer));
+			} else {
+				uint8_t temp[10];
+				memcpy(temp, buffer, size);
+				len = varint_decode(buffer, &(var->integer));
+				if (len > size)
+					return -1;
+				varint_dezigzag64(&(var->integer));
+			}
+			_pbcA_push(array, var);
+			buffer += len;
+			size -= len;
+			++n;
+		}
+		return n;
+	}
+	}
+	return -1;
+}
+
 static int
 unpack_field(int ctype, int ptype, char * buffer, struct atom * a, void *out) {
 	if (ctype == CTYPE_ARRAY) {
 		return unpack_array(ptype, buffer, a , out);
 	}
 	if (ctype == CTYPE_PACKED) {
-		pbc_ctx packed;
-		struct context * ctx = (struct context *)packed;
-
-		int n = _pbcC_open_packed(packed , ptype, 
-			(uint8_t *)buffer + a->v.s.start, a->v.s.end - a->v.s.start);
-		if (n<=0)
-			return -1;
-		int i;
-		int r =0;
-		for (i=0;i<n;i++) {
-			r |= unpack_array(ptype , buffer , &(ctx->a[i]) , out);
-		}
-		if (r)
-			return -1;
-		return 0;
+		return _pbcP_unpack_packed((uint8_t *)buffer + a->v.s.start, a->v.s.end - a->v.s.start,	ptype, out);
 	}
 	switch(ptype) {
 	case PTYPE_DOUBLE:
@@ -219,6 +348,439 @@ pbc_pattern_close_arrays(struct pbc_pattern *pat, void * data) {
 	}
 }
 
+static inline int
+_pack_wiretype(uint32_t wt, struct pbc_slice *s) {
+	int len;
+	if (s->len < 10) {
+		uint8_t temp[10];
+		len = varint_encode32(wt, temp);
+		if (len > s->len)
+			return -1;
+		memcpy(s->buffer, temp, len);
+	} else {
+		len = varint_encode32(wt, s->buffer);
+	}
+	s->buffer = (char *)s->buffer + len;
+	s->len -= len;
+	return len;
+}
+
+static inline int
+_pack_varint64(uint64_t i64, struct pbc_slice *s) {
+	int len;
+	if (s->len < 10) {
+		uint8_t temp[10];
+		len = varint_encode(i64, temp);
+		if (len > s->len)
+			return -1;
+		memcpy(s->buffer, temp, len);
+	} else {
+		len = varint_encode(i64, s->buffer);
+	}
+	s->buffer = (char *)s->buffer + len;
+	s->len -= len;
+	return len;
+}
+
+static inline int
+_pack_sint32(uint32_t v, struct pbc_slice *s) {
+	int len;
+	if (s->len < 10) {
+		uint8_t temp[10];
+		len = varint_zigzag32(v, temp);
+		if (len > s->len)
+			return -1;
+		memcpy(s->buffer, temp, len);
+	} else {
+		len = varint_zigzag32(v, s->buffer);
+	}
+	s->buffer = (char *)s->buffer + len;
+	s->len -= len;
+	return len;
+}
+
+static inline int
+_pack_sint64(uint64_t v, struct pbc_slice *s) {
+	int len;
+	if (s->len < 10) {
+		uint8_t temp[10];
+		len = varint_zigzag(v, temp);
+		if (len > s->len)
+			return -1;
+		memcpy(s->buffer, temp, len);
+	} else {
+		len = varint_zigzag(v, s->buffer);
+	}
+	s->buffer = (char *)s->buffer + len;
+	s->len -= len;
+	return len;
+}
+
+static inline void
+_fix32_encode(uint32_t v , uint8_t *buffer) {
+	buffer[0] = (uint8_t) v;
+	buffer[1] = (uint8_t) (v >> 8);
+	buffer[2] = (uint8_t) (v >> 16);
+	buffer[3] = (uint8_t) (v >> 24);
+}
+
+static inline void
+_fix64_encode(struct longlong *v , uint8_t *buffer) {
+	_fix32_encode(v->low , buffer);
+	_fix32_encode(v->hi, buffer + 4);
+}
+
+static int
+_pack_number(int ptype , int ctype , struct pbc_slice *s, void *input) {
+	pbc_var var;
+	if (ctype == CTYPE_VAR) {
+		memcpy(var, input, sizeof(var));
+	} else {
+		switch (ctype) {
+		case CTYPE_INT32:
+			var->integer.low = *(uint32_t *)input;
+			var->integer.hi = 0;
+			break;
+		case CTYPE_INT64: {
+			uint64_t v = *(uint64_t *)input;
+			var->integer.low = (uint32_t) (v & 0xffffffff);
+			var->integer.hi = (uint32_t) (v >> 32);
+			break;
+		}
+		case CTYPE_INT16:
+			var->integer.low = *(uint16_t *)input;
+			var->integer.hi = 0;
+			break;
+		case CTYPE_INT8:
+			var->integer.low = *(uint8_t *)input;
+			var->integer.hi = 0;
+			break;
+		case CTYPE_BOOL:
+			var->integer.low = *(bool *)input;
+			var->integer.hi = 0;
+			break;
+		case CTYPE_DOUBLE:
+			var->real = *(double *)input;
+			break;
+		case CTYPE_FLOAT:
+			var->real = *(float *)input;
+			break;
+		}
+	}
+
+	switch(ptype) {
+	case PTYPE_FIXED64:
+	case PTYPE_SFIXED64:
+		if (s->len < 8)
+			return -1;
+		_fix64_encode(&(var->integer), s->buffer);
+		s->buffer = (char *)s->buffer + 8;
+		s->len -= 8;
+		return 8;
+	case PTYPE_DOUBLE:
+		if (s->len < 8)
+			return -1;
+		double_encode(var->real , s->buffer);
+		s->buffer = (char *)s->buffer + 8;
+		s->len -= 8;
+		return 8;
+	case PTYPE_FLOAT:
+		if (s->len < 4)
+			return -1;
+		float_encode((float)var->real , s->buffer);
+		s->buffer = (char *)s->buffer + 4;
+		s->len -= 4;
+		return 4;
+	case PTYPE_FIXED32:
+	case PTYPE_SFIXED32:
+		if (s->len < 4)
+			return -1;
+		_fix32_encode(var->integer.low, s->buffer);
+		s->buffer = (char *)s->buffer + 4;
+		s->len -= 4;
+		return 4;
+	case PTYPE_UINT64:
+	case PTYPE_INT64:
+	case PTYPE_INT32:
+		return _pack_varint64((uint64_t)var->integer.low | (uint64_t)var->integer.hi << 32, s);
+	case PTYPE_UINT32:
+	case PTYPE_BOOL:
+	case PTYPE_ENUM:
+		return _pack_wiretype(var->integer.low , s);
+	case PTYPE_SINT32: 
+		return _pack_sint32(var->integer.low , s);
+	case PTYPE_SINT64:
+		return _pack_sint64((uint64_t)var->integer.low | (uint64_t)var->integer.hi << 32 , s);
+	default:
+		return -1;
+	}
+}
+
+static int
+_pack_field(struct _pattern_field *pf , int ctype, struct pbc_slice *s, void *input) {
+	int wiretype;
+	int ret = 0;
+	int len;
+	struct pbc_slice * input_slice;
+	struct pbc_slice string_slice;
+
+	switch(pf->ptype) {
+	case PTYPE_FIXED64:
+	case PTYPE_SFIXED64:
+	case PTYPE_DOUBLE:
+		wiretype = WT_BIT64;
+		goto _number;
+	case PTYPE_FIXED32:
+	case PTYPE_SFIXED32:
+	case PTYPE_FLOAT:
+		wiretype = WT_BIT32;
+		goto _number;
+	case PTYPE_UINT64:
+	case PTYPE_INT64:
+	case PTYPE_INT32:
+	case PTYPE_BOOL:
+	case PTYPE_UINT32:
+	case PTYPE_ENUM:
+	case PTYPE_SINT32:
+	case PTYPE_SINT64:
+		wiretype = WT_VARINT;
+		goto _number;
+	case PTYPE_STRING:
+		wiretype = WT_LEND;
+		input_slice = input;
+		if (input_slice->len > 0)
+			goto _string;
+		string_slice.buffer = input_slice->buffer;
+		string_slice.len = strlen((const char *)string_slice.buffer) - input_slice->len;
+		input_slice = &string_slice;
+	
+		goto _string;
+	case PTYPE_MESSAGE:
+	case PTYPE_BYTES:
+		wiretype = WT_LEND;
+		goto _bytes;
+	default:
+		break;
+	}
+
+	return -1;
+_bytes:
+	input_slice = input;
+_string:
+	len = _pack_wiretype(pf->id << 3 | WT_LEND , s);
+	if (len < 0) {
+		return len;
+	}
+	ret += len;
+	len = _pack_wiretype(input_slice->len , s);
+	if (len < 0) {
+		return len;
+	}
+	ret += len;
+	if (input_slice->len > s->len)
+		return -1;
+	memcpy(s->buffer , input_slice->buffer, input_slice->len);
+	ret += input_slice->len;
+	s->buffer = (char *)s->buffer + input_slice->len;
+	s->len -= input_slice->len;
+
+	return ret;
+_number:
+	len = _pack_wiretype(pf->id << 3 | wiretype , s);
+	if (len < 0) {
+		return len;
+	}
+	ret += len;
+	len = _pack_number(pf->ptype, ctype , s, input);
+	if (len < 0) {
+		return len;
+	}
+	ret += len;
+
+	return ret;
+}
+
+static int 
+_pack_repeated(struct _pattern_field *pf , struct pbc_slice *s, pbc_array array) {
+	int n = pbc_array_size(array);
+	int ret = 0;
+	if (n>0) {
+		int i;
+		for (i=0;i<n;i++) {
+			int len = _pack_field(pf , CTYPE_VAR , s , _pbcA_index_p(array , i));
+			if (len < 0)
+				return len;
+			ret += len;
+		}
+	}
+	return ret;
+}
+
+static int
+_pack_packed_fixed(struct _pattern_field *pf , int width, struct pbc_slice *s, pbc_array array) {
+	int len;
+	int n = pbc_array_size(array);
+	len = _pack_wiretype(n * width , s);
+	if (len < 0) {
+		return len;
+	}
+	if (s->len - len <  n * width)
+		return -1;
+	int i;
+	for (i=0;i<n;i++) {
+		_pack_number(pf->ptype, CTYPE_VAR , s, _pbcA_index_p(array, i));
+	}
+
+	return len + n * width;
+}
+
+static int
+_pack_packed_varint(struct _pattern_field *pf , struct pbc_slice *slice, pbc_array array) {
+	struct pbc_slice s = * slice;
+	int n = pbc_array_size(array);
+	int estimate = n; 
+	int estimate_len = _pack_wiretype(estimate , &s);
+	if (estimate_len < 0) {
+		return -1;
+	}
+	int i;
+	int packed_len = 0;
+	for (i=0;i<n;i++) {
+		int len	= _pack_number(pf->ptype, CTYPE_VAR , &s, _pbcA_index_p(array, i));
+		if (len < 0)
+			return -1;
+		packed_len += len;
+	}
+	if (packed_len == estimate) {
+		*slice = s;
+		return packed_len + estimate_len;
+	}
+	uint8_t temp[10];
+	struct pbc_slice header_slice = { temp , 10 };
+	int header_len = _pack_wiretype(packed_len , &header_slice);
+	if (header_len == estimate_len) {
+		memcpy(slice->buffer , temp , header_len);
+		*slice = s;
+		return packed_len + estimate_len;
+	}
+	if (header_len + packed_len > slice->len)
+		return -1;
+	memmove((char *)slice->buffer + header_len , (char *)slice->buffer + estimate_len, packed_len);
+	memcpy(slice->buffer , temp , header_len);
+	slice->buffer = (char *)slice->buffer + packed_len + header_len;
+	slice->len -= packed_len + header_len;
+	return packed_len + header_len;
+}
+
+static int 
+_pack_packed(struct _pattern_field *pf , struct pbc_slice *s, pbc_array array) {
+	int n = pbc_array_size(array);
+	if (n == 0)
+		return 0;
+
+	int ret = 0;
+	int len;
+	len = _pack_wiretype(pf->id << 3 | WT_LEND , s);
+	if (len < 0) {
+		return len;
+	}
+	ret += len;
+
+	switch (pf->ptype) {
+	case PTYPE_FIXED64:
+	case PTYPE_SFIXED64:
+	case PTYPE_DOUBLE:
+		len = _pack_packed_fixed(pf, 8, s , array);
+		if (len < 0)
+			return len;
+		break;
+	case PTYPE_FIXED32:
+	case PTYPE_SFIXED32:
+	case PTYPE_FLOAT:
+		len = _pack_packed_fixed(pf, 4, s , array);
+		if (len < 0)
+			return len;
+		break;
+	case PTYPE_UINT64:
+	case PTYPE_INT64:
+	case PTYPE_INT32:
+	case PTYPE_BOOL:
+	case PTYPE_UINT32:
+	case PTYPE_ENUM:
+	case PTYPE_SINT32:
+	case PTYPE_SINT64:
+		len = _pack_packed_varint(pf, s, array);
+		if (len < 0)
+			return len;
+		break;
+	}
+	ret += len;
+
+	return ret;
+}
+
+static bool
+_is_default(struct _pattern_field * pf, void * in) {
+	switch (pf->ctype) {
+	case CTYPE_INT64: {
+		struct longlong * d64 = &pf->defv->integer;
+		return ((uint64_t)d64->low | (uint64_t)d64->hi << 32) == *(uint64_t *)in;
+	}
+	case CTYPE_DOUBLE: 
+		return pf->defv->real == *(double *)in;
+	case CTYPE_FLOAT:
+		return (float)(pf->defv->real) == *(float *)in;
+	case CTYPE_INT32:
+		return pf->defv->integer.low == *(uint32_t *)in;
+	case CTYPE_INT16:
+		return (uint16_t)(pf->defv->integer.low) == *(uint16_t *)in;
+	case CTYPE_INT8:
+		return (uint8_t)(pf->defv->integer.low) == *(uint8_t *)in;
+	case CTYPE_BOOL:
+		if (pf->defv->integer.low)
+			return *(bool *)in == true;
+		else
+			return *(bool *)in == false;
+	}
+	if (pf->ptype == PTYPE_STRING) {
+		struct pbc_slice *slice = in;
+		int len = slice->len;
+		if (len <= 0) {
+			return strcmp(pf->defv->s.str, slice->buffer) == 0;
+		}
+		return len == pf->defv->s.len && memcmp(pf->defv->s.str, slice->buffer, len)==0;
+	}
+
+	return false;
+}
+
+int 
+pbc_pattern_pack(struct pbc_pattern *pat, void *input, struct pbc_slice * s)
+{
+	struct pbc_slice slice = *s;
+	int i;
+	for (i=0;i<pat->count;i++) {
+		struct _pattern_field * pf = &pat->f[i];
+		void * in = (char *)input + pf->offset;
+		int len = 0;
+		if (pf->ctype == CTYPE_PACKED) {
+			len = _pack_packed(pf, &slice , in);
+		} else if (pf->ctype == CTYPE_ARRAY) {
+			len = _pack_repeated(pf, &slice , in);
+		} else {
+			if (!_is_default(pf , input)) {
+				len = _pack_field(pf, pf->ctype, &slice, in);
+			}
+		}
+		if (len < 0)
+			return len;
+	}
+	int len = (char *)slice.buffer - (char *)s->buffer;
+	int ret = s->len - len;
+	s->len = len;
+	return ret;
+}
+
 int 
 pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) {
 	pbc_ctx _ctx;
@@ -227,7 +789,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 		_pbcC_close(_ctx);
 		return r+1;
 	}
-	set_default(pat, output);
+	pbc_pattern_set_default(pat, output);
 
 	struct context * ctx = (struct context *)_ctx;
 
@@ -237,7 +799,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 		struct _pattern_field * f = bsearch_pattern(pat, ctx->a[i].id);
 		if (f) {
 			char * out = (char *)output + f->offset;
-			if (unpack_field(f->ctype , f->ptype , ctx->buffer , &ctx->a[i], out) != 0) {
+			if (unpack_field(f->ctype , f->ptype , ctx->buffer , &ctx->a[i], out) < 0) {
 				pbc_pattern_close_arrays(pat, output);
 				_pbcC_close(_ctx);
 				return -i-1;
@@ -425,4 +987,3 @@ void
 pbc_pattern_delete(struct pbc_pattern * pat) {
 	free(pat);
 }
-

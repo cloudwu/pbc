@@ -91,4 +91,34 @@ read_float(struct atom * a) {
 	return u.f;
 }
 
+static inline void
+double_encode(double v , uint8_t * buffer) {
+	union {
+		float v;
+		uint64_t e;
+	} u;
+	u.v = v;
+	buffer[0] = (uint8_t) (u.e & 0xff);
+	buffer[1] = (uint8_t) (u.e >> 8 & 0xff);
+	buffer[2] = (uint8_t) (u.e >> 16 & 0xff);
+	buffer[3] = (uint8_t) (u.e >> 24 & 0xff);
+	buffer[4] = (uint8_t) (u.e >> 32 & 0xff);
+	buffer[5] = (uint8_t) (u.e >> 40 & 0xff);
+	buffer[6] = (uint8_t) (u.e >> 48 & 0xff);
+	buffer[7] = (uint8_t) (u.e >> 56 & 0xff);
+}
+
+static inline void
+float_encode(float v , uint8_t * buffer) {
+	union {
+		float v;
+		uint32_t e;
+	} u;
+	u.v = v;
+	buffer[0] = (uint8_t) (u.e & 0xff);
+	buffer[1] = (uint8_t) (u.e >> 8 & 0xff);
+	buffer[2] = (uint8_t) (u.e >> 16 & 0xff);
+	buffer[3] = (uint8_t) (u.e >> 24 & 0xff);
+}
+
 #endif

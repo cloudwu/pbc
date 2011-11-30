@@ -6,5 +6,4 @@ Working in progress.
 
 ## Todo
 
-* pattern mode pack
 * extension support

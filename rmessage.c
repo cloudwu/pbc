@@ -133,69 +133,20 @@ read_value(struct _field *f, struct atom * a, uint8_t *buffer) {
 
 static void
 push_value_packed(pbc_array array, struct _field *f, struct atom * aa, uint8_t *buffer) {
-	pbc_ctx packed;
-	struct context * ctx = (struct context *)packed;
-	int n = _pbcC_open_packed(packed , f->type, 
-			(uint8_t *)buffer + aa->v.s.start, aa->v.s.end - aa->v.s.start);
+	int n = _pbcP_unpack_packed((uint8_t *)buffer + aa->v.s.start, aa->v.s.end - aa->v.s.start,
+		f->type , array);
 	if (n<=0) {
 		// todo  : error
 		return;
 	}
-	int i;
-	pbc_var v;
-
-	switch(f->type) {
-	case PTYPE_DOUBLE:
+	if (f->type == PTYPE_ENUM) {
+		int i;
 		for (i=0;i<n;i++) {
-			v->real = read_double(&ctx->a[i]);
-			_pbcA_push(array,v);
+			union _pbc_var * v = _pbcA_index_p(array, i);
+			int id = v->integer.low;
+			v->e.id = id;
+			v->e.name = _pbcM_ip_query(f->type_name.e->id , id);
 		}
-		break;
-	case PTYPE_FLOAT:
-		for (i=0;i<n;i++) {
-			v->real = read_float(&ctx->a[i]);
-			_pbcA_push(array,v);
-		}
-		break;
-	case PTYPE_ENUM:
-		for (i=0;i<n;i++) {
-			struct atom *a = &ctx->a[i];
-			v->e.id = a->v.i.low;
-			v->e.name = _pbcM_ip_query(f->type_name.e->id , a->v.i.low);
-			_pbcA_push(array,v);
-		}
-		break;
-	case PTYPE_INT64:
-	case PTYPE_UINT64:
-	case PTYPE_INT32:
-	case PTYPE_UINT32:
-	case PTYPE_FIXED32:
-	case PTYPE_FIXED64:
-	case PTYPE_SFIXED32:
-	case PTYPE_SFIXED64:
-	case PTYPE_BOOL:
-		for (i=0;i<n;i++) {
-			struct atom *a = &ctx->a[i];
-			v->integer = a->v.i;
-			_pbcA_push(array,v);
-		}
-		break;
-	case PTYPE_SINT32: 
-		for (i=0;i<n;i++) {
-			struct atom *a = &ctx->a[i];
-			v->integer = a->v.i;
-			varint_dezigzag32(&(v->integer));
-			_pbcA_push(array,v);
-		}
-		break;
-	case PTYPE_SINT64:
-		for (i=0;i<n;i++) {
-			struct atom *a = &ctx->a[i];
-			v->integer = a->v.i;
-			varint_dezigzag64(&(v->integer));
-			_pbcA_push(array,v);
-		}
-		break;
 	}
 }
 
