@@ -217,11 +217,11 @@ _pbcP_unpack_packed(uint8_t *buffer, int size, int ptype, pbc_array array) {
 		while (size > 0) {
 			int len;
 			if (size >= 10) {
-				len = varint_decode(buffer, &(var->integer));
+				len = _pbcV_decode(buffer, &(var->integer));
 			} else {
 				uint8_t temp[10];
 				memcpy(temp, buffer, size);
-				len = varint_decode(buffer, &(var->integer));
+				len = _pbcV_decode(buffer, &(var->integer));
 				if (len > size)
 					return -1;
 			}
@@ -237,15 +237,15 @@ _pbcP_unpack_packed(uint8_t *buffer, int size, int ptype, pbc_array array) {
 		while (size > 0) {
 			int len;
 			if (size >= 10) {
-				len = varint_decode(buffer, &(var->integer));
-				varint_dezigzag32(&(var->integer));
+				len = _pbcV_decode(buffer, &(var->integer));
+				_pbcV_dezigzag32(&(var->integer));
 			} else {
 				uint8_t temp[10];
 				memcpy(temp, buffer, size);
-				len = varint_decode(buffer, &(var->integer));
+				len = _pbcV_decode(buffer, &(var->integer));
 				if (len > size)
 					return -1;
-				varint_dezigzag32(&(var->integer));
+				_pbcV_dezigzag32(&(var->integer));
 			}
 			_pbcA_push(array, var);
 			buffer += len;
@@ -259,15 +259,15 @@ _pbcP_unpack_packed(uint8_t *buffer, int size, int ptype, pbc_array array) {
 		while (size > 0) {
 			int len;
 			if (size >= 10) {
-				len = varint_decode(buffer, &(var->integer));
-				varint_dezigzag64(&(var->integer));
+				len = _pbcV_decode(buffer, &(var->integer));
+				_pbcV_dezigzag64(&(var->integer));
 			} else {
 				uint8_t temp[10];
 				memcpy(temp, buffer, size);
-				len = varint_decode(buffer, &(var->integer));
+				len = _pbcV_decode(buffer, &(var->integer));
 				if (len > size)
 					return -1;
-				varint_dezigzag64(&(var->integer));
+				_pbcV_dezigzag64(&(var->integer));
 			}
 			_pbcA_push(array, var);
 			buffer += len;
@@ -306,12 +306,12 @@ unpack_field(int ctype, int ptype, char * buffer, struct atom * a, void *out) {
 		return write_integer(ctype, a , out);
 	case PTYPE_SINT32: {
 		struct longlong temp = a->v.i;
-		varint_dezigzag32(&temp);
+		_pbcV_dezigzag32(&temp);
 		return write_longlong(ctype, &temp , out);
 	}
 	case PTYPE_SINT64: {
 		struct longlong temp = a->v.i;
-		varint_dezigzag64(&temp);
+		_pbcV_dezigzag64(&temp);
 		return write_longlong(ctype, &temp , out);
 	}
 	case PTYPE_MESSAGE: 
@@ -353,12 +353,12 @@ _pack_wiretype(uint32_t wt, struct pbc_slice *s) {
 	int len;
 	if (s->len < 10) {
 		uint8_t temp[10];
-		len = varint_encode32(wt, temp);
+		len = _pbcV_encode32(wt, temp);
 		if (len > s->len)
 			return -1;
 		memcpy(s->buffer, temp, len);
 	} else {
-		len = varint_encode32(wt, s->buffer);
+		len = _pbcV_encode32(wt, s->buffer);
 	}
 	s->buffer = (char *)s->buffer + len;
 	s->len -= len;
@@ -370,12 +370,12 @@ _pack_varint64(uint64_t i64, struct pbc_slice *s) {
 	int len;
 	if (s->len < 10) {
 		uint8_t temp[10];
-		len = varint_encode(i64, temp);
+		len = _pbcV_encode(i64, temp);
 		if (len > s->len)
 			return -1;
 		memcpy(s->buffer, temp, len);
 	} else {
-		len = varint_encode(i64, s->buffer);
+		len = _pbcV_encode(i64, s->buffer);
 	}
 	s->buffer = (char *)s->buffer + len;
 	s->len -= len;
@@ -387,12 +387,12 @@ _pack_sint32(uint32_t v, struct pbc_slice *s) {
 	int len;
 	if (s->len < 10) {
 		uint8_t temp[10];
-		len = varint_zigzag32(v, temp);
+		len = _pbcV_zigzag32(v, temp);
 		if (len > s->len)
 			return -1;
 		memcpy(s->buffer, temp, len);
 	} else {
-		len = varint_zigzag32(v, s->buffer);
+		len = _pbcV_zigzag32(v, s->buffer);
 	}
 	s->buffer = (char *)s->buffer + len;
 	s->len -= len;
@@ -404,12 +404,12 @@ _pack_sint64(uint64_t v, struct pbc_slice *s) {
 	int len;
 	if (s->len < 10) {
 		uint8_t temp[10];
-		len = varint_zigzag(v, temp);
+		len = _pbcV_zigzag(v, temp);
 		if (len > s->len)
 			return -1;
 		memcpy(s->buffer, temp, len);
 	} else {
-		len = varint_zigzag(v, s->buffer);
+		len = _pbcV_zigzag(v, s->buffer);
 	}
 	s->buffer = (char *)s->buffer + len;
 	s->len -= len;

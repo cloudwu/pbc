@@ -26,34 +26,34 @@ PBC is a google protocol buffers library for C without code generation.
     }
 
 ```C
-	struct pbc_rmessage * m = pbc_rmessage_new(env, "tutorial.Person", slice);
-	printf("name = %s\n", pbc_rmessage_string(m , "name" , 0 , NULL));
-	printf("id = %d\n", pbc_rmessage_integer(m , "id" , 0 , NULL));
-	printf("email = %s\n", pbc_rmessage_string(m , "email" , 0 , NULL));
+struct pbc_rmessage * m = pbc_rmessage_new(env, "tutorial.Person", slice);
+printf("name = %s\n", pbc_rmessage_string(m , "name" , 0 , NULL));
+printf("id = %d\n", pbc_rmessage_integer(m , "id" , 0 , NULL));
+printf("email = %s\n", pbc_rmessage_string(m , "email" , 0 , NULL));
 
-	int phone_n = pbc_rmessage_size(m, "phone");
-	int i;
+int phone_n = pbc_rmessage_size(m, "phone");
+int i;
 
-	for (i=0;i<phone_n;i++) {
-		struct pbc_rmessage * p = pbc_rmessage_message(m , "phone", i);
-		printf("\tnumber[%d] = %s\n",i,pbc_rmessage_string(p , "number", i ,NULL));
-		printf("\ttype[%d] = %s\n",i,pbc_rmessage_string(p, "type", i, NULL));
-	}
+for (i=0;i<phone_n;i++) {
+	struct pbc_rmessage * p = pbc_rmessage_message(m , "phone", i);
+	printf("\tnumber[%d] = %s\n",i,pbc_rmessage_string(p , "number", i ,NULL));
+	printf("\ttype[%d] = %s\n",i,pbc_rmessage_string(p, "type", i, NULL));
+}
 
-	pbc_rmessage_delete(m);
+pbc_rmessage_delete(m);
 ```
 
 ## Message API
 
 You can use *wmessage* for encoding , and *rmessage* for decoding.
 
-See test_addressbook.c for detail.
+See test/addressbook.c for detail.
 
 ## Pattern API
 
 If you need higher performance , you can use pbc_pattern_xxx api .
 
-See test_pattern.c for detail.
+See test/pattern.c for detail.
 
 pattern api is faster, and less memory used, and you can access data from native C struct . 
 
@@ -71,6 +71,6 @@ With message API , you can use both string and integer as the enum type , and wi
 
 ## Question ?
 
-Send me an email : http://www.codingnow.com/2000/gmail.gif
-
-* http://blog.codingnow.com/2011/12/protocol_buffers_for_c.html (in Chinese)
+* Send me an email : http://www.codingnow.com/2000/gmail.gif
+* My Blog : http://blog.codingnow.com
+* Design : http://blog.codingnow.com/2011/12/protocol_buffers_for_c.html (in Chinese)

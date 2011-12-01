@@ -103,12 +103,12 @@ read_value(struct _field *f, struct atom * a, uint8_t *buffer) {
 	case PTYPE_SINT32: 
 		v = malloc(SIZE_VAR);
 		v->v.var->integer = a->v.i;
-		varint_dezigzag32(&(v->v.var->integer));
+		_pbcV_dezigzag32(&(v->v.var->integer));
 		break;
 	case PTYPE_SINT64:
 		v = malloc(SIZE_VAR);
 		v->v.var->integer = a->v.i;
-		varint_dezigzag64(&(v->v.var->integer));
+		_pbcV_dezigzag64(&(v->v.var->integer));
 		break;
 	case PTYPE_STRING:
 		v = read_string(a,f,buffer);
@@ -178,11 +178,11 @@ push_value_array(pbc_array array, struct _field *f, struct atom * a, uint8_t *bu
 		break;
 	case PTYPE_SINT32: 
 		v->integer = a->v.i;
-		varint_dezigzag32(&(v->integer));
+		_pbcV_dezigzag32(&(v->integer));
 		break;
 	case PTYPE_SINT64:
 		v->integer = a->v.i;
-		varint_dezigzag64(&(v->integer));
+		_pbcV_dezigzag64(&(v->integer));
 		break;
 	case PTYPE_STRING:
 		read_string_var(v,a,f,buffer);

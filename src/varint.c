@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 inline int
-varint_encode32(uint32_t number, uint8_t buffer[10])
+_pbcV_encode32(uint32_t number, uint8_t buffer[10])
 {
 	if (number < 0x80) {
 		buffer[0] = (uint8_t) number ; 
@@ -32,10 +32,10 @@ varint_encode32(uint32_t number, uint8_t buffer[10])
 }
 
 int
-varint_encode(uint64_t number, uint8_t buffer[10]) 
+_pbcV_encode(uint64_t number, uint8_t buffer[10]) 
 {
 	if ((number & 0xffffffff) == number) {
-		return varint_encode32((uint32_t)number , buffer);
+		return _pbcV_encode32((uint32_t)number , buffer);
 	}
 	int i = 0;
 	do {
@@ -48,7 +48,7 @@ varint_encode(uint64_t number, uint8_t buffer[10])
 }
 
 int
-varint_decode(uint8_t buffer[10], struct longlong *result) {
+_pbcV_decode(uint8_t buffer[10], struct longlong *result) {
 	if (!(buffer[0] & 0x80)) {
 		result->low = buffer[0];
 		result->hi = 0;
@@ -80,21 +80,21 @@ varint_decode(uint8_t buffer[10], struct longlong *result) {
 }
 
 int 
-varint_zigzag32(int32_t n, uint8_t buffer[10])
+_pbcV_zigzag32(int32_t n, uint8_t buffer[10])
 {
 	n = (n << 1) ^ (n >> 31);
-	return varint_encode32(n,buffer);
+	return _pbcV_encode32(n,buffer);
 }
 
 int 
-varint_zigzag(int64_t n, uint8_t buffer[10])
+_pbcV_zigzag(int64_t n, uint8_t buffer[10])
 {
 	n = (n << 1) ^ (n >> 63);
-	return varint_encode(n,buffer);
+	return _pbcV_encode(n,buffer);
 }
 
 void
-varint_dezigzag64(struct longlong *r)
+_pbcV_dezigzag64(struct longlong *r)
 {
 	uint32_t low = r->low;
 	r->low = ((low >> 1) | ((r->hi & 1) << 31)) ^ - (low & 1);
@@ -102,7 +102,7 @@ varint_dezigzag64(struct longlong *r)
 }
 
 void
-varint_dezigzag32(struct longlong *r)
+_pbcV_dezigzag32(struct longlong *r)
 {
 	uint32_t low = r->low;
 	r->low = (low >> 1) ^ - (low & 1);

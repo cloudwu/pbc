@@ -172,37 +172,37 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 	case PTYPE_UINT64: 
 	case PTYPE_INT32:
 		id |= WT_VARINT;
-		m->ptr += varint_encode32(id, m->ptr);
-		m->ptr += varint_encode((uint64_t)low | (uint64_t)hi << 32 , m->ptr);
+		m->ptr += _pbcV_encode32(id, m->ptr);
+		m->ptr += _pbcV_encode((uint64_t)low | (uint64_t)hi << 32 , m->ptr);
 		break;
 	case PTYPE_UINT32:
 	case PTYPE_ENUM:
 	case PTYPE_BOOL:
 		id |= WT_VARINT;
-		m->ptr += varint_encode32(id, m->ptr);
-		m->ptr += varint_encode32(low, m->ptr);
+		m->ptr += _pbcV_encode32(id, m->ptr);
+		m->ptr += _pbcV_encode32(low, m->ptr);
 		break;
 	case PTYPE_FIXED64:
 	case PTYPE_SFIXED64:
 		id |= WT_BIT64;
-		m->ptr += varint_encode32(id, m->ptr);
+		m->ptr += _pbcV_encode32(id, m->ptr);
 		int64_encode(low,hi,m->ptr);
 		break;
 	case PTYPE_FIXED32:
 	case PTYPE_SFIXED32:
 		id |= WT_BIT32;
-		m->ptr += varint_encode32(id, m->ptr);
+		m->ptr += _pbcV_encode32(id, m->ptr);
 		int32_encode(low,m->ptr);
 		break;
 	case PTYPE_SINT32:
 		id |= WT_VARINT;
-		m->ptr += varint_encode32(id, m->ptr);
-		m->ptr += varint_zigzag32(low, m->ptr);
+		m->ptr += _pbcV_encode32(id, m->ptr);
+		m->ptr += _pbcV_zigzag32(low, m->ptr);
 		break;
 	case PTYPE_SINT64:
 		id |= WT_VARINT;
-		m->ptr += varint_encode32(id, m->ptr);
-		m->ptr += varint_zigzag((uint64_t)low | (uint64_t)hi << 32 , m->ptr);
+		m->ptr += _pbcV_encode32(id, m->ptr);
+		m->ptr += _pbcV_zigzag((uint64_t)low | (uint64_t)hi << 32 , m->ptr);
 		break;
 	}
 }
@@ -228,14 +228,14 @@ pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
 	switch (f->type) {
 	case PTYPE_FLOAT: {
 		id |= WT_BIT32;
-		m->ptr += varint_encode32(id, m->ptr);
+		m->ptr += _pbcV_encode32(id, m->ptr);
 		float_encode(v , m->ptr);
 		m->ptr += 4;
 		break;
 	}
 	case PTYPE_DOUBLE:
 		id |= WT_BIT32;
-		m->ptr += varint_encode32(id, m->ptr);
+		m->ptr += _pbcV_encode32(id, m->ptr);
 		double_encode(v , m->ptr);
 		m->ptr += 8;
 		break;
@@ -303,15 +303,15 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 			return;
 		}
 		id |= WT_VARINT;
-		m->ptr += varint_encode32(id, m->ptr);
-		m->ptr += varint_encode32(enum_id, m->ptr);
+		m->ptr += _pbcV_encode32(id, m->ptr);
+		m->ptr += _pbcV_encode32(enum_id, m->ptr);
 		break;
 	}
 	case PTYPE_STRING:
 	case PTYPE_BYTES:
 		id |= WT_LEND;
-		m->ptr += varint_encode32(id, m->ptr);
-		m->ptr += varint_encode32(len, m->ptr);
+		m->ptr += _pbcV_encode32(id, m->ptr);
+		m->ptr += _pbcV_encode32(len, m->ptr);
 		_expand(m,len);
 		memcpy(m->ptr , v , len);
 		m->ptr += len;
@@ -340,7 +340,7 @@ _pack_packed_64(struct _packed *p,struct pbc_wmessage *m) {
 	int i;
 	pbc_var var;
 	_expand(m,10 + len);
-	m->ptr += varint_encode32(len, m->ptr);
+	m->ptr += _pbcV_encode32(len, m->ptr);
 	switch (p->ptype) {
 	case PTYPE_DOUBLE:
 		for (i=0;i<n;i++) {
@@ -365,7 +365,7 @@ _pack_packed_32(struct _packed *p,struct pbc_wmessage *m) {
 	int i;
 	pbc_var var;
 	_expand(m,10 + len);
-	m->ptr += varint_encode32(len, m->ptr);
+	m->ptr += _pbcV_encode32(len, m->ptr);
 	switch (p->ptype) {
 	case PTYPE_FLOAT:
 		for (i=0;i<n;i++) {
@@ -394,7 +394,7 @@ _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 	int i;
 	pbc_var var;
 	_expand(m,10 + len);
-	int len_len = varint_encode32(len, m->ptr);
+	int len_len = _pbcV_encode32(len, m->ptr);
 	m->ptr += len_len;
 
 	switch (p->ptype) {
@@ -403,7 +403,7 @@ _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 		for (i=0;i<n;i++) {
 			_pbcA_index(p->data, i, var);
 			_expand(m,10);
-			m->ptr += varint_encode((uint64_t)var->integer.low | (uint64_t)var->integer.hi << 32 , m->ptr);
+			m->ptr += _pbcV_encode((uint64_t)var->integer.low | (uint64_t)var->integer.hi << 32 , m->ptr);
 		}
 		break;
 	case PTYPE_INT32:
@@ -413,21 +413,21 @@ _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 		for (i=0;i<n;i++) {
 			_pbcA_index(p->data, i, var);
 			_expand(m,10);
-			m->ptr += varint_encode32(var->integer.low , m->ptr);
+			m->ptr += _pbcV_encode32(var->integer.low , m->ptr);
 		}
 		break;
 	case PTYPE_SINT32:
 		for (i=0;i<n;i++) {
 			_pbcA_index(p->data, i, var);
 			_expand(m,10);
-			m->ptr += varint_zigzag32(var->integer.low, m->ptr);
+			m->ptr += _pbcV_zigzag32(var->integer.low, m->ptr);
 		}
 		break;
 	case PTYPE_SINT64:
 		for (i=0;i<n;i++) {
 			_pbcA_index(p->data, i, var);
 			_expand(m,10);
-			m->ptr += varint_zigzag((uint64_t)var->integer.low | (uint64_t)var->integer.hi << 32 , m->ptr);
+			m->ptr += _pbcV_zigzag((uint64_t)var->integer.low | (uint64_t)var->integer.hi << 32 , m->ptr);
 		}
 		break;
 	default:
@@ -439,7 +439,7 @@ _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 	int end_len = end_offset - (offset + len_len);
 	if (end_len != len) {
 		uint8_t temp[10];
-		int end_len_len = varint_encode32(end_len, temp);
+		int end_len_len = _pbcV_encode32(end_len, temp);
 		if (end_len_len != len_len) {
 			_expand(m, end_len_len);
 			memmove(m->buffer + offset + end_len_len , 
@@ -456,7 +456,7 @@ _pack_packed(void *p, void *ud) {
 	struct pbc_wmessage * m = ud;
 	int id = packed->id << 3 | WT_LEND;
 	_expand(m,10);
-	m->ptr += varint_encode32(id, m->ptr);
+	m->ptr += _pbcV_encode32(id, m->ptr);
 	switch(packed->ptype) {
 	case PTYPE_DOUBLE:
 	case PTYPE_FIXED64:
@@ -490,8 +490,8 @@ pbc_wmessage_buffer(struct pbc_wmessage *m, struct pbc_slice *slice) {
 			struct _field * f = var->p[1];
 			int id = f->id << 3 | WT_LEND;
 			_expand(m,20+s.len);
-			m->ptr += varint_encode32(id, m->ptr);
-			m->ptr += varint_encode32(s.len, m->ptr);
+			m->ptr += _pbcV_encode32(id, m->ptr);
+			m->ptr += _pbcV_encode32(s.len, m->ptr);
 			memcpy(m->ptr, s.buffer, s.len);
 			m->ptr += s.len;
 		}

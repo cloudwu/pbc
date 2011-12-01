@@ -18,7 +18,7 @@ wiretype_decode(char *buffer, int cap , struct atom *a , int start)
 	uint8_t temp[10];
 	memcpy(temp, buffer , MIN(cap,10));
 	struct longlong r;
-	int len = varint_decode(temp, &r);
+	int len = _pbcV_decode(temp, &r);
 	if (len > cap || r.hi !=0)
 		return NULL;
 	int wiretype = r.low & 7;
@@ -30,7 +30,7 @@ wiretype_decode(char *buffer, int cap , struct atom *a , int start)
 	switch (wiretype) {
 	case WT_VARINT :
 		memcpy(temp, buffer , MIN(cap,10));
-		len = varint_decode(temp, &a->v.i);
+		len = _pbcV_decode(temp, &a->v.i);
 		if (cap < len)
 			return NULL;
 		return buffer+len;
@@ -48,7 +48,7 @@ wiretype_decode(char *buffer, int cap , struct atom *a , int start)
 		return buffer + 8;
 	case WT_LEND :
 		memcpy(temp, buffer , MIN(cap,10));
-		len = varint_decode(temp, &r);
+		len = _pbcV_decode(temp, &r);
 		if (cap < len + r.low || r.hi !=0)
 			return NULL;
 		a->v.s.start = start + len;
@@ -76,9 +76,9 @@ _decode_varint(uint8_t * buffer, int size , struct atom * a) {
 	if (size < 10) {
 		uint8_t temp[10];
 		memcpy(temp,buffer,size);
-		return varint_decode(temp , &(a->v.i));
+		return _pbcV_decode(temp , &(a->v.i));
 	} else {
-		return varint_decode(buffer , &(a->v.i));
+		return _pbcV_decode(buffer , &(a->v.i));
 	}
 }
 
