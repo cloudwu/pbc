@@ -12,7 +12,7 @@ CFLAGS = -O2
 BUILD = build
 
 LIBSRCS = context.c varint.c array.c pattern.c register.c proto.c map.c alloc.c rmessage.c wmessage.c bootstrap.c stringpool.c
-LIBNAME = $(BUILD)/libpbc.$(SO)
+LIBNAME = libpbc.$(SO)
 
 TESTSRCS = addressbook.c pattern.c
 PROTOSRCS = addressbook.proto descriptor.proto
@@ -45,7 +45,7 @@ endef
 $(foreach s,$(LIBSRCS),$(eval $(call BUILD_temp,$(s))))
 
 $(LIBNAME) : $(LIB_O)
-	$(CC) --shared -o $(LIBNAME) $^
+	cd $(BUILD) && $(CC) --shared -o $(LIBNAME) $(addprefix ../,$^)
 
 TEST :=
 
@@ -55,7 +55,7 @@ define TEST_temp
   $$(TAR)$$(EXE) : | $(BUILD)
   $$(TAR)$$(EXE) : | $(LIBNAME)
   $$(TAR)$$(EXE) : test/$(1)
-	$(CC) $(CFLAGS) -I. -L$(BUILD) -lpbc -o $$@ $$<
+	cd $(BUILD) && $(CC) $(CFLAGS) -I.. -L. -lpbc -o $$(notdir $$@) ../$$<
 endef
 
 $(foreach s,$(TESTSRCS),$(eval $(call TEST_temp,$(s))))
