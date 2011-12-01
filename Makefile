@@ -12,7 +12,7 @@ CFLAGS = -O2
 BUILD = build
 
 LIBSRCS = context.c varint.c array.c pattern.c register.c proto.c map.c alloc.c rmessage.c wmessage.c bootstrap.c stringpool.c
-LIBNAME = $(BUILD)/pbc.$(SO)
+LIBNAME = $(BUILD)/libpbc.$(SO)
 
 TESTSRCS = addressbook.c pattern.c
 PROTOSRCS = addressbook.proto descriptor.proto
