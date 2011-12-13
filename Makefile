@@ -1,18 +1,11 @@
-ifeq ($(OS),Windows_NT)
-  SO := dll
-  EXE := .exe
-else
-  SO := so
-  EXE :=
-endif
-
 CC = gcc
 CFLAGS = -O2
+AR = ar rc
 
 BUILD = build
 
 LIBSRCS = context.c varint.c array.c pattern.c register.c proto.c map.c alloc.c rmessage.c wmessage.c bootstrap.c stringpool.c
-LIBNAME = libpbc.$(SO)
+LIBNAME = libpbc.a
 
 TESTSRCS = addressbook.c pattern.c
 PROTOSRCS = addressbook.proto descriptor.proto
@@ -45,17 +38,17 @@ endef
 $(foreach s,$(LIBSRCS),$(eval $(call BUILD_temp,$(s))))
 
 $(LIBNAME) : $(LIB_O)
-	cd $(BUILD) && $(CC) --shared -o $(LIBNAME) $(addprefix ../,$^)
+	cd $(BUILD) && $(AR) $(LIBNAME) $(addprefix ../,$^)
 
 TEST :=
 
 define TEST_temp
   TAR :=  $(BUILD)/$(notdir $(basename $(1)))
-  TEST := $(TEST) $$(TAR)$$(EXE)
-  $$(TAR)$$(EXE) : | $(BUILD)
-  $$(TAR)$$(EXE) : | $(LIBNAME)
-  $$(TAR)$$(EXE) : test/$(1)
-	cd $(BUILD) && $(CC) $(CFLAGS) -I.. -L. -lpbc -o $$(notdir $$@) ../$$<
+  TEST := $(TEST) $$(TAR)
+  $$(TAR) : | $(BUILD)
+  $$(TAR) : | $(LIBNAME)
+  $$(TAR) : test/$(1)
+	cd $(BUILD) && $(CC) $(CFLAGS) -I.. -L. -o $$(notdir $$@) ../$$< -lpbc
 endef
 
 $(foreach s,$(TESTSRCS),$(eval $(call TEST_temp,$(s))))
