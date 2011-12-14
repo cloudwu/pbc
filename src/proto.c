@@ -159,3 +159,54 @@ _pbcP_message_default(struct _message * m, const char * name, pbc_var defv) {
 	return f->type;
 }
 
+int 
+pbc_type(struct pbc_env * p, const char * typename , const char * key , const char ** type) {
+	struct _message *m = _pbcP_get_message(p, typename);
+	if (m==NULL) {
+		return 0;
+	}
+	struct _field * field = _pbcM_sp_query(m->name, key);
+	if (field == NULL) {
+		return 0;
+	}
+	int ret = 0;
+	switch (field->type) {
+	case PTYPE_DOUBLE:
+	case PTYPE_FLOAT:
+		ret = PBC_REAL;
+		break;
+	case PTYPE_INT64:
+	case PTYPE_UINT64:
+	case PTYPE_INT32:
+	case PTYPE_FIXED64:
+	case PTYPE_FIXED32:
+	case PTYPE_UINT32:  
+	case PTYPE_SFIXED32:
+	case PTYPE_SFIXED64:
+	case PTYPE_SINT32:  
+	case PTYPE_SINT64:  
+		ret = PBC_INT;
+		break;
+	case PTYPE_BOOL:
+		ret = PBC_BOOL;
+		break;
+	case PTYPE_STRING:
+	case PTYPE_BYTES:  
+		ret = PBC_STRING;
+		break;
+	case PTYPE_ENUM:
+		ret = PBC_ENUM;
+		break;
+	case PTYPE_MESSAGE:
+		ret = PBC_MESSAGE;
+		break;
+	default:
+		return 0;
+	}
+	if (field->label == LABEL_REPEATED ||
+		field->label == LABEL_PACKED) {
+		ret |= PBC_REPEATED;
+	}
+
+	return ret;
+}

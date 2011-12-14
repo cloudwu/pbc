@@ -6,6 +6,14 @@
 
 #define PBC_ARRAY_CAP 64
 
+#define PBC_INT 1
+#define PBC_REAL 2
+#define PBC_BOOL 3
+#define PBC_ENUM 4
+#define PBC_STRING 5
+#define PBC_MESSAGE 6
+#define PBC_REPEATED 128
+
 typedef struct _pbc_array { char _data[PBC_ARRAY_CAP]; } pbc_array[1];
 
 struct pbc_slice {
@@ -21,6 +29,7 @@ struct pbc_wmessage;
 struct pbc_env * pbc_new(void);
 void pbc_delete(struct pbc_env *);
 int pbc_register(struct pbc_env *, struct pbc_slice * slice);
+int pbc_type(struct pbc_env *, const char * typename , const char * key , const char ** type);
 
 // message api
 

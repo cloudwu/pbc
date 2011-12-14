@@ -49,11 +49,6 @@ message file {
 
 */
 
-#define FIELD_LABEL_OPTIONAL 0
-#define FIELD_LABEL_REQUIRED 1
-#define FIELD_LABEL_REPEATED 2
-#define FIELD_LABEL_PACKED 3
-
 struct field_t {
 	pbc_var name;
 	int32_t id;
