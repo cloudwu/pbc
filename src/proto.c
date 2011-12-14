@@ -196,9 +196,15 @@ pbc_type(struct pbc_env * p, const char * typename , const char * key , const ch
 		break;
 	case PTYPE_ENUM:
 		ret = PBC_ENUM;
+		if (type) {
+			*type = field->type_name.e->key;
+		}
 		break;
 	case PTYPE_MESSAGE:
 		ret = PBC_MESSAGE;
+		if (type) {
+			*type = field->type_name.m->key;
+		}
 		break;
 	default:
 		return 0;

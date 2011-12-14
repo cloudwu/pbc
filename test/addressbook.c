@@ -52,6 +52,9 @@ test_rmessage(struct pbc_env *env, struct pbc_slice *slice) {
 
 	int phone_n = pbc_rmessage_size(m, "phone");
 	int i;
+	const char * field_name;
+	pbc_type(env, "tutorial.Person", "phone", &field_name);
+	printf("phone type [%s]\n",field_name);
 
 	for (i=0;i<phone_n;i++) {
 		struct pbc_rmessage * p = pbc_rmessage_message(m , "phone", i);
