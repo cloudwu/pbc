@@ -11,7 +11,7 @@ local print = print
 module "protobuf"
 
 local P = c._env_new()
-setmetatable(_ENV , { __gc = function(t) c._env_delete(P) end })
+setmetatable(_M , { __gc = function(t) c._env_delete(P) end })
 
 local decode_type_cache = {}
 local _R_meta = {}
@@ -379,4 +379,9 @@ setmetatable(_pattern_cache, {
 function unpack(pattern, buffer, length)
 	local pat = _pattern_cache[pattern]
 	return c._pattern_unpack(pat.CObj , pat.format, pat.size, buffer, length)
+end
+
+function pack(pattern, ...)
+	local pat = _pattern_cache[pattern]
+	return c._pattern_pack(pat.CObj, pat.format, pat.size , ...)
 end

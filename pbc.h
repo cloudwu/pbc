@@ -67,7 +67,7 @@ void pbc_array_push_real(pbc_array array, double v);
 struct pbc_pattern * pbc_pattern_new(struct pbc_env * , const char * message, const char *format, ...);
 void pbc_pattern_delete(struct pbc_pattern *);
 
-// return bytes , -1 for error
+// return unused bytes , -1 for error
 int pbc_pattern_pack(struct pbc_pattern *, void *input, struct pbc_slice * s);
 
 // <0 for error
