@@ -40,3 +40,5 @@ print(decode.id)
 for _,v in ipairs(decode.phone) do
 	print("\t"..v.number, v.type)
 end
+
+print(protobuf.unpack("tutorial.Person name id", code))

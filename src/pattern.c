@@ -851,6 +851,32 @@ _ctype(const char * ctype) {
 	}
 }
 
+static int
+_ctype_size(const char *ctype) {
+	switch (ctype[1]) {
+	case 'f':
+		return sizeof(float);
+	case 'F':
+		return sizeof(double);
+	case 'd':
+		return sizeof(int32_t);
+	case 'D':
+		return sizeof(int64_t);
+	case 'b':
+		return sizeof(bool);
+	case 'h':
+		return sizeof(int16_t);
+	case 'c':
+		return sizeof(int8_t);
+	case 's':
+		return sizeof(struct pbc_slice);
+	case 'a':
+		return sizeof(pbc_array);
+	default:
+		return 0;
+	}
+}
+
 static const char *
 _copy_string(const char *format , char ** temp) {
 	char * output = *temp;
@@ -931,12 +957,62 @@ _check_ctype(struct _field * field, struct _pattern_field *f) {
 		f->ctype == CTYPE_DOUBLE || f->ctype ==CTYPE_FLOAT;
 }
 
+struct pbc_pattern *
+_pattern_new(struct _message *m, const char *format) {
+	int len = strlen(format);
+	char temp[len+1];
+	int n = _scan_pattern(format, temp);
+	struct pbc_pattern * pat = _pbcP_new(n);
+	int i;
+
+	const char *ptr = temp;
+
+	int offset = 0;
+
+	for (i=0;i<n;i++) {
+		struct _pattern_field * f = &(pat->f[i]);
+		struct _field * field = _pbcM_sp_query(m->name, ptr);
+		if (field == NULL)
+			goto _error;
+		f->id = field->id;
+		f->ptype = field->type;
+		*f->defv = *field->default_v;
+		f->offset = offset;
+		ptr += strlen(ptr) + 1;
+		f->ctype = _ctype(ptr);
+		if (f->ctype < 0)
+			goto _error;
+		
+		if (f->ctype == CTYPE_ARRAY && field->label == LABEL_PACKED) {
+			f->ctype = CTYPE_PACKED;
+		}
+		if (_check_ctype(field, f))
+			goto _error;
+
+		offset += _ctype_size(ptr);
+		ptr += strlen(ptr) + 1;
+	}
+
+	pat->count = n;
+
+	qsort(pat->f , n , sizeof(struct _pattern_field), _comp_field);
+
+	return pat;
+_error:
+	free(pat);
+	return NULL;
+}
+
 struct pbc_pattern * 
 pbc_pattern_new(struct pbc_env * env , const char * message, const char * format, ... ) {
 	struct _message *m = _pbcP_get_message(env, message);
 	if (m==NULL) {
 		return NULL;
 	}
+	if (format[0]=='@') {
+		return _pattern_new(m , format+1);
+	}
+
 	int len = strlen(format);
 	char temp[len+1];
 	int n = _scan_pattern(format, temp);

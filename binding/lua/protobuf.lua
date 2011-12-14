@@ -5,6 +5,7 @@ local table = table
 local assert = assert
 local pairs = pairs
 local ipairs = ipairs
+local string = string
 local print = print
 
 module "protobuf"
@@ -306,4 +307,76 @@ function encode( message, t , func)
 		c._wmessage_delete(encoder)
 		return s
 	end
+end
+
+--------- unpack ----------
+
+local _pattern_cache = {}
+
+local pat_meta = {
+	__gc = function(t)
+		c._pattern_delete(t.CObj)
+	end
+}
+
+local _pattern_type = {
+	[1] = {"%d","i"},
+	[2] = {"%F","r"},
+	[3] = {"%d","b"},
+	[4] = {"%d","i"},
+	[5] = {"%s","s"},
+	[6] = {"%s","m"},
+	[7] = {"%D","x"},
+	[128+1] = {"%d","I"},
+	[128+2] = {"%F","R"},
+	[128+3] = {"%d","B"},
+	[128+4] = {"%d","I"},
+	[128+5] = {"%s","S"},
+	[128+6] = {"%s","M"},
+	[128+7] = {"%D","X"},
+}
+
+
+local function _pattern_create(pattern)
+	local iter = string.gmatch(pattern,"[^ ]+")
+	local message = iter()
+	local cpat = {}
+	local lua = {}
+	for v in iter do
+		local t = c._env_type(P, message, v)
+		t = _pattern_type[t]
+		if t == nil then
+			return
+		end
+		table.insert(cpat,v .. " " .. t[1])
+		table.insert(lua,t[2])
+	end
+	local cobj = c._pattern_new(P, message , "@" .. table.concat(cpat," "))
+	if cobj == nil then
+		return
+	end
+	local pat = {
+		CObj = cobj,
+		format = table.concat(lua),
+		size = 0
+	}
+	pat.size = c._pattern_size(pat.format)
+
+	setmetatable(pat, pat_meta)
+
+	return pat
+end
+
+setmetatable(_pattern_cache, {
+	__mode = "v",
+	__index = function(t, key)
+		local v = _pattern_create(key)
+		t[key] = v
+		return v
+	end
+})
+
+function unpack(pattern, buffer, length)
+	local pat = _pattern_cache[pattern]
+	return c._pattern_unpack(pat.CObj , pat.format, pat.size, buffer, length)
 end

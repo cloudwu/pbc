@@ -1,6 +1,7 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include <stdbool.h>
 
 #include "pbc.h"
 
@@ -240,6 +241,200 @@ _wmessage_buffer_string(lua_State *L) {
 	return 1;
 }
 
+/*
+	lightuserdata env
+	string message
+	string format
+ */
+static int
+_pattern_new(lua_State *L) {
+	struct pbc_env * env = lua_touserdata(L, 1);
+	const char * message = lua_tostring(L,2);
+	const char * format = lua_tostring(L,3);
+	struct pbc_pattern * pat = pbc_pattern_new(env, message, format);
+	lua_pushlightuserdata(L,pat);
+
+	return 1;
+}
+
+static int
+_pattern_delete(lua_State *L) {
+	struct pbc_pattern * pat = lua_touserdata(L,1);
+	pbc_pattern_delete(pat);
+	
+	return 0;
+}
+
+static void *
+_push_value(lua_State *L, char * ptr, char type) {
+	switch(type) {
+		case 'i': {
+			int32_t v = *(int32_t*)ptr;
+			ptr += 4;
+			lua_pushinteger(L,v);
+			break;
+		}
+		case 'b': {
+			int32_t v = *(int32_t*)ptr;
+			ptr += 4;
+			lua_pushboolean(L,v);
+			break;
+		}
+		case 'x': {
+			lua_pushlstring(L,ptr,8);
+			ptr += 8;
+			break;
+		}
+		case 'r': {
+			double v = *(double *)ptr;
+			ptr += 8;
+			lua_pushnumber(L,v);
+			break;
+		}
+		case 's': {
+			struct pbc_slice * slice = (struct pbc_slice *)ptr;
+			lua_pushlstring(L,slice->buffer, slice->len);
+			ptr += sizeof(struct pbc_slice);
+			break;
+		}
+		case 'm': {
+			struct pbc_slice * slice = (struct pbc_slice *)ptr;
+			lua_createtable(L,2,0);
+			lua_pushlightuserdata(L, slice->buffer);
+			lua_rawseti(L,-2,1);
+			lua_pushinteger(L,slice->len);
+			lua_rawseti(L,-2,2);
+			ptr += sizeof(struct pbc_slice);
+			break;			
+		}
+	}
+	return ptr;
+}
+
+static void
+_push_array(lua_State *L, pbc_array array, char type, int index) {
+	switch (type) {
+	case 'I': {
+		int v = pbc_array_integer(array, index, NULL);
+		lua_pushinteger(L, v);
+		break;
+	}
+	case 'B': {
+		int v = pbc_array_integer(array, index, NULL);
+		lua_pushboolean(L, v);
+		break;
+	}
+	case 'X': {
+		uint32_t hi = 0;
+		uint32_t low = pbc_array_integer(array, index, &hi);
+		uint64_t v = (uint64_t)low | (uint64_t)hi << 32;
+		lua_pushlstring(L, (char *)&v, 8);
+		break;
+	}
+	case 'R': {
+		double v = pbc_array_real(array, index);
+		lua_pushnumber(L, v);
+		break;
+	}
+	case 'S': {
+		struct pbc_slice * slice = pbc_array_slice(array, index);
+		lua_pushlstring(L, (const char *)slice->buffer,slice->len);
+		break;
+	}
+	case 'M': {
+		struct pbc_slice * slice = pbc_array_slice(array, index);
+		lua_createtable(L,2,0);
+		lua_pushlightuserdata(L,slice->buffer);
+		lua_rawseti(L,-2,1);
+		lua_pushinteger(L,slice->len);
+		lua_rawseti(L,-2,2);
+		break;
+	}
+	}
+	lua_rawseti(L,-2,index+1);
+}
+
+/*
+	lightuserdata pattern
+	string format "ixrsmb"
+	integer size
+	lightuserdata buffer
+	integer buffer_len
+ */
+static int
+_pattern_unpack(lua_State *L) {
+	struct pbc_pattern * pat = lua_touserdata(L, 1);
+	size_t format_sz = 0;
+	const char * format = lua_tolstring(L,2,&format_sz);
+	int size = lua_tointeger(L,3);
+	struct pbc_slice slice;
+	if (lua_isstring(L,4)) {
+		size_t buffer_len = 0;
+		const char *buffer = lua_tolstring(L,4,&buffer_len);
+		slice.buffer = (void *)buffer;
+		slice.len = buffer_len;
+	} else {
+		slice.buffer = lua_touserdata(L,4);
+		slice.len = lua_tointeger(L,5);
+	}
+	
+	char temp[size];
+	int ret = pbc_pattern_unpack(pat, &slice, temp);
+	if (ret < 0) 
+		return 0;
+	lua_checkstack(L, format_sz + 3);
+	int i;
+	char * ptr = temp;
+	bool array = false;
+	for (i=0;i<format_sz;i++) {
+		char type = format[i];
+		if (type >= 'a' && type <='z') {
+			ptr = _push_value(L,ptr,type);
+		} else {
+			array = true;
+			int n = pbc_array_size((void *)ptr);
+			lua_createtable(L,n,0);
+			int j;
+			for (j=0;j<n;j++) {
+				_push_array(L,(void *)ptr, type, j);
+			}
+		}
+	}
+	if (array) {
+		pbc_pattern_close_arrays(pat, temp);
+	}
+	return format_sz;
+}
+
+static int
+_pattern_size(lua_State *L) {
+	size_t sz =0;
+	const char *format = lua_tolstring(L,1,&sz);
+	int i;
+	int size = 0;
+	for (i=0;i<sz;i++) {
+		switch(format[i]) {
+		case 'b': 
+		case 'i':
+			size += 4;
+			break;
+		case 'r':
+		case 'x': 
+			size += 8;
+			break;
+		case 's':
+		case 'm':
+			size += sizeof(struct pbc_slice);
+			break;
+		default:
+			size += sizeof(pbc_array);
+			break;
+		}
+	}
+	lua_pushinteger(L,size);
+	return 1;
+}
+
 int
 luaopen_protobuf_c(lua_State *L) {
 	luaL_Reg reg[] = {
@@ -264,6 +459,10 @@ luaopen_protobuf_c(lua_State *L) {
 		{"_wmessage_int64", _wmessage_int64 },
 		{"_wmessage_buffer", _wmessage_buffer },
 		{"_wmessage_buffer_string", _wmessage_buffer_string },
+		{"_pattern_new", _pattern_new },
+		{"_pattern_delete", _pattern_delete },
+		{"_pattern_size", _pattern_size },
+		{"_pattern_unpack", _pattern_unpack },
 		{NULL,NULL},
 	};
 
