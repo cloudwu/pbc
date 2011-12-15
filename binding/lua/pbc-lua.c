@@ -580,7 +580,7 @@ _get_array_value(lua_State *L, pbc_array array, char type) {
 
 /*
 	lightuserdata pattern
-	string format "ixrsmb"
+	string format "ixrsmbp"
 	integer size
  */
 static int
