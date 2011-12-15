@@ -178,12 +178,14 @@ pbc_type(struct pbc_env * p, const char * typename , const char * key , const ch
 	case PTYPE_INT64:
 	case PTYPE_UINT64:
 	case PTYPE_INT32:
-	case PTYPE_FIXED32:
 	case PTYPE_UINT32:  
-	case PTYPE_SFIXED32:
 	case PTYPE_SINT32:  
 	case PTYPE_SINT64:  
 		ret = PBC_INT;
+		break;
+	case PTYPE_FIXED32:
+	case PTYPE_SFIXED32:
+		ret = PBC_FIXED32;
 		break;
 	case PTYPE_SFIXED64:
 	case PTYPE_FIXED64:

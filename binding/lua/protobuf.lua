@@ -51,6 +51,10 @@ function _reader:message(key, message_type)
 	end
 end
 
+function _reader:int32(key)
+	return c._rmessage_int32(self, key , 0)
+end
+
 function _reader:int64(key)
 	return c._rmessage_int64(self, key , 0)
 end
@@ -104,6 +108,15 @@ function _reader:message_repeated(key, message_type)
 	return ret
 end
 
+function _reader:int32_repeated(key)
+	local n = c._rmessage_size(self , key)
+	local ret = {}
+	for i=0,n-1 do
+		table.insert(ret,  c._rmessage_int32(self , key , i))
+	end
+	return ret
+end
+
 function _reader:int64_repeated(key)
 	local n = c._rmessage_size(self , key)
 	local ret = {}
@@ -125,6 +138,7 @@ _reader[6] = function(msg)
 		end
 end
 _reader[7] = function(msg) return _reader.int64 end
+_reader[8] = function(msg) return _reader.int32 end
 
 _reader[128+1] = function(msg) return _reader.int_repeated end
 _reader[128+2] = function(msg) return _reader.real_repeated end
@@ -138,6 +152,7 @@ _reader[128+6] = function(msg)
 		end
 end
 _reader[128+7] = function(msg) return _reader.int64_repeated end
+_reader[128+8] = function(msg) return _reader.int32_repeated end
 
 local _decode_type_meta = {}
 
@@ -203,6 +218,7 @@ local _writer = {
 	enum = c._wmessage_string,
 	string = c._wmessage_string,
 	int64 = c._wmessage_int64,
+	int32 = c._wmessage_int32,
 }
 
 function _writer:bool(k,v)
@@ -245,6 +261,12 @@ function _writer:message_repeated(k,v, message_type)
 	end
 end
 
+function _writer:int32_repeated(k,v)
+	for _,v in ipairs(v) do
+		c._wmessage_int32(self,k,v)
+	end
+end
+
 function _writer:int64_repeated(k,v)
 	for _,v in ipairs(v) do
 		c._wmessage_int64(self,k,v)
@@ -263,6 +285,7 @@ _writer[6] = function(msg)
 		end
 end
 _writer[7] = function(msg) return _writer.int64 end
+_writer[8] = function(msg) return _writer.int32 end
 
 _writer[128+1] = function(msg) return _writer.int_repeated end
 _writer[128+2] = function(msg) return _writer.real_repeated end
@@ -276,6 +299,7 @@ _writer[128+6] = function(msg)
 		end
 end
 _writer[128+7] = function(msg) return _writer.int64_repeated end
+_writer[128+8] = function(msg) return _writer.int32_repeated end
 
 local _encode_type_meta = {}
 
@@ -327,6 +351,7 @@ local _pattern_type = {
 	[5] = {"%s","s"},
 	[6] = {"%s","m"},
 	[7] = {"%D","x"},
+	[8] = {"%d","p"},
 	[128+1] = {"%d","I"},
 	[128+2] = {"%F","R"},
 	[128+3] = {"%d","B"},
@@ -334,6 +359,7 @@ local _pattern_type = {
 	[128+5] = {"%s","S"},
 	[128+6] = {"%s","M"},
 	[128+7] = {"%D","X"},
+	[128+8] = {"%D","P"},
 }
 
 
