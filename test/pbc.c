@@ -1,5 +1,4 @@
 #include "pbc.h"
-#include "alloc.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,10 +20,10 @@ read_file (const char *filename , struct pbc_slice *slice) {
 }
 
 void
-test_des(struct pbc_env * env)
+test_des(struct pbc_env * env , const char * pb)
 {
 	struct pbc_slice slice;
-	read_file("descriptor.pb", &slice);
+	read_file(pb, &slice);
 
 	struct pbc_rmessage * msg = pbc_rmessage_new(env, "google.protobuf.FileDescriptorSet", &slice);
 
@@ -48,35 +47,23 @@ test_des(struct pbc_env * env)
 
 
 	pbc_rmessage_delete(msg);
+
+	int ret = pbc_register(env, &slice);
+
+	printf("Register %d\n",ret);
+
 	free(slice.buffer);
-
-	struct pbc_wmessage * wmsg = pbc_wmessage_new(env , "google.protobuf.EnumDescriptorProto");
-	pbc_wmessage_string(wmsg,"name","test",0);
-	struct pbc_wmessage * value = pbc_wmessage_message(wmsg,"value");
-	pbc_wmessage_string(value,"name","Hello",0);
-	pbc_wmessage_integer(value,"value",1,0);
-
-	value = pbc_wmessage_message(wmsg,"value");
-	pbc_wmessage_string(value,"name","World",0);
-	pbc_wmessage_integer(value,"number",2,0);
-
-	pbc_wmessage_delete(wmsg);
 }
 
 int
-main()
+main(int argc, char *argv[])
 {
 	struct pbc_env * env = pbc_new();
 
-//	memory();
-
-	test_des(env);
-
-//	memory();
+	test_des(env,argv[1]);
 
 	pbc_delete(env);
 
-	memory();
 
 	return 0;
 }

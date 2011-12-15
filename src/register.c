@@ -11,6 +11,9 @@
 
 static const char *
 _concat_name(struct _stringpool *p , const char *prefix ,  int prefix_sz , const char *name , int name_sz) {
+	if (prefix_sz == 0) {
+		return _pbcS_build(p , name, name_sz);
+	}
 	char temp[name_sz + prefix_sz + 2];
 	memcpy(temp,prefix,prefix_sz);
 	temp[prefix_sz] = '.';
