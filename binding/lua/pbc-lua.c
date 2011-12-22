@@ -101,7 +101,7 @@ _rmessage_int32(lua_State *L) {
 	const char * key = lua_tostring(L,2);
 	int index = lua_tointeger(L,3);
 	uint32_t v = pbc_rmessage_integer(m, key, index, NULL);
-	lua_pushlightuserdata(L,(void *)v);
+	lua_pushlightuserdata(L,(void *)(intptr_t)v);
 
 	return 1;
 }
@@ -247,7 +247,7 @@ _wmessage_int32(lua_State *L) {
 	struct pbc_wmessage * m = lua_touserdata(L,1);
 	const char * key = lua_tostring(L,2);
 	void *number = lua_touserdata(L,3);
-	pbc_wmessage_integer(m, key, (uint32_t)number , 0);
+	pbc_wmessage_integer(m, key, (uint32_t)(intptr_t)number , 0);
 	return 0;
 }
 
@@ -322,7 +322,7 @@ _push_value(lua_State *L, char * ptr, char type) {
 		case 'p': {
 			uint32_t v = *(uint32_t*)ptr;
 			ptr += 4;
-			lua_pushlightuserdata(L,(void *)v);
+			lua_pushlightuserdata(L,(void *)(intptr_t)v);
 			break;
 		}
 		case 'x': {
@@ -371,7 +371,7 @@ _push_array(lua_State *L, pbc_array array, char type, int index) {
 	}
 	case 'P': {
 		uint32_t v = pbc_array_integer(array, index, NULL);
-		lua_pushlightuserdata(L,(void *)v);
+		lua_pushlightuserdata(L,(void *)(intptr_t)v);
 		break;
 	}
 	case 'X': {
@@ -471,7 +471,7 @@ _get_value(lua_State *L, int index, char * ptr, char type) {
 		}
 		case 'p': {
 			void *p = lua_touserdata(L, index);
-			uint32_t v = (uint32_t)p;
+			uint32_t v = (uint32_t)(intptr_t)p;
 			memcpy(ptr, &v , 4);
 			return ptr + 4;
 		}
@@ -534,7 +534,7 @@ _get_array_value(lua_State *L, pbc_array array, char type) {
 		}
 		case 'P': {
 			void *p = lua_touserdata(L, -1);
-			uint32_t v = (uint32_t)p;
+			uint32_t v = (uint32_t)(intptr_t)p;
 			pbc_array_push_integer(array, v, 0);
 			break;
 		}
