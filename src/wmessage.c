@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 
 #define WMESSAGE_SIZE 64
 
@@ -268,6 +269,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 			int enum_id = _pbcM_si_query(f->type_name.e->name, v);
 			if (enum_id < 0) {
 				// todo : error , invalid enum
+				assert(0);
 				return;
 			}
 			_packed_integer(m , f, key , enum_id , 0);
@@ -300,6 +302,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		int enum_id = _pbcM_si_query(f->type_name.e->name, v);
 		if (enum_id < 0) {
 			// todo : error , enum invalid
+			assert(0);
 			return;
 		}
 		id |= WT_VARINT;

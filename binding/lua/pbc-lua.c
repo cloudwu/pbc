@@ -424,6 +424,9 @@ _pattern_unpack(lua_State *L) {
 		slice.buffer = (void *)buffer;
 		slice.len = buffer_len;
 	} else {
+		if (!lua_isuserdata(L,4)) {
+			return luaL_error(L, "Need a userdata");
+		}
 		slice.buffer = lua_touserdata(L,4);
 		slice.len = lua_tointeger(L,5);
 	}
