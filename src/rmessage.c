@@ -211,6 +211,11 @@ push_value_array(pbc_array array, struct _field *f, struct atom * a, uint8_t *bu
 
 static void
 _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buffer, int size) {
+	if (size == 0) {
+		ret->msg = type;
+		ret->index = _pbcM_sp_new();
+		return;
+	}
 	pbc_ctx _ctx;
 	if (_pbcC_open(_ctx,buffer,size) <=0) {
 		memset(ret , 0, sizeof(*ret));
