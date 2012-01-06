@@ -783,11 +783,15 @@ pbc_pattern_pack(struct pbc_pattern *pat, void *input, struct pbc_slice * s)
 
 int 
 pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) {
+	if (s->len == 0) {
+		pbc_pattern_set_default(pat, output);
+		return 0;
+	}
 	pbc_ctx _ctx;
 	int r = _pbcC_open(_ctx, s->buffer, s->len);
 	if (r <= 0) {
 		_pbcC_close(_ctx);
-		return r+1;
+		return r-1;
 	}
 	pbc_pattern_set_default(pat, output);
 
