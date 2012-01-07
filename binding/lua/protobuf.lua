@@ -158,7 +158,7 @@ local _decode_type_meta = {}
 
 function _decode_type_meta:__index(key)
 	local t, msg = c._env_type(P, self._CType, key)
-	local func = _reader[t](msg)
+	local func = assert(_reader[t],key)(msg)
 	self[key] = func
 	return func
 end
@@ -305,7 +305,7 @@ local _encode_type_meta = {}
 
 function _encode_type_meta:__index(key)
 	local t, msg = c._env_type(P, self._CType, key)
-	local func = _writer[t](msg)
+	local func = assert(_writer[t],key)(msg)
 	self[key] = func
 	return func
 end
