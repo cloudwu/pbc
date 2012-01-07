@@ -291,6 +291,9 @@ _pattern_new(lua_State *L) {
 	const char * message = lua_tostring(L,2);
 	const char * format = lua_tostring(L,3);
 	struct pbc_pattern * pat = pbc_pattern_new(env, message, format);
+	if (pat == NULL) {
+		return luaL_error(L, "create patten %s (%s) failed", message , format);
+	}
 	lua_pushlightuserdata(L,pat);
 
 	return 1;
@@ -414,6 +417,9 @@ _push_array(lua_State *L, pbc_array array, char type, int index) {
 static int
 _pattern_unpack(lua_State *L) {
 	struct pbc_pattern * pat = lua_touserdata(L, 1);
+	if (pat == NULL) {
+		return luaL_error(L, "unpack pattern is NULL");
+	}
 	size_t format_sz = 0;
 	const char * format = lua_tolstring(L,2,&format_sz);
 	int size = lua_tointeger(L,3);
@@ -589,6 +595,9 @@ _get_array_value(lua_State *L, pbc_array array, char type) {
 static int
 _pattern_pack(lua_State *L) {
 	struct pbc_pattern * pat = lua_touserdata(L,1);
+	if (pat == NULL) {
+		return luaL_error(L, "pack pattern is NULL");
+	}
 	size_t format_sz = 0;
 	const char * format = lua_tolstring(L,2,&format_sz);
 	int size = lua_tointeger(L,3);

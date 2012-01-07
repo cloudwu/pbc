@@ -943,7 +943,7 @@ _check_ctype(struct _field * field, struct _pattern_field *f) {
 	if (field->label == LABEL_PACKED) {
 		return f->ctype != CTYPE_PACKED;
 	}
-	if (field->type == PTYPE_STRING || field->type == PTYPE_MESSAGE) {
+	if (field->type == PTYPE_STRING || field->type == PTYPE_MESSAGE || field->type == PTYPE_BYTES) {
 		return f->ctype != CTYPE_VAR;
 	}
 	if (field->type == PTYPE_FLOAT || field->type == PTYPE_DOUBLE) {
