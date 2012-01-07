@@ -232,7 +232,7 @@ _wmessage_string(lua_State *L) {
 	struct pbc_wmessage * m = lua_touserdata(L,1);
 	const char * key = lua_tostring(L,2);
 	size_t len = 0;
-	const char * v = lua_tolstring(L,3,&len);
+	const char * v = luaL_checklstring(L,3,&len);
 	pbc_wmessage_string(m, key, v, (int)len);
 
 	return 0;
