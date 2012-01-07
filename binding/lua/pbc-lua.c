@@ -166,8 +166,14 @@ _rmessage_size(lua_State *L) {
 
 static int
 _env_type(lua_State *L) {
+	lua_settop(L,3);
 	struct pbc_env * env = lua_touserdata(L,1);
 	const char * typename = lua_tostring(L,2);
+	if (lua_isnil(L,3)) {
+		int ret = pbc_type(env, typename, NULL, NULL);
+		lua_pushboolean(L,ret);
+		return 1;
+	}
 	const char * key = lua_tostring(L,3);
 	const char * type = NULL;
 	int ret = pbc_type(env, typename, key, &type);

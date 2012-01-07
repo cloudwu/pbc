@@ -411,3 +411,7 @@ function pack(pattern, ...)
 	local pat = _pattern_cache[pattern]
 	return c._pattern_pack(pat.CObj, pat.format, pat.size , ...)
 end
+
+function check(typename)
+	return c._env_type(P,typename)
+end
