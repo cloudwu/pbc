@@ -315,11 +315,15 @@ unpack_field(int ctype, int ptype, char * buffer, struct atom * a, void *out) {
 		return write_longlong(ctype, &temp , out);
 	}
 	case PTYPE_MESSAGE: 
+		if (!_check_wt_lend(a))
+			return -1;
 		((union _pbc_var *)out)->m.buffer = buffer + a->v.s.start;
 		((union _pbc_var *)out)->m.len = a->v.s.end - a->v.s.start;
 		return 0;
 	case PTYPE_STRING:
 	case PTYPE_BYTES:
+		if (!_check_wt_lend(a))
+			return -1;
 		((union _pbc_var *)out)->s.str = buffer + a->v.s.start;
 		((union _pbc_var *)out)->s.len = a->v.s.end - a->v.s.start;
 		return 0;
@@ -801,7 +805,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 	int i;
 
 	for (i=0;i<ctx->number;i++) {
-		struct _pattern_field * f = bsearch_pattern(pat, ctx->a[i].id);
+		struct _pattern_field * f = bsearch_pattern(pat, ctx->a[i].wire_id >> 3);
 		if (f) {
 			char * out = (char *)output + f->offset;
 			if (unpack_field(f->ctype , f->ptype , ctx->buffer , &ctx->a[i], out) < 0) {

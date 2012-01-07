@@ -111,14 +111,20 @@ read_value(struct _field *f, struct atom * a, uint8_t *buffer) {
 		_pbcV_dezigzag64(&(v->v.var->integer));
 		break;
 	case PTYPE_STRING:
+		if (!_check_wt_lend(a))
+			return NULL;
 		v = read_string(a,f,buffer);
 		break;
 	case PTYPE_BYTES:
+		if (!_check_wt_lend(a))
+			return NULL;
 		v = malloc(SIZE_VAR);
 		v->v.var->s.str = (const char *)(buffer + a->v.s.start);
 		v->v.var->s.len = a->v.s.end - a->v.s.start;
 		break;
 	case PTYPE_MESSAGE:
+		if (!_check_wt_lend(a))
+			return NULL;
 		v = malloc(SIZE_MESSAGE);
 		_pbc_rmessage_new(&(v->v.message), f->type_name.m , 
 			buffer + a->v.s.start , 
@@ -185,13 +191,19 @@ push_value_array(pbc_array array, struct _field *f, struct atom * a, uint8_t *bu
 		_pbcV_dezigzag64(&(v->integer));
 		break;
 	case PTYPE_STRING:
+		if (!_check_wt_lend(a))
+			return;
 		read_string_var(v,a,f,buffer);
 		break;
 	case PTYPE_BYTES:
+		if (!_check_wt_lend(a))
+			return;
 		v->s.str = (const char *)(buffer + a->v.s.start);
 		v->s.len = a->v.s.end - a->v.s.start;
 		break;
 	case PTYPE_MESSAGE: {
+		if (!_check_wt_lend(a))
+			return;
 		struct pbc_rmessage message;
 		_pbc_rmessage_new(&message, f->type_name.m , 
 			buffer + a->v.s.start , 
@@ -229,7 +241,7 @@ _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buf
 	int i;
 
 	for (i=0;i<ctx->number;i++) {
-		int id = ctx->a[i].id;
+		int id = ctx->a[i].wire_id >> 3;
 		struct _field * f = _pbcM_ip_query(type->id , id);
 		if (f) {
 			if (f->label == LABEL_REPEATED || f->label == LABEL_PACKED) {

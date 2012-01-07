@@ -320,7 +320,7 @@ setmetatable(encode_type_cache , {
 
 function encode( message, t , func)
 	local encoder = c._wmessage_new(P, message)
-	assert(encoder , "Unknown message : " .. message)
+	assert(encoder ,  message)
 	encode_message(encoder, message, t)
 	if func then
 		local buffer, len = c._wmessage_buffer(encoder)

@@ -22,7 +22,7 @@ wiretype_decode(uint8_t *buffer, int cap , struct atom *a , int start)
 	if (len > cap || r.hi !=0)
 		return NULL;
 	int wiretype = r.low & 7;
-	a->id = r.low >> 3;
+	a->wire_id = r.low;
 	buffer += len;
 	start += len;
 	cap -=len;
@@ -72,7 +72,7 @@ wiretype_decode(uint8_t *buffer, int cap , struct atom *a , int start)
 
 static inline int
 _decode_varint(uint8_t * buffer, int size , struct atom * a) {
-	a->id = 0;
+	a->wire_id = WT_VARINT;
 	if (size < 10) {
 		uint8_t temp[10];
 		memcpy(temp,buffer,size);
@@ -173,7 +173,7 @@ _pbcC_open_packed(pbc_ctx _ctx, int ptype, void *buffer, int size) {
 	if (bits == 64) {
 		uint8_t * data = buffer;
 		for (i=0;i<ctx->number;i++) {
-			a[i].id = 0;
+			a[i].wire_id = WT_BIT64;
 			a[i].v.i.low = data[0] |
 				data[1] << 8 |
 				data[2] << 16 |
@@ -187,7 +187,7 @@ _pbcC_open_packed(pbc_ctx _ctx, int ptype, void *buffer, int size) {
 	} else {
 		uint8_t * data = buffer;
 		for (i=0;i<ctx->number;i++) {
-			a[i].id = 0;
+			a[i].wire_id = WT_BIT32;
 			a[i].v.i.low = data[0] |
 				data[1] << 8 |
 				data[2] << 16 |

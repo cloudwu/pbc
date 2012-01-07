@@ -51,7 +51,7 @@ struct slice {
 };
 
 struct atom {
-	int id;
+	int wire_id;
 	union {
 		struct slice s;
 		struct longlong i;
@@ -70,6 +70,11 @@ typedef struct _pbc_ctx { char _data[PBC_CONTEXT_CAP]; } pbc_ctx[1];
 int _pbcC_open(pbc_ctx , void *buffer, int size);	// <=0 failed
 int _pbcC_open_packed(pbc_ctx _ctx, int ptype, void *buffer, int size);
 void _pbcC_close(pbc_ctx);
+
+static inline int
+_check_wt_lend(struct atom *a) {
+	return (a->wire_id & 7) == WT_LEND;
+}
 
 static inline double
 read_double(struct atom * a) {
