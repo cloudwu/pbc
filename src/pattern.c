@@ -319,6 +319,7 @@ unpack_field(int ctype, int ptype, char * buffer, struct atom * a, void *out) {
 		((union _pbc_var *)out)->m.len = a->v.s.end - a->v.s.start;
 		return 0;
 	case PTYPE_STRING:
+	case PTYPE_BYTES:
 		((union _pbc_var *)out)->s.str = buffer + a->v.s.start;
 		((union _pbc_var *)out)->s.len = a->v.s.end - a->v.s.start;
 		return 0;
