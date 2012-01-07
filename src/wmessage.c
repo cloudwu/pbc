@@ -235,7 +235,7 @@ pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
 		break;
 	}
 	case PTYPE_DOUBLE:
-		id |= WT_BIT32;
+		id |= WT_BIT64;
 		m->ptr += _pbcV_encode32(id, m->ptr);
 		double_encode(v , m->ptr);
 		m->ptr += 8;

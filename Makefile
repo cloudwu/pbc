@@ -7,8 +7,8 @@ BUILD = build
 LIBSRCS = context.c varint.c array.c pattern.c register.c proto.c map.c alloc.c rmessage.c wmessage.c bootstrap.c stringpool.c
 LIBNAME = libpbc.a
 
-TESTSRCS = addressbook.c pattern.c pbc.c
-PROTOSRCS = addressbook.proto descriptor.proto
+TESTSRCS = addressbook.c pattern.c pbc.c float.c
+PROTOSRCS = addressbook.proto descriptor.proto float.proto
 
 BUILD_O = $(BUILD)/o
 
@@ -46,8 +46,8 @@ define TEST_temp
   TAR :=  $(BUILD)/$(notdir $(basename $(1)))
   TEST := $(TEST) $$(TAR)
   $$(TAR) : | $(BUILD)
-  $$(TAR) : | $(LIBNAME)
-  $$(TAR) : test/$(1)
+  $$(TAR) : $(LIBNAME)
+  $$(TAR) : test/$(1) 
 	cd $(BUILD) && $(CC) $(CFLAGS) -I.. -L. -o $$(notdir $$@) ../$$< -lpbc
 endef
 

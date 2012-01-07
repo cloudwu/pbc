@@ -94,7 +94,7 @@ read_float(struct atom * a) {
 static inline void
 double_encode(double v , uint8_t * buffer) {
 	union {
-		float v;
+		double v;
 		uint64_t e;
 	} u;
 	u.v = v;

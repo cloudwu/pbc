@@ -13,7 +13,7 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 static char * 
-wiretype_decode(char *buffer, int cap , struct atom *a , int start)
+wiretype_decode(uint8_t *buffer, int cap , struct atom *a , int start)
 {
 	uint8_t temp[10];
 	memcpy(temp, buffer , MIN(cap,10));
