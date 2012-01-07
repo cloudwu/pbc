@@ -166,9 +166,8 @@ _register_message(struct pbc_env *p, struct _stringpool *pool, struct pbc_rmessa
 
 		_pbcP_push_message(p, temp , &f , queue);
 	}
-	if (field_count > 0) {
-		_pbcP_init_message(p, temp);
-	}
+
+	_pbcP_init_message(p, temp);
 
 	_register_extension(p, pool, temp, prefix_sz + name_sz + 1,message_type, queue);
 

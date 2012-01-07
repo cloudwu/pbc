@@ -206,6 +206,8 @@ _pbcM_ip_combine(struct map_ip *a, struct map_ip *b)
 void *
 _pbcM_ip_query(struct map_ip * map, int id)
 {
+	if (map == NULL)
+		return NULL;
 	if (map->array) {
 		if (id>=0 && id<(int)map->array_size)
 			return map->array[id];

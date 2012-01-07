@@ -127,7 +127,14 @@ struct _message *
 _pbcP_init_message(struct pbc_env * p, const char *name) {
 	struct _message * m = _pbcM_sp_query(p->msgs, name);
 	if (m == NULL) {
-		return NULL;
+		m = malloc(sizeof(*m));
+		m->def = NULL;
+		m->key = name;
+		m->id = NULL;
+		m->name = _pbcM_sp_new();
+		_pbcM_sp_insert(p->msgs, name, m);
+
+		return m;
 	}
 	if (m->id) {
 		// extend message, delete old id map.
