@@ -412,6 +412,10 @@ function pack(pattern, ...)
 	return c._pattern_pack(pat.CObj, pat.format, pat.size , ...)
 end
 
-function check(typename)
-	return c._env_type(P,typename)
+function check(typename , field)
+	if field == nil then
+		return c._env_type(P,typename)
+	else
+		return c._env_type(P,typename,field) ~=0
+	end
 end

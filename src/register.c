@@ -217,43 +217,87 @@ _register(struct pbc_env *p, struct pbc_rmessage * file, struct _stringpool *poo
 	_pbcA_close(queue);
 }
 
-static const char *
-_check_file_name(struct pbc_env * p , struct pbc_rmessage * file, void *data) {
+#define CHECK_FILE_OK 0
+#define CHECK_FILE_EXIST 1
+#define CHECK_FILE_DEPENDENCY 2
+
+static int
+_check_file_name(struct pbc_env * p , struct pbc_rmessage * file, const char ** fname) {
 	const char * filename = pbc_rmessage_string(file, "name", 0, NULL);
+//	printf("reg :%s\n",filename);
 	if (_pbcM_sp_query(p->files, filename)) {
-		return filename;
+		return CHECK_FILE_EXIST;
 	}
 	int sz = pbc_rmessage_size(file, "dependency"); 
 	int i;
 	for (i=0;i<sz;i++) {
 		const char *dname = pbc_rmessage_string(file,"dependency",i,NULL);
+//		printf("dependency :%s\n",dname);
 		if (_pbcM_sp_query(p->files, dname) == NULL) {
-			return dname;
+			return CHECK_FILE_DEPENDENCY;
 		}
 	}
 
-	_pbcM_sp_insert(p->files , filename, data);
-	return NULL;
+	*fname = filename;
+
+	return CHECK_FILE_OK;
+}
+
+static int
+_register_no_dependency(struct pbc_env * p,struct pbc_rmessage ** files , int n ) {
+	int r = 0;
+	int i;
+	for (i=0;i<n;i++) {
+		if (files[i] == NULL)
+			continue;
+		const char *filename = NULL;
+		int err = _check_file_name(p, files[i], &filename);
+		switch(err) {
+		case CHECK_FILE_EXIST:
+			break;
+		case CHECK_FILE_DEPENDENCY:
+			++r;
+			break;
+		case CHECK_FILE_OK: {
+			struct _stringpool *pool = _pbcS_new();
+			_pbcM_sp_insert(p->files , filename, pool);
+			_register(p,files[i],pool);
+			files[i] = NULL;
+			}
+			break;
+		}
+	}
+	return r;
 }
 
 int
 pbc_register(struct pbc_env * p, struct pbc_slice *slice) {
 	struct pbc_rmessage * message = pbc_rmessage_new(p, "google.protobuf.FileDescriptorSet", slice);
 	if (message == NULL) {
+		printf("open google.protobuf.FileDescriptorSet fail\n");
 		return 1;
 	}
-
-	struct pbc_rmessage * file = pbc_rmessage_message(message, "file", 0);
-	if (file == NULL) {
+	int n = pbc_rmessage_size(message, "file");
+	struct pbc_rmessage * files[n];
+	int i;
+	if (n == 0) {
 		goto _error;
 	}
-	struct _stringpool *pool = _pbcS_new();
-	if (_check_file_name(p, file , pool)) {
-		_pbcS_delete(pool);
-		goto _error;
+	for (i=0;i<n;i++) {
+		files[i] = pbc_rmessage_message(message, "file", i);
+		if (files[i] == NULL) {
+			goto _error;
+		}
 	}
 
-	_register(p,file,pool);
+	int r = n;
+	do {
+		int rr = _register_no_dependency(p,files , n);
+		if (rr == r) {
+			goto _error;
+		}
+		r = rr;
+	} while (r>0);
 
 	pbc_rmessage_delete(message);
 	return 0;
