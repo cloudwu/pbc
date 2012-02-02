@@ -46,7 +46,7 @@ _register_enum(struct pbc_env *p, struct _stringpool *pool, struct pbc_rmessage 
 static void
 _set_default(struct _stringpool *pool, struct _field *f , int ptype, const char *value, int sz) {
 	if (value == NULL || sz == 0) {
-		if (f->type == PTYPE_STRING) {
+		if (f->type == PTYPE_STRING || f->type == PTYPE_BYTES) {
 			f->default_v->s.str = "";
 			f->default_v->s.len = 0;
 		} else {
