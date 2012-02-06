@@ -402,4 +402,63 @@ _pbcM_sp_foreach_ud(struct map_sp *map, void (*func)(void *p, void *ud), void *u
 	}
 }
 
+static int
+_find_first(struct map_sp *map)
+{
+	size_t i;
+	for (i=0;i<map->cap;i++) {
+		if (map->slot[i].pointer) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+static int
+_find_next(struct map_sp *map, const char *key)
+{
+	size_t hash_full = calc_hash(key);
+	size_t hash = hash_full & (map->cap -1);
+
+	struct _pbcM_sp_slot * slot = &map->slot[hash];
+	for (;;) {
+		if (slot->hash == hash_full && strcmp(slot->key, key) == 0) {
+			int i = slot - map->slot + 1;
+			while(i<map->cap) {
+				if (map->slot[i].pointer) {
+					return i;
+				}
+				++i;
+			}
+			return -1;
+		}
+		if (slot->next == 0) {
+			return -1;
+		}
+		slot = &map->slot[slot->next-1];
+	}
+}
+
+void * 
+_pbcM_sp_next(struct map_sp *map, const char ** key)
+{
+	if (map == NULL) {
+		*key = NULL;
+		return NULL;
+	}
+	int idx;
+	if (*key == NULL) {
+		idx = _find_first(map);
+	} else {
+		idx = _find_next(map, *key);
+	}
+	if (idx < 0) {
+		*key = NULL;
+		return NULL;
+	}
+	*key = map->slot[idx].key;
+	return map->slot[idx].pointer;
+}
+
+
 

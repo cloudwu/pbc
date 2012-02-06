@@ -26,5 +26,6 @@ void ** _pbcM_sp_query_insert(struct map_sp *map, const char *key);
 void _pbcM_sp_delete(struct map_sp *map);
 void _pbcM_sp_foreach(struct map_sp *map, void (*func)(void *p));
 void _pbcM_sp_foreach_ud(struct map_sp *map, void (*func)(void *p, void *ud), void *ud);
+void * _pbcM_sp_next(struct map_sp *map, const char ** key);
 
 #endif

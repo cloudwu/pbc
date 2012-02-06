@@ -25,6 +25,15 @@ struct value {
 	union _var v;
 };
 
+int 
+pbc_rmessage_next(struct pbc_rmessage *m, const char **key) {
+	struct value * v = _pbcM_sp_next(m->index, key);
+	if (*key == NULL) {
+		return 0;
+	}
+	return _pbcP_type(v->type, NULL);
+}
+
 #define SIZE_VAR (offsetof(struct value, v) + sizeof(pbc_var))
 #define SIZE_ARRAY (offsetof(struct value, v) + sizeof(pbc_array))
 #define SIZE_MESSAGE (offsetof(struct value, v) + sizeof(struct pbc_rmessage))

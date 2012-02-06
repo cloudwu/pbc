@@ -167,15 +167,7 @@ _pbcP_message_default(struct _message * m, const char * name, pbc_var defv) {
 }
 
 int 
-pbc_type(struct pbc_env * p, const char * typename , const char * key , const char ** type) {
-	struct _message *m = _pbcP_get_message(p, typename);
-	if (m==NULL) {
-		return 0;
-	}
-	if (key == NULL) {
-		return 1;
-	}
-	struct _field * field = _pbcM_sp_query(m->name, key);
+_pbcP_type(struct _field * field, const char ** type) {
 	if (field == NULL) {
 		return 0;
 	}
@@ -229,4 +221,17 @@ pbc_type(struct pbc_env * p, const char * typename , const char * key , const ch
 	}
 
 	return ret;
+}
+
+int 
+pbc_type(struct pbc_env * p, const char * typename , const char * key , const char ** type) {
+	struct _message *m = _pbcP_get_message(p, typename);
+	if (m==NULL) {
+		return 0;
+	}
+	if (key == NULL) {
+		return 1;
+	}
+	struct _field * field = _pbcM_sp_query(m->name, key);
+	return _pbcP_type(field, type);
 }

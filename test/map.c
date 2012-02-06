@@ -1,4 +1,4 @@
-#include "map.h"
+#include "src/map.h"
 
 #include <stdio.h>
 #include <stddef.h>
@@ -37,6 +37,14 @@ main()
 	printf("%s\n",(const char *)_pbcM_sp_query(map3,"Alice"));
 	printf("%s\n",(const char *)_pbcM_sp_query(map3,"Bob"));
 	printf("%s\n",(const char *)_pbcM_sp_query(map3,"Carol"));
+
+	const char * key = NULL;
+	for (;;) {
+		void * v = _pbcM_sp_next(map3, &key);
+		if (key == NULL)
+			break;
+		printf("%s : %s\n", key, (const char *)v);
+	}
 
 	return 0;
 }

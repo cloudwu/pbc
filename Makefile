@@ -4,10 +4,12 @@ AR = ar rc
 
 BUILD = build
 
+.PHONY : all lib clean tool
+
 LIBSRCS = context.c varint.c array.c pattern.c register.c proto.c map.c alloc.c rmessage.c wmessage.c bootstrap.c stringpool.c
 LIBNAME = libpbc.a
 
-TESTSRCS = addressbook.c pattern.c pbc.c float.c
+TESTSRCS = addressbook.c pattern.c pbc.c float.c map.c
 PROTOSRCS = addressbook.proto descriptor.proto float.proto
 
 BUILD_O = $(BUILD)/o
@@ -23,6 +25,15 @@ $(BUILD) : $(BUILD_O)
 
 $(BUILD_O) :
 	mkdir -p $@
+
+TOOL := $(BUILD)/dump
+
+tool : $(TOOL)
+
+$(TOOL) : | $(BUILD)
+$(TOOL) : $(LIBNAME)
+$(TOOL) : tool/dump.c
+	cd $(BUILD) && $(CC) $(CFLAGS) -I.. -L. -o dump ../$< -lpbc
 
 LIB_O :=
 
