@@ -188,12 +188,14 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 		id |= WT_BIT64;
 		m->ptr += _pbcV_encode32(id, m->ptr);
 		int64_encode(low,hi,m->ptr);
+		m->ptr += 8;
 		break;
 	case PTYPE_FIXED32:
 	case PTYPE_SFIXED32:
 		id |= WT_BIT32;
 		m->ptr += _pbcV_encode32(id, m->ptr);
 		int32_encode(low,m->ptr);
+		m->ptr += 4;
 		break;
 	case PTYPE_SINT32:
 		id |= WT_VARINT;

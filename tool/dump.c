@@ -104,17 +104,16 @@ dump_message(struct pbc_rmessage *m, int level) {
 }
 
 static void
-dump(const char *proto, const char * message, const char *datafile) {
+dump(const char *proto, const char * message, struct pbc_slice *data) {
 	struct pbc_env * env = pbc_new();
-	struct pbc_slice pb,data;
+	struct pbc_slice pb;
 	read_file(proto, &pb);
 	int r = pbc_register(env, &pb);
 	if (r!=0) {
 		fprintf(stderr, "Can't register %s\n", proto);
 		exit(1);
 	}
-	read_file(datafile , &data);
-	struct pbc_rmessage * m = pbc_rmessage_new(env , message , &data);
+	struct pbc_rmessage * m = pbc_rmessage_new(env , message , data);
 	if (m == NULL) {
 		fprintf(stderr, "Decode message %s fail\n",message);
 		exit(1);
@@ -123,11 +122,39 @@ dump(const char *proto, const char * message, const char *datafile) {
 }
 
 static void
+push_byte(int byte, struct pbc_slice *data , int idx) {
+	if (idx >= data->len) {
+		data->len *= 2;
+		data->buffer = realloc(data->buffer, data->len);
+	}
+	((uint8_t *)data->buffer)[idx] = (uint8_t)byte;
+}
+
+static void
+read_stdin(int mode, struct pbc_slice *data) {
+	data->len = 128;
+	data->buffer = malloc(data->len);
+	int idx = 0;
+	while(!feof(stdin)) {
+		int byte;
+		int r = scanf("%d" , &byte);
+		if (r == 0) {
+			break;
+		}
+		push_byte(byte, data, idx);
+		++idx;
+	}
+	data->len = idx;
+}
+
+static void
 usage(const char *argv0) {
 	printf("  -h help.\n"
 		"  -p <filename.pb> protobuf file\n"
 		"  -m <messagename>\n"
-		"  -d <datafile>\n");
+		"  -d <datafile>\n"
+		"  -D input from stdin (DEC number)\n"
+	);
 }
 
 int
@@ -136,8 +163,9 @@ main(int argc , char * argv[])
 	int ch;
 	const char * proto = NULL;
 	const char * message = NULL;
-	const char * data = NULL;
-	while ((ch = getopt(argc, argv, "hp:m:d:")) != -1) {
+	const char * datafile = NULL;
+	int mode = 0;
+	while ((ch = getopt(argc, argv, "hDp:m:d:")) != -1) {
 		switch(ch) {
 		case 'h':
 			usage(argv[0]);
@@ -149,19 +177,31 @@ main(int argc , char * argv[])
 			message = optarg;
 			break;
 		case 'd':
-			data = optarg;
+			datafile = optarg;
+			break;
+		case 'D':
+			mode = 10;
 			break;
 		default:
 			usage(argv[0]);
 			return 1;
 		}
 	}
-	if (proto == NULL || message == NULL || data == NULL) {
+
+	if (proto == NULL || message == NULL) {
 		usage(argv[0]);
 		return 1;
 	}
 
-	dump(proto , message , data);
+	struct pbc_slice data;
+
+	if (datafile == NULL) {
+		read_stdin(mode, &data);
+	} else {
+		read_file(datafile , &data);
+	}
+
+	dump(proto , message , &data);
 
 	return 0;
 }
