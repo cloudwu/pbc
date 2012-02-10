@@ -7,6 +7,7 @@ local pairs = pairs
 local ipairs = ipairs
 local string = string
 local print = print
+local io = io
 
 module "protobuf"
 
@@ -196,8 +197,15 @@ function close_decoder(self)
 	setmetatable(self,nil)
 end
 
-function register( buffer , length)
-	c._env_register(P, buffer, length)
+function register( buffer)
+	c._env_register(P, buffer)
+end
+
+function register_file(filename)
+	local f = assert(io.open(filename , "rb"))
+	local buffer = f:read "*a"
+	c._env_register(P, buffer)
+	f:close()
 end
 
 ----------- encode ----------------
