@@ -32,6 +32,7 @@ struct pbc_env * pbc_new(void);
 void pbc_delete(struct pbc_env *);
 int pbc_register(struct pbc_env *, struct pbc_slice * slice);
 int pbc_type(struct pbc_env *, const char * typename , const char * key , const char ** type);
+const char * pbc_error(struct pbc_env *);
 
 // message api
 

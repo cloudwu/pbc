@@ -46,6 +46,10 @@ dump(uint8_t *buffer, int sz) {
 static void
 test_rmessage(struct pbc_env *env, struct pbc_slice *slice) {
 	struct pbc_rmessage * m = pbc_rmessage_new(env, "tutorial.Person", slice);
+	if (m==NULL) {
+		printf("Error : %s",pbc_error(env));
+		return;
+	}
 	printf("name = %s\n", pbc_rmessage_string(m , "name" , 0 , NULL));
 	printf("id = %d\n", pbc_rmessage_integer(m , "id" , 0 , NULL));
 	printf("email = %s\n", pbc_rmessage_string(m , "email" , 0 , NULL));
@@ -105,7 +109,11 @@ main()
 	if (slice.buffer == NULL)
 		return 1;
 	struct pbc_env * env = pbc_new();
-	pbc_register(env, &slice);
+	int r = pbc_register(env, &slice);
+	if (r) {
+		printf("Error : %s", pbc_error(env));
+		return 1;
+	}
 
 	free(slice.buffer);
 

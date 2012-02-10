@@ -37,6 +37,7 @@ struct _message {
 	struct map_ip * id;	// id -> _field
 	struct map_sp * name;	// string -> _field
 	struct pbc_rmessage * def;	// default message
+	struct pbc_env * env;
 };
 
 struct _enum {
@@ -50,6 +51,7 @@ struct pbc_env {
 	struct map_sp * files;	// string -> void *
 	struct map_sp * enums;	// string -> _enum
 	struct map_sp * msgs;	// string -> _message
+	const char * lasterror;
 };
 
 struct _message * _pbcP_init_message(struct pbc_env * p, const char *name);

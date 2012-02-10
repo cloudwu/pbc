@@ -9,6 +9,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+const char * 
+pbc_error(struct pbc_env * p) {
+	const char *err = p->lasterror;
+	p->lasterror = "";
+	return err;
+}
+
 struct _message * 
 _pbcP_get_message(struct pbc_env * p , const char *name) {
 	return _pbcM_sp_query(p->msgs, name);
@@ -20,6 +27,7 @@ pbc_new(void) {
 	p->files = _pbcM_sp_new();
 	p->enums = _pbcM_sp_new();
 	p->msgs = _pbcM_sp_new();
+	p->lasterror = "";
 
 	_pbcB_init(p);
 
@@ -91,6 +99,7 @@ _pbcP_push_message(struct pbc_env * p, const char *name, struct _field *f , pbc_
 		m->key = name;
 		m->id = NULL;
 		m->name = _pbcM_sp_new();
+		m->env = p;
 		_pbcM_sp_insert(p->msgs, name, m);
 	}
 	struct _field * field = malloc(sizeof(*field));
@@ -132,6 +141,7 @@ _pbcP_init_message(struct pbc_env * p, const char *name) {
 		m->key = name;
 		m->id = NULL;
 		m->name = _pbcM_sp_new();
+		m->env = p;
 		_pbcM_sp_insert(p->msgs, name, m);
 
 		return m;

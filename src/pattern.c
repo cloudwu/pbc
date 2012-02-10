@@ -795,6 +795,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 	pbc_ctx _ctx;
 	int r = _pbcC_open(_ctx, s->buffer, s->len);
 	if (r <= 0) {
+		pat->env->lasterror = "Pattern unpack open context error";
 		_pbcC_close(_ctx);
 		return r-1;
 	}
@@ -811,6 +812,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 			if (unpack_field(f->ctype , f->ptype , ctx->buffer , &ctx->a[i], out) < 0) {
 				pbc_pattern_close_arrays(pat, output);
 				_pbcC_close(_ctx);
+				pat->env->lasterror = "Pattern unpack field error";
 				return -i-1;
 			}
 		}
@@ -931,12 +933,12 @@ _comp_field(const void * a, const void * b) {
 }
 
 struct pbc_pattern *
-_pbcP_new(int n)
-{
+_pbcP_new(struct pbc_env * env, int n) {
 	size_t sz = sizeof(struct pbc_pattern) + (sizeof(struct _pattern_field)) * (n-1);
 	struct pbc_pattern * ret = malloc(sz);
 	memset(ret, 0 , sz);
 	ret->count = n;
+	ret->env = env;
 	return ret;
 }
 
@@ -971,7 +973,7 @@ _pattern_new(struct _message *m, const char *format) {
 	int len = strlen(format);
 	char temp[len+1];
 	int n = _scan_pattern(format, temp);
-	struct pbc_pattern * pat = _pbcP_new(n);
+	struct pbc_pattern * pat = _pbcP_new(m->env, n);
 	int i;
 
 	const char *ptr = temp;
@@ -981,22 +983,28 @@ _pattern_new(struct _message *m, const char *format) {
 	for (i=0;i<n;i++) {
 		struct _pattern_field * f = &(pat->f[i]);
 		struct _field * field = _pbcM_sp_query(m->name, ptr);
-		if (field == NULL)
+		if (field == NULL) {
+			m->env->lasterror = "Pattern @new query none exist field";
 			goto _error;
+		}
 		f->id = field->id;
 		f->ptype = field->type;
 		*f->defv = *field->default_v;
 		f->offset = offset;
 		ptr += strlen(ptr) + 1;
 		f->ctype = _ctype(ptr);
-		if (f->ctype < 0)
+		if (f->ctype < 0) {
+			m->env->lasterror = "Pattern @new use an invalid ctype";
 			goto _error;
+		}
 		
 		if (f->ctype == CTYPE_ARRAY && field->label == LABEL_PACKED) {
 			f->ctype = CTYPE_PACKED;
 		}
-		if (_check_ctype(field, f))
+		if (_check_ctype(field, f)) {
+			m->env->lasterror = "Pattern @new ctype check error";
 			goto _error;
+		}
 
 		offset += _ctype_size(ptr);
 		ptr += strlen(ptr) + 1;
@@ -1016,6 +1024,7 @@ struct pbc_pattern *
 pbc_pattern_new(struct pbc_env * env , const char * message, const char * format, ... ) {
 	struct _message *m = _pbcP_get_message(env, message);
 	if (m==NULL) {
+		env->lasterror = "Pattern new can't find proto";
 		return NULL;
 	}
 	if (format[0]=='@') {
@@ -1025,7 +1034,7 @@ pbc_pattern_new(struct pbc_env * env , const char * message, const char * format
 	int len = strlen(format);
 	char temp[len+1];
 	int n = _scan_pattern(format, temp);
-	struct pbc_pattern * pat = _pbcP_new(n);
+	struct pbc_pattern * pat = _pbcP_new(env, n);
 	int i;
 	va_list ap;
 	va_start(ap , format);
@@ -1035,8 +1044,10 @@ pbc_pattern_new(struct pbc_env * env , const char * message, const char * format
 	for (i=0;i<n;i++) {
 		struct _pattern_field * f = &(pat->f[i]);
 		struct _field * field = _pbcM_sp_query(m->name, ptr);
-		if (field == NULL)
+		if (field == NULL) {
+			env->lasterror = "Pattern new query none exist field";
 			goto _error;
+		}
 		f->id = field->id;
 		f->ptype = field->type;
 		*f->defv = *field->default_v;
@@ -1045,13 +1056,17 @@ pbc_pattern_new(struct pbc_env * env , const char * message, const char * format
 		ptr += strlen(ptr) + 1;
 
 		f->ctype = _ctype(ptr);
-		if (f->ctype < 0)
+		if (f->ctype < 0) {
+			env->lasterror = "Pattern new use an invalid ctype";
 			goto _error;
+		}
 		if (f->ctype == CTYPE_ARRAY && field->label == LABEL_PACKED) {
 			f->ctype = CTYPE_PACKED;
 		}
-		if (_check_ctype(field, f))
+		if (_check_ctype(field, f)) {
+			env->lasterror = "Pattern new ctype check error";
 			goto _error;
+		}
 
 		ptr += strlen(ptr) + 1;
 	}

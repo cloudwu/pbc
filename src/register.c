@@ -274,18 +274,20 @@ int
 pbc_register(struct pbc_env * p, struct pbc_slice *slice) {
 	struct pbc_rmessage * message = pbc_rmessage_new(p, "google.protobuf.FileDescriptorSet", slice);
 	if (message == NULL) {
-		printf("open google.protobuf.FileDescriptorSet fail\n");
+		p->lasterror = "register open google.protobuf.FileDescriptorSet fail";
 		return 1;
 	}
 	int n = pbc_rmessage_size(message, "file");
 	struct pbc_rmessage * files[n];
 	int i;
 	if (n == 0) {
+		p->lasterror = "register empty";
 		goto _error;
 	}
 	for (i=0;i<n;i++) {
 		files[i] = pbc_rmessage_message(message, "file", i);
 		if (files[i] == NULL) {
+			p->lasterror = "register open fail";
 			goto _error;
 		}
 	}
@@ -294,6 +296,7 @@ pbc_register(struct pbc_env * p, struct pbc_slice *slice) {
 	do {
 		int rr = _register_no_dependency(p,files , n);
 		if (rr == r) {
+			p->lasterror = "register dependency error";
 			goto _error;
 		}
 		r = rr;

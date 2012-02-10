@@ -147,11 +147,12 @@ read_value(struct _field *f, struct atom * a, uint8_t *buffer) {
 }
 
 static void
-push_value_packed(pbc_array array, struct _field *f, struct atom * aa, uint8_t *buffer) {
+push_value_packed(struct _message * type, pbc_array array, struct _field *f, struct atom * aa, uint8_t *buffer) {
 	int n = _pbcP_unpack_packed((uint8_t *)buffer + aa->v.s.start, aa->v.s.end - aa->v.s.start,
 		f->type , array);
 	if (n<=0) {
 		// todo  : error
+		type->env->lasterror = "Unpack packed field error";
 		return;
 	}
 	if (f->type == PTYPE_ENUM) {
@@ -239,6 +240,7 @@ _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buf
 	}
 	pbc_ctx _ctx;
 	if (_pbcC_open(_ctx,buffer,size) <=0) {
+		type->env->lasterror = "rmessage decode context error";
 		memset(ret , 0, sizeof(*ret));
 		return;
 	}
@@ -265,7 +267,7 @@ _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buf
 					v= *vv;
 				}
 				if (f->label == LABEL_PACKED) {
-					push_value_packed(v->v.array , f , &(ctx->a[i]), buffer);
+					push_value_packed(type, v->v.array , f , &(ctx->a[i]), buffer);
 				} else {
 					push_value_array(v->v.array , f, &(ctx->a[i]), buffer);
 				}
@@ -284,8 +286,10 @@ _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buf
 struct pbc_rmessage * 
 pbc_rmessage_new(struct pbc_env * env, const char * typename ,  struct pbc_slice * slice) {
 	struct _message * msg = _pbcP_get_message(env, typename);
-	if (msg == NULL)
+	if (msg == NULL) {
+		env->lasterror = "Proto not found";
 		return NULL;
+	}
 	struct pbc_rmessage temp;
 	_pbc_rmessage_new(&temp, msg , slice->buffer, slice->len);
 	if (temp.msg == NULL)
@@ -434,6 +438,7 @@ pbc_rmessage_message(struct pbc_rmessage * rm, const char *key, int index) {
 	if (v == NULL) {
 		struct _field * f = _pbcM_sp_query(rm->msg->name, key);
 		if (f == NULL) {
+			rm->msg->env->lasterror = "Invalid key for sub-message";
 			// invalid key
 			return NULL;
 		}

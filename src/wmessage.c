@@ -148,6 +148,7 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 	struct _field * f = _pbcM_sp_query(m->type->name,key);
 	if (f==NULL) {
 		// todo : error
+		m->type->env->lasterror = "wmessage_interger query key error";
 		return;
 	}
 	if (f->label == LABEL_PACKED) {
@@ -215,6 +216,7 @@ pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
 	struct _field * f = _pbcM_sp_query(m->type->name,key);
 	if (f == NULL) {
 		// todo : error
+		m->type->env->lasterror = "wmessage_real query key error";
 		return;
 	}
 	if (f->label == LABEL_PACKED) {
@@ -250,6 +252,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 	struct _field * f = _pbcM_sp_query(m->type->name,key);
 	if (f == NULL) {
 		// todo : error
+		m->type->env->lasterror = "wmessage_string query key error";
 		return;
 	}
 
@@ -271,6 +274,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 			int enum_id = _pbcM_si_query(f->type_name.e->name, v);
 			if (enum_id < 0) {
 				// todo : error , invalid enum
+				m->type->env->lasterror = "wmessage_string packed invalid enum";
 				assert(0);
 				return;
 			}
@@ -304,6 +308,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		int enum_id = _pbcM_si_query(f->type_name.e->name, v);
 		if (enum_id < 0) {
 			// todo : error , enum invalid
+			m->type->env->lasterror = "wmessage_string invalid enum";
 			assert(0);
 			return;
 		}
@@ -329,6 +334,7 @@ pbc_wmessage_message(struct pbc_wmessage *m, const char *key) {
 	struct _field * f = _pbcM_sp_query(m->type->name,key);
 	if (f == NULL) {
 		// todo : error
+		m->type->env->lasterror = "wmessage_message query key error";
 		return NULL;
 	}
 	pbc_var var;
@@ -437,7 +443,9 @@ _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 		break;
 	default:
 		// error
-		m->ptr += len;
+		memset(m->ptr , 0 , n);
+		m->ptr += n;
+		m->type->env->lasterror = "wmessage type error when pack packed";
 		break;
 	}
 	int end_offset = m->ptr - m->buffer;

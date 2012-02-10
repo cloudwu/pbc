@@ -242,7 +242,7 @@ _set_int32_array(struct _pattern_field * f) {
 
 static int
 register_internal(struct pbc_env * p, struct pbc_slice *slice) {
-	struct pbc_pattern * FIELD_T =  _pbcP_new(8);
+	struct pbc_pattern * FIELD_T =  _pbcP_new(p,8);
 	F(0,name,string);
 	F(1,id,int32);
 	F(2,label,int32);
@@ -252,7 +252,7 @@ register_internal(struct pbc_env * p, struct pbc_slice *slice) {
 	F(6,default_string,string);
 	F(7,default_real,double);
 
-	struct pbc_pattern * FILE_T =  _pbcP_new(10);
+	struct pbc_pattern * FILE_T =  _pbcP_new(p,10);
 
 	D(0,name,string);
 	D(1,dependency,string_array);
