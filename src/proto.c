@@ -240,7 +240,7 @@ pbc_type(struct pbc_env * p, const char * typename , const char * key , const ch
 		return 0;
 	}
 	if (key == NULL) {
-		return 1;
+		return 0;
 	}
 	struct _field * field = _pbcM_sp_query(m->name, key);
 	return _pbcP_type(field, type);
