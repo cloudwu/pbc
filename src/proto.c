@@ -207,8 +207,10 @@ _pbcP_type(struct _field * field, const char ** type) {
 		ret = PBC_BOOL;
 		break;
 	case PTYPE_STRING:
-	case PTYPE_BYTES:  
 		ret = PBC_STRING;
+		break;
+	case PTYPE_BYTES:  
+		ret = PBC_BYTES;
 		break;
 	case PTYPE_ENUM:
 		ret = PBC_ENUM;

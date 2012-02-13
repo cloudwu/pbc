@@ -14,6 +14,10 @@ module "protobuf"
 local P = c._env_new()
 setmetatable(_M , { __gc = function(t) c._env_delete(P) end })
 
+function lasterror()
+	return c._last_error(P)
+end
+
 local decode_type_cache = {}
 local _R_meta = {}
 
@@ -140,6 +144,7 @@ _reader[6] = function(msg)
 end
 _reader[7] = function(msg) return _reader.int64 end
 _reader[8] = function(msg) return _reader.int32 end
+_reader[9] = _reader[5]
 
 _reader[128+1] = function(msg) return _reader.int_repeated end
 _reader[128+2] = function(msg) return _reader.real_repeated end
@@ -154,6 +159,7 @@ _reader[128+6] = function(msg)
 end
 _reader[128+7] = function(msg) return _reader.int64_repeated end
 _reader[128+8] = function(msg) return _reader.int32_repeated end
+_reader[128+9] = _reader[128+5]
 
 local _decode_type_meta = {}
 
@@ -294,6 +300,7 @@ _writer[6] = function(msg)
 end
 _writer[7] = function(msg) return _writer.int64 end
 _writer[8] = function(msg) return _writer.int32 end
+_writer[9] = _writer[5]
 
 _writer[128+1] = function(msg) return _writer.int_repeated end
 _writer[128+2] = function(msg) return _writer.real_repeated end
@@ -308,6 +315,7 @@ _writer[128+6] = function(msg)
 end
 _writer[128+7] = function(msg) return _writer.int64_repeated end
 _writer[128+8] = function(msg) return _writer.int32_repeated end
+_writer[128+9] = _writer[128+5]
 
 local _encode_type_meta = {}
 
@@ -370,6 +378,9 @@ local _pattern_type = {
 	[128+8] = {"%D","P"},
 }
 
+_pattern_type[9] = _pattern_type[5]
+_pattern_type[128+9] = _pattern_type[128+5]
+
 
 local function _pattern_create(pattern)
 	local iter = string.gmatch(pattern,"[^ ]+")
@@ -377,11 +388,9 @@ local function _pattern_create(pattern)
 	local cpat = {}
 	local lua = {}
 	for v in iter do
-		local t = c._env_type(P, message, v)
-		t = _pattern_type[t]
-		if t == nil then
-			return
-		end
+		local tidx = c._env_type(P, message, v)
+		local t = _pattern_type[tidx]
+		assert(t,tidx)
 		table.insert(cpat,v .. " " .. t[1])
 		table.insert(lua,t[2])
 	end
@@ -426,4 +435,12 @@ function check(typename , field)
 	else
 		return c._env_type(P,typename,field) ~=0
 	end
+end
+
+local function _next(obj, prev)
+	return c._rmessage_nextkey(obj, prev)
+end
+
+function key(msg)
+	return _next, msg._CObj , nil
 end

@@ -76,6 +76,21 @@ _rmessage_new(lua_State *L) {
 }
 
 static int
+_rmessage_nextkey(lua_State *L) {
+	struct pbc_rmessage * m = lua_touserdata(L,1);
+	const char *key = NULL;
+	if (lua_isstring(L,2)) {
+		key = lua_tostring(L,2);
+	}
+	int t = pbc_rmessage_next(m, &key);
+	if (key == NULL)
+		return 0;
+	lua_pushstring(L,key);
+	lua_pushinteger(L,t);
+	return 2;
+}
+
+static int
 _rmessage_delete(lua_State *L) {
 	struct pbc_rmessage * m = lua_touserdata(L,1);
 	pbc_rmessage_delete(m);
@@ -290,6 +305,17 @@ _wmessage_buffer_string(lua_State *L) {
 	struct pbc_wmessage * m = lua_touserdata(L,1);
 	pbc_wmessage_buffer(m , &slice);
 	lua_pushlstring(L, (const char *)slice.buffer, slice.len);
+	return 1;
+}
+
+/*
+	lightuserdata env
+ */
+static int
+_last_error(lua_State *L) {
+	struct pbc_env * env = lua_touserdata(L, 1);
+	const char * err = pbc_error(env);
+	lua_pushstring(L,err);
 	return 1;
 }
 
@@ -645,7 +671,7 @@ _pattern_pack(lua_State *L) {
 	luaL_buffinit(L, &b);
 
 	int cap = 128;
-	do {
+	for (;;) {
 		char * temp = luaL_prepbuffsize(&b , cap);
 
 		struct pbc_slice slice;
@@ -661,7 +687,8 @@ _pattern_pack(lua_State *L) {
 		}
 
 		luaL_addsize(&b , slice.len);
-	} while (0);
+		break;
+	}
 	luaL_pushresult(&b);
 
 	pbc_pattern_close_arrays(pat, data);
@@ -706,6 +733,7 @@ luaopen_protobuf_c(lua_State *L) {
 		{"_env_delete" , _env_delete },
 		{"_env_register" , _env_register },
 		{"_env_type", _env_type },
+		{"_rmessage_nextkey", _rmessage_nextkey },
 		{"_rmessage_new" , _rmessage_new },
 		{"_rmessage_delete" , _rmessage_delete },
 		{"_rmessage_integer" , _rmessage_integer },
@@ -730,6 +758,7 @@ luaopen_protobuf_c(lua_State *L) {
 		{"_pattern_size", _pattern_size },
 		{"_pattern_unpack", _pattern_unpack },
 		{"_pattern_pack", _pattern_pack },
+		{"_last_error", _last_error },
 		{NULL,NULL},
 	};
 

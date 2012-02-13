@@ -568,7 +568,7 @@ _pack_field(struct _pattern_field *pf , int ctype, struct pbc_slice *s, void *in
 		break;
 	}
 
-	return -1;
+	return 0;
 _bytes:
 	input_slice = input;
 _string:
@@ -777,8 +777,9 @@ pbc_pattern_pack(struct pbc_pattern *pat, void *input, struct pbc_slice * s)
 				len = _pack_field(pf, pf->ctype, &slice, in);
 			}
 		}
-		if (len < 0)
+		if (len < 0) {
 			return len;
+		}
 	}
 	int len = (char *)slice.buffer - (char *)s->buffer;
 	int ret = s->len - len;
