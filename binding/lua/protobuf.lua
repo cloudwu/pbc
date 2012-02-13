@@ -444,3 +444,19 @@ end
 function key(msg)
 	return _next, msg._CObj , nil
 end
+
+local function _next_pairs(msg, prev)
+	local key, t = c._rmessage_nextkey(msg._CObj, prev)
+	if key == nil then
+		return
+	end
+	local v = decode_type_cache[msg._CType][key](msg._CObj, key)
+	msg[key] = v
+	return key,v,t
+end
+
+function _R_meta:__pairs()
+	return _next_pairs , self , nil
+end
+
+_R_metagc.__pairs = _R_meta.__pairs
