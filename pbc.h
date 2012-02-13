@@ -6,6 +6,7 @@
 
 #define PBC_ARRAY_CAP 64
 
+#define PBC_EXIST -1
 #define PBC_INT 1
 #define PBC_REAL 2
 #define PBC_BOOL 3
