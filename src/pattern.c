@@ -773,7 +773,7 @@ pbc_pattern_pack(struct pbc_pattern *pat, void *input, struct pbc_slice * s)
 		} else if (pf->ctype == CTYPE_ARRAY) {
 			len = _pack_repeated(pf, &slice , in);
 		} else {
-			if (!_is_default(pf , input)) {
+			if (!_is_default(pf , in)) {
 				len = _pack_field(pf, pf->ctype, &slice, in);
 			}
 		}
