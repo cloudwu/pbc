@@ -450,9 +450,7 @@ local function _next_pairs(msg, prev)
 	if key == nil then
 		return
 	end
-	local v = decode_type_cache[msg._CType][key](msg._CObj, key)
-	msg[key] = v
-	return key,v,t
+	return key, msg[key]
 end
 
 function _R_meta:__pairs()
