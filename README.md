@@ -69,6 +69,12 @@ Not supported
 
 With message API , you can use both string and integer as the enum type , and with pattern api it must be integer. 
 
+## Lua bindings
+
+cd bindings/lua && make
+
+See https://github.com/cloudwu/pbc/tree/master/binding/lua/README.md
+
 ## Question ?
 
 * Send me an email : http://www.codingnow.com/2000/gmail.gif

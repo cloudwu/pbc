@@ -10,6 +10,7 @@ pb = require "protobuf"
 pb.register "addressbook.pb"
 ```
 or
+
 ```Lua
 file = io.open("addressbook.pb","rb")
 buffer = file:read "*a"
