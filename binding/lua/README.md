@@ -54,6 +54,7 @@ pb.encode("tutorial.Person",
 ```
 
 For decode :
+
 ```Lua
 result = pb.decode("tutorial.Person", stringbuffer)
 -- decode also support lightuserdata and length of data instead of a string : pb.decode("tutorial.Person", buffer, length)
@@ -79,6 +80,7 @@ result:close_decoder()
 ## Pattern mode
 
 Pattern mode is cheaper than message mode.
+
 ```Lua
 phone = pb.encode("tutorial.Person.PhoneNumber number","87654321")  -- pack a PhoneNumber package.
 person = pb.encode("tutorial.Person name id phone","Alice",123,{phone}) -- phone list is a repeated field
