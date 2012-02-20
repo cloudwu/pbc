@@ -57,7 +57,8 @@ For decode :
 
 ```Lua
 result = pb.decode("tutorial.Person", stringbuffer)
--- decode also support lightuserdata and length of data instead of a string : pb.decode("tutorial.Person", buffer, length)
+-- decode also support lightuserdata and length of data instead of a string :
+-- pb.decode("tutorial.Person", buffer, length)
 
 -- you can iterate the result with pairs
 for k,v in pairs(result) do
