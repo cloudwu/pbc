@@ -7,7 +7,7 @@ Make and install protobuf.dll and protobuf.lua into your lua path.
 ```Lua
 pb = require "protobuf"
 
-pb.register "addressbook.pb"
+pb.register_file "addressbook.pb"
 ```
 or
 
