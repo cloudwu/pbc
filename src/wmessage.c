@@ -155,7 +155,7 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 		_packed_integer(m , f, key , low, hi);
 		return;		
 	}
-	if (f->label != LABEL_REPEATED) {
+	if (f->label == LABEL_OPTIONAL) {
 		if (f->type == PTYPE_ENUM) {
 			if (low == f->default_v->e.id)
 				return;
@@ -224,7 +224,7 @@ pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
 		return;		
 	}
 
-	if (f->label != LABEL_REPEATED) {
+	if (f->label == LABEL_OPTIONAL) {
 		if (v == f->default_v->real)
 			return;
 	}
@@ -283,7 +283,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		return;	
 	}
 
-	if (f->label != LABEL_REPEATED) {
+	if (f->label == LABEL_OPTIONAL) {
 		if (f->type == PTYPE_ENUM) {
 			if (strncmp(v , f->default_v->e.name, len) == 0 && f->default_v->e.name[len] =='\0') {
 				return;

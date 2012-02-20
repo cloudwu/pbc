@@ -10,6 +10,7 @@ struct _pattern_field {
 	int offset;
 	int ptype;
 	int ctype;
+	int label;
 	pbc_var defv;
 };
 

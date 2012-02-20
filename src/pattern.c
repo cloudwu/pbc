@@ -768,14 +768,20 @@ pbc_pattern_pack(struct pbc_pattern *pat, void *input, struct pbc_slice * s)
 		struct _pattern_field * pf = &pat->f[i];
 		void * in = (char *)input + pf->offset;
 		int len = 0;
-		if (pf->ctype == CTYPE_PACKED) {
-			len = _pack_packed(pf, &slice , in);
-		} else if (pf->ctype == CTYPE_ARRAY) {
-			len = _pack_repeated(pf, &slice , in);
-		} else {
-			if (!_is_default(pf , in)) {
-				len = _pack_field(pf, pf->ctype, &slice, in);
+		switch(pf->label) {
+		case LABEL_OPTIONAL:
+			if (_is_default(pf , in)) {
+				break;
 			}
+		case LABEL_REQUIRED:
+			len = _pack_field(pf, pf->ctype, &slice, in);
+			break;
+		case LABEL_REPEATED:
+			len = _pack_repeated(pf, &slice , in);
+			break;
+		case LABEL_PACKED:
+			len = _pack_packed(pf, &slice , in);
+			break;
 		}
 		if (len < 0) {
 			return len;
@@ -1068,6 +1074,7 @@ pbc_pattern_new(struct pbc_env * env , const char * message, const char * format
 			env->lasterror = "Pattern new ctype check error";
 			goto _error;
 		}
+		f->label = field->label;
 
 		ptr += strlen(ptr) + 1;
 	}
