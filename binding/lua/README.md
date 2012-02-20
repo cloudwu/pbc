@@ -1,6 +1,6 @@
 ## Install
 
-Make and install protobuf.dll and protobuf.lua into your lua path.
+Make and install protobuf.so ( or protobuf.dll in windows ) and protobuf.lua into your lua path.
 
 ## Register
 
