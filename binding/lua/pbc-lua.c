@@ -642,8 +642,7 @@ _pattern_pack(lua_State *L) {
 	int size = lua_tointeger(L,3);
 
 	char data[size];
-
-	memset(data, 0 ,size);
+	pbc_pattern_set_default(pat, data);
 
 	char * ptr = data;
 
@@ -659,7 +658,7 @@ _pattern_pack(lua_State *L) {
 			int j;
 			int n = lua_rawlen(L,4+i);
 			for (j=0;j<n;j++) {
-				lua_rawgeti(L,4+i,j);
+				lua_rawgeti(L,4+i,j+1);
 				_get_array_value(L,(void *)ptr,format[i]);
 				lua_pop(L,1);
 			}

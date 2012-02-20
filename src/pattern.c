@@ -998,6 +998,7 @@ _pattern_new(struct _message *m, const char *format) {
 		f->ptype = field->type;
 		*f->defv = *field->default_v;
 		f->offset = offset;
+		f->label = field->label;
 		ptr += strlen(ptr) + 1;
 		f->ctype = _ctype(ptr);
 		if (f->ctype < 0) {
@@ -1059,6 +1060,7 @@ pbc_pattern_new(struct pbc_env * env , const char * message, const char * format
 		f->ptype = field->type;
 		*f->defv = *field->default_v;
 		f->offset = va_arg(ap, int);
+		f->label = field->label;
 
 		ptr += strlen(ptr) + 1;
 
@@ -1074,7 +1076,6 @@ pbc_pattern_new(struct pbc_env * env , const char * message, const char * format
 			env->lasterror = "Pattern new ctype check error";
 			goto _error;
 		}
-		f->label = field->label;
 
 		ptr += strlen(ptr) + 1;
 	}
