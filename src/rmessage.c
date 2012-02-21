@@ -43,7 +43,7 @@ read_string(struct atom *a,struct _field *f, uint8_t *buffer) {
 	const char * temp = (const char *) (buffer + a->v.s.start);
 	int len = a->v.s.end - a->v.s.start;
 
-	if (temp[len] == '\0') {
+	if (len > 0 && temp[len-1] == '\0') {
 		struct value * v = malloc(SIZE_VAR);
 		v->v.var->s.str = temp;
 		v->v.var->s.len = len;
@@ -62,12 +62,13 @@ static void
 read_string_var(pbc_var var,struct atom *a,struct _field *f,uint8_t *buffer) {
 	const char * temp = (const char *) (buffer + a->v.s.start);
 	int len = a->v.s.end - a->v.s.start;
-	if (temp[len] == '\0') {
+	if (len == 0) {
+		var->s.str = "";
+		var->s.len = 0;
+	}
+	else if (temp[len-1] == '\0') {
 		var->s.str = temp;
 		var->s.len = len;
-	} else if (len == 0) {
-			var->s.str = "";
-			var->s.len = 0;
 	} else {
 		char * temp2 = malloc(len + 1);
 		memcpy(temp2, temp, len);
