@@ -66,8 +66,8 @@ for k,v in pairs(result) do
 end
 
 -- Lua 5.1 don't support __pairs metamethod, so use pb.key instead.
-for k,v in pb.key(result) do
-  print(k,v)
+for k in pb.key(result) do
+  print(k,result[k])
 end
 ```
 
@@ -75,7 +75,7 @@ In Lua 5.2, the C Object attach with message table will destory in __gc method, 
 
 ```Lua
 -- In lua 5.1
-result:close_decoder()
+pb.close_decoder(result)
 ```
 
 ## Pattern mode
@@ -83,14 +83,13 @@ result:close_decoder()
 Pattern mode is cheaper than message mode.
 
 ```Lua
-phone = pb.encode("tutorial.Person.PhoneNumber number","87654321")  -- pack a PhoneNumber package.
-person = pb.encode("tutorial.Person name id phone","Alice",123,{phone}) -- phone list is a repeated field
+phone = pb.pack("tutorial.Person.PhoneNumber number","87654321")  -- pack a PhoneNumber package.
+person = pb.pack("tutorial.Person name id phone","Alice",123,{phone}) -- phone list is a repeated field
 
--- or you can avoid generate temporary string.
+-- use pb.unpack to unpack package
 
-pb.encode("tutorial.Person.PhoneNumber number","87654321", function(phonebuffer, length)
-  person = pb.encode("tutorial.Person name id phone" , "Alice" , 123 , { { phonebuffer, length } } )
-end)
+name, id, phone_package = pb.unpack("tutorial.Person name id phone", person)
+number = pb.unpack("tutorial.Person.PhoneNumber number",unpack(phone_package[1])) -- unpack return message with { buffer, length }
 ```
 
 ## Other API
