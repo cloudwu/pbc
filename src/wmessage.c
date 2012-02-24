@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #define WMESSAGE_SIZE 64
 
@@ -256,17 +257,17 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		return;
 	}
 
-	if (len == 0) {
-		len = strlen(v);
-	} else if (len<0) {
+	bool varlen = false;
+
+	if (len <=0) {
+		varlen = true;
 		// -1 for add '\0'
 		len = strlen(v) - len;
 	}
-
 	if (f->label == LABEL_PACKED) {
 		if (f->type == PTYPE_ENUM) {
 			char temp[len+1];
-			if (v[len] != '\0') {
+			if (!varlen || v[len] != '\0') {
 				memcpy(temp,v,len);
 				temp[len]='\0';
 				v = temp;
@@ -300,7 +301,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 	switch (f->type) {
 	case PTYPE_ENUM : {
 		char temp[len+1];
-		if (v[len] != '\0') {
+		if (!varlen || v[len] != '\0') {
 			memcpy(temp,v,len);
 			temp[len]='\0';
 			v = temp;
