@@ -19,6 +19,22 @@ file:close()
 pb.register(buffer)
 ```
 
+## Lua parser
+
+You can use the lua parser to register .proto file instead of .pb file .
+
+```Lua
+parser = require "parser"
+
+parser.register(filename [,path])
+-- filename can be a string (single file) or a table (filename set)
+
+```
+
+See testparser.lua for detail .
+
+parser.lua use Lpeg (http://www.inf.puc-rio.br/~roberto/lpeg/) to parser .proto file.
+
 ## Message Mode
 ```Lua
 pb = require "protobuf"
