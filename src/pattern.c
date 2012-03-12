@@ -52,10 +52,6 @@ pbc_pattern_set_default(struct pbc_pattern *pat, void *output) {
 			struct _pbc_array *array = (struct _pbc_array *)(output + pat->f[i].offset);
 			_pbcA_open(array);
 			continue;
-		} else if (pat->f[i].ptype == PTYPE_MESSAGE) {
-			struct _pbc_ctx *ctx = (struct _pbc_ctx *)(output + pat->f[i].offset);
-			_pbcC_open(ctx , NULL , 0);			
-			continue;
 		} else if (pat->f[i].ptype == PTYPE_ENUM) {
 			pbc_var defv;
 			defv->integer.low = pat->f[i].defv->e.id;
