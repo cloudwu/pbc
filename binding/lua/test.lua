@@ -41,7 +41,6 @@ for _,v in ipairs(decode.phone) do
 	print("\t"..v.number, v.type)
 end
 
-
-buffer = protobuf.pack("tutorial.Person name id", "Alice", 123)
-print(#buffer , buffer)
-print(protobuf.unpack("tutorial.Person name id", buffer))
+phonebuf = protobuf.pack("tutorial.Person.PhoneNumber number","87654321")
+buffer = protobuf.pack("tutorial.Person name id phone", "Alice", 123, { phonebuf })
+print(protobuf.unpack("tutorial.Person name id phone", buffer))

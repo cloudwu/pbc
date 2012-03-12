@@ -31,7 +31,9 @@ _pbcA_close(pbc_array _array) {
 void 
 _pbcA_push(pbc_array _array, pbc_var var) {
 	struct array * a = (struct array *)_array;
-	if (a->number >= INNER_FIELD) {
+	if (a->number == 0) {
+		a->a = (union _pbc_var *)(a+1);
+	} else if (a->number >= INNER_FIELD) {
 		if (a->number == INNER_FIELD) {
 			int cap = 1;
 			while (cap <= a->number + 1) 

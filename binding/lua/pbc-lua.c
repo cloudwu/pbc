@@ -642,7 +642,9 @@ _pattern_pack(lua_State *L) {
 	int size = lua_tointeger(L,3);
 
 	char data[size];
-	pbc_pattern_set_default(pat, data);
+//	A trick , we don't need default value. zero buffer for array and message field.
+//	pbc_pattern_set_default(pat, data);
+	memset(data, 0 , size);
 
 	char * ptr = data;
 

@@ -89,6 +89,10 @@ test_pattern_unpack(struct pbc_env *env, struct pbc_slice * slice) {
 static int
 test_pattern_pack(struct pbc_env *env , struct pbc_slice *slice) {
 	struct person p;
+	/*
+	  If you don't care about default values (you will set all values by yourself) ,
+      you can also use memset(&p, 0 , sizeof(p)) instead of pbc_pattern_set_default.
+	*/
 	pbc_pattern_set_default(pat, &p);
 
 	p.name.buffer = (void*)"Alice";
