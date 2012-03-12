@@ -77,18 +77,35 @@ _set_default(struct _stringpool *pool, struct _field *f , int ptype, const char 
 		}
 		f->default_v->integer.hi = 0;
 		break;
-	case PTYPE_INT64:
 	case PTYPE_UINT64:
+	case PTYPE_INT64:
 	case PTYPE_SFIXED64:
-	case PTYPE_SINT64:
-		// todo string to int64
+	case PTYPE_SINT64: {
+		long long v = strtoll(value, NULL, 10);
+		f->default_v->integer.low = (long) v;
+		f->default_v->integer.hi = (long)(v >> 32);
+		break;
+		}
 	case PTYPE_INT32:
 	case PTYPE_FIXED32:
-	case PTYPE_UINT32:
 	case PTYPE_SFIXED32:
 	case PTYPE_SINT32:
-		f->default_v->integer.low = atol(value);
+		f->default_v->integer.low = strtol(value, NULL, 10);
+		if (f->default_v->integer.low < 0) {
+			f->default_v->integer.hi = -1;
+		} else {
+			f->default_v->integer.hi = 0;
+		}
+		break;
+	case PTYPE_UINT32:
+		f->default_v->integer.low = strtoul(value, NULL, 10);
 		f->default_v->integer.hi = 0;
+		break;
+	case PTYPE_BYTES:
+	case PTYPE_MESSAGE:
+		// bytes and message types have no default value
+		f->default_v->m.buffer = 0;
+		f->default_v->m.len = 0;
 		break;
 	default:
 		f->default_v->integer.low = 0;
