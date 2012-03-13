@@ -44,22 +44,25 @@ set_default_v(void * output, int ctype, pbc_var defv) {
 	}
 }
 
+static void
+_pattern_set_default(struct _pattern_field *field, char *output) {
+	if (field->ctype == CTYPE_ARRAY || field->ctype == CTYPE_PACKED) {
+		struct _pbc_array *array = (struct _pbc_array *)(output + field->offset);
+		_pbcA_open(array);
+	} else if (field->ptype == PTYPE_ENUM) {
+		pbc_var defv;
+		defv->integer.low = field->defv->e.id;
+		defv->integer.hi = 0;
+		set_default_v(output + field->offset, field->ctype, defv);
+	}
+	set_default_v(output + field->offset, field->ctype, field->defv);
+}
+
 void
 pbc_pattern_set_default(struct pbc_pattern *pat, void *output) {
 	int i;
 	for (i=0;i<pat->count;i++) {
-		if (pat->f[i].ctype == CTYPE_ARRAY || pat->f[i].ctype == CTYPE_PACKED) {
-			struct _pbc_array *array = (struct _pbc_array *)(output + pat->f[i].offset);
-			_pbcA_open(array);
-			continue;
-		} else if (pat->f[i].ptype == PTYPE_ENUM) {
-			pbc_var defv;
-			defv->integer.low = pat->f[i].defv->e.id;
-			defv->integer.hi = 0;
-			set_default_v(output + pat->f[i].offset, pat->f[i].ctype, defv);
-			continue;
-		}
-		set_default_v(output + pat->f[i].offset, pat->f[i].ctype, pat->f[i].defv);
+		_pattern_set_default(&pat->f[i], output);
 	}
 }
 
@@ -802,18 +805,35 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 		_pbcC_close(_ctx);
 		return r-1;
 	}
-	pbc_pattern_set_default(pat, output);
 
 	struct context * ctx = (struct context *)_ctx;
+	bool field[pat->count];
+	memset(field, 0, sizeof(field));
 
 	int i;
+	int fc = 0;
 
 	for (i=0;i<ctx->number;i++) {
 		struct _pattern_field * f = bsearch_pattern(pat, ctx->a[i].wire_id >> 3);
 		if (f) {
+			int index = f - pat->f;
+			if (field[index] == false) {
+				field[index] = true;
+				++fc;
+				if ((f->ctype == CTYPE_ARRAY || f->ctype == CTYPE_PACKED)) {
+					struct _pbc_array *array = (struct _pbc_array *)(output + f->offset);
+					_pbcA_open(array);
+				}
+			}
 			char * out = (char *)output + f->offset;
 			if (unpack_field(f->ctype , f->ptype , ctx->buffer , &ctx->a[i], out) < 0) {
-				pbc_pattern_close_arrays(pat, output);
+				int j;
+				for (j=0;j<pat->count;j++) {
+					if (field[j] == true && (pat->f[j].ctype == CTYPE_ARRAY || pat->f[j].ctype == CTYPE_PACKED)) {
+						void *array = (char *)output + pat->f[j].offset;
+						_pbcA_close(array);
+					}
+				}
 				_pbcC_close(_ctx);
 				pat->env->lasterror = "Pattern unpack field error";
 				return -i-1;
@@ -821,6 +841,13 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 		}
 	}
 	_pbcC_close(_ctx);
+	if (fc != pat->count) {
+		for (i=0;i<pat->count;i++) {
+			if (field[i] == false) {
+				_pattern_set_default(&pat->f[i], output);
+			}
+		}
+	}
 	return 0;
 }
 
