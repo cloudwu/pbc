@@ -50,18 +50,18 @@ message file {
 */
 
 struct field_t {
-	pbc_var name;
+	struct pbc_slice name;
 	int32_t id;
 	int32_t label;
 	int32_t type;
-	pbc_var type_name;
+	struct pbc_slice type_name;
 	int32_t default_integer;
-	pbc_var default_string;
+	struct pbc_slice default_string;
 	double default_real;
 };
 
 struct file_t {
-	pbc_var name;	// string
+	struct pbc_slice name;	// string
 	pbc_array dependency;	// string
 	pbc_array message_name;	// string
 	pbc_array message_size;	// int32
@@ -113,7 +113,7 @@ set_default(struct _field *f, struct field_t *input) {
 		break;
 	case PTYPE_STRING:
 	case PTYPE_ENUM:
-		memcpy(f->default_v, input->default_string , sizeof(pbc_var));
+		f->default_v->m = input->default_string;
 		break;
 	default:
 		f->default_v->integer.low = input->default_integer;
@@ -135,10 +135,10 @@ set_msg_one(struct pbc_pattern * FIELD_T, struct pbc_env *p, struct file_t *file
 		}
 		struct _field f;
 		f.id = field.id;
-		f.name = field.name->s.str;
+		f.name = field.name.buffer;
 		f.type = field.type;
 		f.label = field.label;
-		f.type_name.n = field.type_name->s.str;
+		f.type_name.n = field.type_name.buffer;
 		set_default(&f, &field);
 
 		_pbcP_push_message(p,name, &f , queue);
@@ -200,6 +200,8 @@ static void
 _set_string(struct _pattern_field * f) {
 	f->ptype = PTYPE_STRING;
 	f->ctype = CTYPE_VAR;
+	f->defv->s.str = "";
+	f->defv->s.len = 0;
 }
 
 static void
@@ -273,7 +275,7 @@ register_internal(struct pbc_env * p, struct pbc_slice *slice) {
 		goto _return;
 	}
 
-	_pbcM_sp_insert(p->files , file.name->s.str, NULL);
+	_pbcM_sp_insert(p->files , file.name.buffer, NULL);
 
 	pbc_array queue;
 	_pbcA_open(queue);

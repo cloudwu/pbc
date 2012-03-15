@@ -323,8 +323,8 @@ unpack_field(int ctype, int ptype, char * buffer, struct atom * a, void *out) {
 	case PTYPE_BYTES:
 		if (!_check_wt_lend(a))
 			return -1;
-		((union _pbc_var *)out)->s.str = buffer + a->v.s.start;
-		((union _pbc_var *)out)->s.len = a->v.s.end - a->v.s.start;
+		((struct pbc_slice *)out)->buffer = buffer + a->v.s.start;
+		((struct pbc_slice *)out)->len = a->v.s.end - a->v.s.start;
 		return 0;
 	}
 	return -1;
@@ -748,6 +748,9 @@ _is_default(struct _pattern_field * pf, void * in) {
 	}
 	if (pf->ptype == PTYPE_STRING) {
 		struct pbc_slice *slice = in;
+		if (slice->buffer == NULL) {
+			return pf->defv->s.str[0] == '\0';
+		}
 		int len = slice->len;
 		if (len <= 0) {
 			return strcmp(pf->defv->s.str, slice->buffer) == 0;
@@ -995,7 +998,7 @@ _check_ctype(struct _field * field, struct _pattern_field *f) {
 	}
 
 	return f->ctype == CTYPE_VAR || f->ctype == CTYPE_ARRAY || f->ctype == CTYPE_PACKED ||
-		f->ctype == CTYPE_DOUBLE || f->ctype ==CTYPE_FLOAT;
+		f->ctype == CTYPE_DOUBLE || f->ctype == CTYPE_FLOAT;
 }
 
 struct pbc_pattern *
