@@ -18,13 +18,15 @@ wiretype_decode(uint8_t *buffer, int cap , struct atom *a , int start)
 	int len;
 	if (cap >= 10) {
 		len = _pbcV_decode(buffer, &r);
+		if (r.hi !=0)
+			return NULL;
 	} else {
 		memcpy(temp, buffer , cap);
 		len = _pbcV_decode(temp, &r);
+		if (len > cap || r.hi !=0)
+			return NULL;
 	}
 
-	if (len > cap || r.hi !=0)
-		return NULL;
 	int wiretype = r.low & 7;
 	a->wire_id = r.low;
 	buffer += len;
@@ -38,9 +40,9 @@ wiretype_decode(uint8_t *buffer, int cap , struct atom *a , int start)
 		} else {
 			memcpy(temp, buffer , cap);
 			len = _pbcV_decode(temp, &a->v.i);
+			if (cap < len)
+				return NULL;
 		}
-		if (cap < len)
-			return NULL;
 		return buffer+len;
 	case WT_BIT64 :
 		if (cap < 8)
@@ -66,7 +68,6 @@ wiretype_decode(uint8_t *buffer, int cap , struct atom *a , int start)
 		a->v.s.start = start + len;
 		a->v.s.end = start + len + r.low;
 		return buffer + len + r.low;
-		break;
 	case WT_BIT32 :
 		if (cap < 4)
 			return NULL;
@@ -76,7 +77,6 @@ wiretype_decode(uint8_t *buffer, int cap , struct atom *a , int start)
 			buffer[3] << 24;
 		a->v.i.hi = 0;
 		return buffer + 4;
-		break;
 	default:
 		return NULL;
 	}
