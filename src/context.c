@@ -229,6 +229,8 @@ _pbcC_open(pbc_ctx _ctx , void *buffer, int size) {
 	int i;
 	int start = 0;
 
+	ctx->a = a;
+
 	for (i=0;i<INNER_ATOM;i++) {
 		if (size == 0)
 			break;
@@ -240,9 +242,7 @@ _pbcC_open(pbc_ctx _ctx , void *buffer, int size) {
 		buffer = next;
 	}
 
-	if (size == 0) {
-		ctx->a = a;
-	} else {
+	if (size > 0) {
 		int cap = 64;
 		ctx->a = malloc(cap * sizeof(struct atom));
 		while (size > 0) {
