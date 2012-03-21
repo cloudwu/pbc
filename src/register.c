@@ -66,6 +66,7 @@ _set_default(struct _stringpool *pool, struct _field *f , int ptype, const char 
 		f->default_v->s.len = sz;
 		break;
 	case PTYPE_ENUM:
+		// enum default value will be converted to f->default_v->e in bootstrap.c : set_field_one()
 		f->default_v->s.str = value;
 		f->default_v->s.len = sz;
 		break;

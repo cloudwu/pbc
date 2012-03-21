@@ -173,11 +173,14 @@ set_field_one(struct pbc_env *p, struct _field *f) {
 		f->type_name.e = _pbcM_sp_query(p->enums, type_name);
 //		printf("ENUM: %s %p ",type_name, f->type_name.e);
 		const char * str = f->default_v->s.str;
-		if (str) {
+		if (str && str[0]) {
 			f->default_v->e.id = _pbcM_si_query(f->type_name.e->name, str);
+			if (f->default_v->e.id < 0)
+				goto _default;
 			f->default_v->e.name = _pbcM_ip_query(f->type_name.e->id, f->default_v->e.id);
 //			printf("[%s %d]\n",str,f->default_v->e.id);
 		} else {
+_default:
 			memcpy(f->default_v, f->type_name.e->default_v, sizeof(pbc_var));
 //			printf("(%s %d)\n",f->default_v->e.name,f->default_v->e.id);
 		}
