@@ -134,6 +134,19 @@ _rmessage_int64(lua_State *L) {
 	return 1;
 }
 
+static int
+_rmessage_int52(lua_State *L) {
+	struct pbc_rmessage * m = lua_touserdata(L,1);
+	const char * key = luaL_checkstring(L,2);
+	int index = luaL_checkinteger(L,3);
+	uint32_t hi,low;
+	low = pbc_rmessage_integer(m, key, index, &hi);
+	int64_t v = (int64_t)((uint64_t)hi << 32 | (uint64_t)low);
+	lua_pushnumber(L,(lua_Number)v);
+
+	return 1;
+}
+
 static int 
 _rmessage_real(lua_State *L) {
 	struct pbc_rmessage * m = lua_touserdata(L,1);
@@ -290,6 +303,17 @@ _wmessage_int64(lua_State *L) {
 }
 
 static int
+_wmessage_int52(lua_State *L) {
+	struct pbc_wmessage * m = lua_touserdata(L,1);
+	const char * key = luaL_checkstring(L,2);
+	int64_t number = (int64_t)(luaL_checknumber(L,3));
+	uint32_t hi = (uint32_t)(number >> 32);
+	pbc_wmessage_integer(m, key, (uint32_t)(number & 0xffffffff), hi);
+
+	return 0;
+}
+
+static int
 _wmessage_buffer(lua_State *L) {
 	struct pbc_slice slice;
 	struct pbc_wmessage * m = lua_touserdata(L,1);
@@ -372,6 +396,12 @@ _push_value(lua_State *L, char * ptr, char type) {
 			ptr += 8;
 			break;
 		}
+		case 'd': {
+			int64_t v = *(int64_t*)ptr;
+			ptr += 8;
+			lua_pushnumber(L,(lua_Number)v);
+			break;
+		}
 		case 'r': {
 			double v = *(double *)ptr;
 			ptr += 8;
@@ -404,6 +434,13 @@ _push_array(lua_State *L, pbc_array array, char type, int index) {
 	case 'I': {
 		int v = pbc_array_integer(array, index, NULL);
 		lua_pushinteger(L, v);
+		break;
+	}
+	case 'D': {
+		uint32_t hi = 0;
+		uint32_t low = pbc_array_integer(array, index, &hi);
+		uint64_t v = (uint64_t)hi << 32 | (uint64_t)low;
+		lua_pushnumber(L, (lua_Number)((int64_t)v));
 		break;
 	}
 	case 'B': {
@@ -740,6 +777,7 @@ luaopen_protobuf_c(lua_State *L) {
 		{"_rmessage_integer" , _rmessage_integer },
 		{"_rmessage_int32", _rmessage_int32 },
 		{"_rmessage_int64", _rmessage_int64 },
+		{"_rmessage_int52", _rmessage_int52 },
 		{"_rmessage_real" , _rmessage_real },
 		{"_rmessage_string" , _rmessage_string },
 		{"_rmessage_message" , _rmessage_message },
@@ -752,6 +790,7 @@ luaopen_protobuf_c(lua_State *L) {
 		{"_wmessage_message", _wmessage_message },
 		{"_wmessage_int32", _wmessage_int32 },
 		{"_wmessage_int64", _wmessage_int64 },
+		{"_wmessage_int52", _wmessage_int52 },
 		{"_wmessage_buffer", _wmessage_buffer },
 		{"_wmessage_buffer_string", _wmessage_buffer_string },
 		{"_pattern_new", _pattern_new },
