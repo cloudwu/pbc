@@ -17,6 +17,7 @@
 #define PBC_FIXED32 8
 #define PBC_BYTES 9
 #define PBC_INT64 10
+#define PBC_UINT 11
 #define PBC_REPEATED 128
 
 typedef struct _pbc_array { char _data[PBC_ARRAY_CAP]; } pbc_array[1];

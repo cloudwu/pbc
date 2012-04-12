@@ -188,14 +188,16 @@ _pbcP_type(struct _field * field, const char ** type) {
 		ret = PBC_REAL;
 		break;
 	case PTYPE_INT64:
-	case PTYPE_UINT64:
 	case PTYPE_SINT64:  
 		ret = PBC_INT64;
 		break;
 	case PTYPE_INT32:
-	case PTYPE_UINT32:  
 	case PTYPE_SINT32:  
 		ret = PBC_INT;
+		break;
+	case PTYPE_UINT32:
+	case PTYPE_UINT64:
+		ret = PBC_UINT;
 		break;
 	case PTYPE_FIXED32:
 	case PTYPE_SFIXED32:
