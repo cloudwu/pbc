@@ -278,6 +278,7 @@ _register_no_dependency(struct pbc_env * p,struct pbc_rmessage ** files , int n 
 			break;
 		case CHECK_FILE_OK: {
 			struct _stringpool *pool = _pbcS_new();
+			filename = _pbcS_build(pool, filename , strlen(filename));
 			_pbcM_sp_insert(p->files , filename, pool);
 			_register(p,files[i],pool);
 			files[i] = NULL;
