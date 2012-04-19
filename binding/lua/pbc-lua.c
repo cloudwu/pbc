@@ -17,6 +17,7 @@
 #undef luaL_addsize
 #define luaL_addsize(b , len) lua_pushlstring(L, temp , len) ; free(temp)
 #define luaL_pushresult(b) 
+#define luaL_checkversion(L)
 
 #else
 
@@ -867,6 +868,7 @@ luaopen_protobuf_c(lua_State *L) {
 		{NULL,NULL},
 	};
 
+	luaL_checkversion(L);
 	luaL_newlib(L, reg);
 
 	return 1;
