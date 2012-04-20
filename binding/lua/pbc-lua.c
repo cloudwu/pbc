@@ -104,7 +104,7 @@ _rmessage_integer(lua_State *L) {
 	struct pbc_rmessage * m = lua_touserdata(L,1);
 	const char * key = luaL_checkstring(L,2);
 	int index = luaL_checkinteger(L,3);
-	uint32_t v = pbc_rmessage_integer(m, key, index, NULL);
+	int32_t v = (int32_t)pbc_rmessage_integer(m, key, index, NULL);
 
 	lua_pushinteger(L,v);
 
