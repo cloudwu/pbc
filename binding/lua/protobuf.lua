@@ -8,6 +8,8 @@ local ipairs = ipairs
 local string = string
 local print = print
 local io = io
+local tinsert = table.insert
+local rawget = rawget
 
 module "protobuf"
 
@@ -22,31 +24,56 @@ local decode_type_cache = {}
 local _R_meta = {}
 
 function _R_meta:__index(key)
-	local v = decode_type_cache[self._CType][key](self._CObj, key)
+	local v = decode_type_cache[self._CType][key](self, key)
 	self[key] = v
 	return v
+end
+
+local function link_parent(self, parent)
+	local link = rawget(parent, _Children)
+	if link == nil then
+		link = {}
+		rawset(parent, "_Children" , link)
+	end
+	tinsert(link, self)
+end
+
+local function remove_cobj(self)
+	self._CObj = nil
+	setmetatable(self, nil)
+	local children = self._Children
+	if children then
+		for _,v in ipairs(children) do
+			remove_cobj(v)
+		end
+	end
+end
+
+local function delete_all(self)
+	c._rmessage_delete(self._CObj)
+	remove_cobj(self)
 end
 
 local _reader = {}
 
 function _reader:int(key)
-	return c._rmessage_integer(self , key , 0)
+	return c._rmessage_integer(self._CObj , key , 0)
 end
 
 function _reader:real(key)
-	return c._rmessage_real(self , key , 0)
+	return c._rmessage_real(self._CObj , key , 0)
 end
 
 function _reader:string(key)
-	return c._rmessage_string(self, key , 0)
+	return c._rmessage_string(self._CObj , key , 0)
 end
 
 function _reader:bool(key)
-	return c._rmessage_integer(self , key , 0) ~= 0
+	return c._rmessage_integer(self._CObj , key , 0) ~= 0
 end
 
 function _reader:message(key, message_type)
-	local rmessage = c._rmessage_message(self , key , 0)
+	local rmessage = c._rmessage_message(self._CObj , key , 0)
 	if rmessage then
 		local v = {
 			_CObj = rmessage,
@@ -58,102 +85,112 @@ function _reader:message(key, message_type)
 end
 
 function _reader:int32(key)
-	return c._rmessage_int32(self, key , 0)
+	return c._rmessage_int32(self._CObj , key , 0)
 end
 
 function _reader:int64(key)
-	return c._rmessage_int64(self, key , 0)
+	return c._rmessage_int64(self._CObj , key , 0)
 end
 
 function _reader:int52(key)
-	return c._rmessage_int52(self, key , 0)
+	return c._rmessage_int52(self._CObj , key , 0)
 end
 
 function _reader:uint52(key)
-	return c._rmessage_uint52(self, key , 0)
+	return c._rmessage_uint52(self._CObj , key , 0)
 end
 
 function _reader:int_repeated(key)
-	local n = c._rmessage_size(self , key)
+	local cobj = self._CObj
+	local n = c._rmessage_size(cobj , key)
 	local ret = {}
 	for i=0,n-1 do
-		table.insert(ret,  c._rmessage_integer(self , key , i))
+		tinsert(ret,  c._rmessage_integer(cobj , key , i))
 	end
 	return ret
 end
 
 function _reader:real_repeated(key)
-	local n = c._rmessage_size(self , key)
+	local cobj = self._CObj
+	local n = c._rmessage_size(cobj , key)
 	local ret = {}
 	for i=0,n-1 do
-		table.insert(ret,  c._rmessage_real(self , key , i))
+		tinsert(ret,  c._rmessage_real(cobj , key , i))
 	end
 	return ret
 end
 
 function _reader:string_repeated(key)
-	local n = c._rmessage_size(self , key)
+	local cobj = self._CObj
+	local n = c._rmessage_size(cobj , key)
 	local ret = {}
 	for i=0,n-1 do
-		table.insert(ret,  c._rmessage_string(self , key , i))
+		tinsert(ret,  c._rmessage_string(cobj , key , i))
 	end
 	return ret
 end
 
 function _reader:bool_repeated(key)
-	local n = c._rmessage_size(self , key)
+	local cobj = self._CObj
+	local n = c._rmessage_size(cobj , key)
 	local ret = {}
 	for i=0,n-1 do
-		table.insert(ret,  c._rmessage_integer(self , key , i) ~= 0)
+		tinsert(ret,  c._rmessage_integer(cobj , key , i) ~= 0)
 	end
 	return ret
 end
 
 function _reader:message_repeated(key, message_type)
-	local n = c._rmessage_size(self , key)
+	local cobj = self._CObj
+	local n = c._rmessage_size(cobj , key)
 	local ret = {}
 	for i=0,n-1 do
 		local m = {
-			_CObj = c._rmessage_message(self , key , i),
+			_CObj = c._rmessage_message(cobj , key , i),
 			_CType = message_type,
+			_Parent = self,
 		}
-		table.insert(ret, setmetatable( m , _R_meta ))
+		tinsert(ret, setmetatable( m , _R_meta ))
 	end
 	return ret
 end
 
 function _reader:int32_repeated(key)
-	local n = c._rmessage_size(self , key)
+	local cobj = self._CObj
+	local n = c._rmessage_size(cobj , key)
 	local ret = {}
 	for i=0,n-1 do
-		table.insert(ret,  c._rmessage_int32(self , key , i))
+		tinsert(ret,  c._rmessage_int32(cobj , key , i))
 	end
 	return ret
 end
 
 function _reader:int64_repeated(key)
-	local n = c._rmessage_size(self , key)
+	local cobj = self._CObj
+	local n = c._rmessage_size(cobj , key)
 	local ret = {}
 	for i=0,n-1 do
-		table.insert(ret,  c._rmessage_int64(self , key , i))
+		tinsert(ret,  c._rmessage_int64(cobj , key , i))
 	end
 	return ret
 end
 
 function _reader:int52_repeated(key)
-	local n = c._rmessage_size(self , key)
+	local cobj = self._CObj
+	local n = c._rmessage_size(cobj , key)
 	local ret = {}
 	for i=0,n-1 do
-		table.insert(ret,  c._rmessage_int52(self , key , i))
+		tinsert(ret,  c._rmessage_int52(cobj , key , i))
 	end
 	return ret
 end
 
 function _reader:uint52_repeated(key)
-	local n = c._rmessage_size(self , key)
+	local cobj = self._CObj
+	local n = c._rmessage_size(cobj , key)
 	local ret = {}
 	for i=0,n-1 do
-		table.insert(ret,  c._rmessage_uint52(self , key , i))
+		tinsert(ret,  c._rmessage_uint52(cobj , key , i))
 	end
 	return ret
 end
@@ -213,9 +250,7 @@ local _R_metagc = {
 	__index = _R_meta.__index
 }
 
-function _R_metagc:__gc()
-	c._rmessage_delete(self._CObj)
-end
+_R_metagc.__gc = assert(delete_all)
 
 function decode( message , buffer, length)
 	local rmessage = c._rmessage_new(P, message, buffer, length)
@@ -228,11 +263,7 @@ function decode( message , buffer, length)
 	end
 end
 
-function close_decoder(self)
-	c._rmessage_delete(self._CObj)
-	self._CObj = nil
-	setmetatable(self,nil)
-end
+close_decoder = assert(delete_all)
 
 function register( buffer)
 	c._env_register(P, buffer)
@@ -444,8 +475,8 @@ local function _pattern_create(pattern)
 		local tidx = c._env_type(P, message, v)
 		local t = _pattern_type[tidx]
 		assert(t,tidx)
-		table.insert(cpat,v .. " " .. t[1])
-		table.insert(lua,t[2])
+		tinsert(cpat,v .. " " .. t[1])
+		tinsert(lua,t[2])
 	end
 	local cobj = c._pattern_new(P, message , "@" .. table.concat(cpat," "))
 	if cobj == nil then
