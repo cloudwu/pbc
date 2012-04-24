@@ -51,6 +51,7 @@ function _reader:message(key, message_type)
 		local v = {
 			_CObj = rmessage,
 			_CType = message_type,
+			_Parent = self,
 		}
 		return setmetatable( v , _R_meta )
 	end
