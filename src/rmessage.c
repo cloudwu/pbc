@@ -220,8 +220,9 @@ push_value_array(struct heap *h, pbc_array array, struct _field *f, struct atom 
 		_pbc_rmessage_new(&message, f->type_name.m , 
 			buffer + a->v.s.start , 
 			a->v.s.end - a->v.s.start,h);
-		if (message.msg == NULL)
+		if (message.msg == NULL) {
 			return;
+		}
 		v->p[0] = message.msg;
 		v->p[1] = message.index;
 		break;
@@ -273,13 +274,23 @@ _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buf
 				}
 				if (f->label == LABEL_PACKED) {
 					push_value_packed(type, v->v.array , f , &(ctx->a[i]), buffer);
+					if (pbc_array_size(v->v.array) == 0) {
+						type->env->lasterror = "rmessage decode packed data error";
+						*vv = NULL;
+					}
 				} else {
 					push_value_array(h,v->v.array , f, &(ctx->a[i]), buffer);
+					if (pbc_array_size(v->v.array) == 0) {
+						type->env->lasterror = "rmessage decode repeated data error";
+						*vv = NULL;
+					}
 				}
 			} else {
 				struct value * v = read_value(h, f, &(ctx->a[i]), buffer);
 				if (v) {
 					_pbcM_sp_insert(ret->index, f->name, v);
+				} else {
+					type->env->lasterror = "rmessage decode data error";
 				}
 			}
 		}

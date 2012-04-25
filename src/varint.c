@@ -76,7 +76,7 @@ _pbcV_decode(uint8_t buffer[10], struct longlong *result) {
 
 	result->low = 0;
 	result->hi = 0;
-	return 0;
+	return 10;
 }
 
 int 

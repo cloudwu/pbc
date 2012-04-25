@@ -386,6 +386,10 @@ function parser.register(fileset , path)
 	end
 
 	local pbencode = pb.encode("google.protobuf.FileDescriptorSet" , { file = files })
+
+	if pbencode == nil then
+		error(pb.lasterror())
+	end
 	pb.register(pbencode)
 	return files
 end
