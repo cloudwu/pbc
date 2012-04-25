@@ -66,7 +66,9 @@ _expand(struct pbc_wmessage *m, int sz) {
 		do {
 			cap = cap * 2;
 		} while ( sz > cap ) ;
-		uint8_t * buffer = realloc(m->buffer, cap);
+		int old_size = m->ptr - m->ptr;
+		uint8_t * buffer = _pbcH_alloc(m->heap, cap);
+		memcpy(buffer, m->buffer, old_size);
 		m->ptr = buffer + (m->ptr - m->buffer);
 		m->endptr = buffer + cap;
 		m->buffer = buffer;

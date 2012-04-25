@@ -33,7 +33,7 @@ void
 _pbcA_close(pbc_array _array) {
 	struct array * a = (struct array *)_array;
 	if (a->heap == NULL && a->a != NULL && (union _pbc_var *)(a+1) != a->a) {
-		free(a->a);
+		_pbcM_free(a->a);
 		a->a = NULL;
 	}
 }
@@ -61,7 +61,7 @@ _pbcA_push(pbc_array _array, pbc_var var) {
 					a->a = _pbcH_alloc(h, sizeof(union _pbc_var) * (size+1) * 2);
 					memcpy(a->a, old, sizeof(union _pbc_var) * size);
 				} else {
-					a->a=realloc(a->a,sizeof(union _pbc_var) * (size+1) * 2);
+					a->a=_pbcM_realloc(a->a,sizeof(union _pbc_var) * (size+1) * 2);
 				}
 			}
 		}
