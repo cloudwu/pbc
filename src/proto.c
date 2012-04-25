@@ -24,9 +24,9 @@ _pbcP_get_message(struct pbc_env * p , const char *name) {
 struct pbc_env * 
 pbc_new(void) {
 	struct pbc_env * p = malloc(sizeof(*p));
-	p->files = _pbcM_sp_new();
-	p->enums = _pbcM_sp_new();
-	p->msgs = _pbcM_sp_new();
+	p->files = _pbcM_sp_new(0 , NULL);
+	p->enums = _pbcM_sp_new(0 , NULL);
+	p->msgs = _pbcM_sp_new(0 , NULL);
 	p->lasterror = "";
 
 	_pbcB_init(p);
@@ -98,7 +98,7 @@ _pbcP_push_message(struct pbc_env * p, const char *name, struct _field *f , pbc_
 		m->def = NULL;
 		m->key = name;
 		m->id = NULL;
-		m->name = _pbcM_sp_new();
+		m->name = _pbcM_sp_new(0 , NULL);
 		m->env = p;
 		_pbcM_sp_insert(p->msgs, name, m);
 	}
@@ -140,7 +140,7 @@ _pbcP_init_message(struct pbc_env * p, const char *name) {
 		m->def = NULL;
 		m->key = name;
 		m->id = NULL;
-		m->name = _pbcM_sp_new();
+		m->name = _pbcM_sp_new(0 , NULL);
 		m->env = p;
 		_pbcM_sp_insert(p->msgs, name, m);
 

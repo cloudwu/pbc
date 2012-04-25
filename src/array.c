@@ -7,6 +7,7 @@
 
 struct array {
 	int number;
+	struct heap *heap;
 	union _pbc_var * a;
 };
 
@@ -16,13 +17,22 @@ void
 _pbcA_open(pbc_array _array) {
 	struct array * a = (struct array *)_array;
 	a->number = 0;
+	a->heap = NULL;
+	a->a = (union _pbc_var *)(a+1);
+}
+
+void 
+_pbcA_open_heap(pbc_array _array, struct heap *h) {
+	struct array * a = (struct array *)_array;
+	a->number = 0;
+	a->heap = h;
 	a->a = (union _pbc_var *)(a+1);
 }
 
 void 
 _pbcA_close(pbc_array _array) {
 	struct array * a = (struct array *)_array;
-	if (a->a != NULL && (union _pbc_var *)(a+1) != a->a) {
+	if (a->heap == NULL && a->a != NULL && (union _pbc_var *)(a+1) != a->a) {
 		free(a->a);
 		a->a = NULL;
 	}
@@ -38,13 +48,21 @@ _pbcA_push(pbc_array _array, pbc_var var) {
 			int cap = 1;
 			while (cap <= a->number + 1) 
 				cap *= 2;
-			union _pbc_var * outer = malloc(cap * sizeof(union _pbc_var));
+			struct heap * h = a->heap;
+			union _pbc_var * outer = HMALLOC(cap * sizeof(union _pbc_var));
 			memcpy(outer , a->a , INNER_FIELD * sizeof(pbc_var));
 			a->a = outer;
 		} else {
 			int size=a->number;
 			if (((size + 1) ^ size) > size) {
-			   a->a=realloc(a->a,sizeof(union _pbc_var) * (size+1) * 2);
+				struct heap * h = a->heap;
+				if (h) {
+					void * old = a->a;
+					a->a = _pbcH_alloc(h, sizeof(union _pbc_var) * (size+1) * 2);
+					memcpy(a->a, old, sizeof(union _pbc_var) * size);
+				} else {
+					a->a=realloc(a->a,sizeof(union _pbc_var) * (size+1) * 2);
+				}
 			}
 		}
 	}

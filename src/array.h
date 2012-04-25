@@ -3,6 +3,7 @@
 
 #include "varint.h"
 #include "pbc.h"
+#include "alloc.h"
 
 typedef union _pbc_var {
 	struct longlong integer;
@@ -20,6 +21,7 @@ typedef union _pbc_var {
 } pbc_var[1];
 
 void _pbcA_open(pbc_array);
+void _pbcA_open_heap(pbc_array, struct heap *h);
 void _pbcA_close(pbc_array);
 
 void _pbcA_push(pbc_array, pbc_var var);

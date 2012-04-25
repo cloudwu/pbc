@@ -236,26 +236,32 @@ struct _pbcM_sp_slot {
 struct map_sp {
 	size_t cap;
 	size_t size;
+	struct heap *heap;
 	struct _pbcM_sp_slot * slot;
 };
 
 struct map_sp *
-_pbcM_sp_new(void)
+_pbcM_sp_new(int max , struct heap *h)
 {
-	struct map_sp * ret = (struct map_sp *)malloc(sizeof(struct map_sp));
-	ret->cap = 1;
+	struct map_sp * ret = (struct map_sp *)HMALLOC(sizeof(struct map_sp));
+	int cap = 1;
+	while (cap < max) {
+		cap *=2;
+	}
+	ret->cap = cap;
 	ret->size = 0;
-	ret->slot = (struct _pbcM_sp_slot *)malloc(sizeof(struct _pbcM_sp_slot));
-	memset(ret->slot,0,sizeof(struct _pbcM_sp_slot));
+	ret->slot = (struct _pbcM_sp_slot *)HMALLOC(ret->cap * sizeof(struct _pbcM_sp_slot));
+	memset(ret->slot,0,sizeof(struct _pbcM_sp_slot) * ret->cap);
+	ret->heap = h;
 	return ret;
 }
 
 void
 _pbcM_sp_delete(struct map_sp *map)
 {
-	if (map) {
-		free(map->slot);
-		free(map);
+	if (map && map->heap == NULL) {
+		_pbcM_free(map->slot);
+		_pbcM_free(map);
 	}
 }
 
@@ -292,17 +298,20 @@ _pbcM_sp_insert_hash(struct map_sp *map, const char *key, size_t hash_full, void
 
 static void
 _pbcM_sp_rehash(struct map_sp *map) {
+	struct heap * h = map->heap;
 	struct _pbcM_sp_slot * old_slot = map->slot;
 	size_t size = map->size;
 	map->size = 0;
 	map->cap *= 2;
-	map->slot = (struct _pbcM_sp_slot *)malloc(sizeof(struct _pbcM_sp_slot)*map->cap);
+	map->slot = (struct _pbcM_sp_slot *)HMALLOC(sizeof(struct _pbcM_sp_slot)*map->cap);
 	memset(map->slot,0,sizeof(struct _pbcM_sp_slot)*map->cap);
 	size_t i;
 	for (i=0;i<size;i++) {
 		_pbcM_sp_insert_hash(map, old_slot[i].key, old_slot[i].hash, old_slot[i].pointer);
 	}
-	free(old_slot);
+	if (h == NULL) {
+		_pbcM_free(old_slot);
+	}
 }
 
 static void **

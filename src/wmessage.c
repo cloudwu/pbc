@@ -19,6 +19,7 @@ struct pbc_wmessage {
 	uint8_t * endptr;
 	pbc_array sub;
 	struct map_sp *packed;
+	struct heap * heap;
 };
 
 struct _packed {
@@ -28,14 +29,15 @@ struct _packed {
 };
 
 static struct pbc_wmessage *
-_wmessage_new(struct _message *msg) {
-	struct pbc_wmessage * m = malloc(sizeof(*m));
+_wmessage_new(struct heap *h, struct _message *msg) {
+	struct pbc_wmessage * m = _pbcH_alloc(h, sizeof(*m));
 	m->type = msg;
-	m->buffer = malloc(WMESSAGE_SIZE);
+	m->buffer = _pbcH_alloc(h, WMESSAGE_SIZE);
 	m->ptr = m->buffer;
 	m->endptr = m->buffer + WMESSAGE_SIZE;
-	_pbcA_open(m->sub);
+	_pbcA_open_heap(m->sub, h);
 	m->packed = NULL;
+	m->heap = h;
 
 	return m;
 }
@@ -45,34 +47,15 @@ pbc_wmessage_new(struct pbc_env * env, const char *typename) {
 	struct _message * msg = _pbcP_get_message(env, typename);
 	if (msg == NULL)
 		return NULL;
-	return _wmessage_new(msg);
-}
-
-static void
-_free_packed(void *p) {
-	struct _packed * packed = p;
-	_pbcA_close(packed->data);
-	free(p);
+	struct heap *h = _pbcH_new(0);
+	return _wmessage_new(h, msg);
 }
 
 void 
 pbc_wmessage_delete(struct pbc_wmessage *m) {
-	int sz = pbc_array_size(m->sub);
-	int i;
-	for (i=0;i<sz;i++) {
-		pbc_var var;
-		_pbcA_index(m->sub,i,var);
-		pbc_wmessage_delete(var->p[0]);
+	if (m) {
+		_pbcH_delete(m->heap);
 	}
-	_pbcA_close(m->sub);
-
-	if (m->packed) {
-		_pbcM_sp_foreach(m->packed, _free_packed);
-		_pbcM_sp_delete(m->packed);
-	}
-
-	free(m->buffer);
-	free(m);
 }
 
 static void
@@ -93,15 +76,15 @@ _expand(struct pbc_wmessage *m, int sz) {
 static struct _packed *
 _get_packed(struct pbc_wmessage *m , struct _field *f , const char *key) {
 	if (m->packed == NULL) {
-		m->packed = _pbcM_sp_new();
+		m->packed = _pbcM_sp_new(4, m->heap);
 	}
 	void ** v = _pbcM_sp_query_insert(m->packed , key);
 	if (*v == NULL) {
-		*v = malloc(sizeof(struct _packed));
+		*v = _pbcH_alloc(m->heap, sizeof(struct _packed));
 		struct _packed *p = *v;
 		p->id = f->id;
 		p->ptype = f->type;
-		_pbcA_open(p->data);
+		_pbcA_open_heap(p->data, m->heap);
 		return p;
 	}
 	return *v;
@@ -339,7 +322,7 @@ pbc_wmessage_message(struct pbc_wmessage *m, const char *key) {
 		return NULL;
 	}
 	pbc_var var;
-	var->p[0] = _wmessage_new(f->type_name.m);
+	var->p[0] = _wmessage_new(m->heap, f->type_name.m);
 	var->p[1] = f;
 	_pbcA_push(m->sub , var);
 	return var->p[0];

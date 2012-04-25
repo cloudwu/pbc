@@ -24,7 +24,7 @@ main()
 		}
 	}
 
-	struct map_sp * map3 = _pbcM_sp_new();
+	struct map_sp * map3 = _pbcM_sp_new(0, NULL);
 	_pbcM_sp_insert(map3,"Alice","alice");
 	_pbcM_sp_insert(map3,"Bob","bob");
 
