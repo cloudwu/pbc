@@ -75,23 +75,6 @@ For decode :
 result = pb.decode("tutorial.Person", stringbuffer)
 -- decode also support lightuserdata and length of data instead of a string :
 -- pb.decode("tutorial.Person", buffer, length)
-
--- you can iterate the result with pairs
-for k,v in pairs(result) do
-  print(k,v)
-end
-
--- Lua 5.1 don't support __pairs metamethod, so use pb.key instead.
-for k in pb.key(result) do
-  print(k,result[k])
-end
-```
-
-In Lua 5.2, the C Object attach with message table will destory in __gc method, and if you use lower version of lua, you must close message manually.
-
-```Lua
--- In lua 5.1
-pb.close_decoder(result)
 ```
 
 ## Pattern mode
