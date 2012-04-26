@@ -418,7 +418,8 @@ pbc_rmessage_message(struct pbc_rmessage * rm, const char *key, int index) {
 		struct _message * m = f->type_name.m;
 
 		if (m->def == NULL) {
-			m->def = _pbcH_alloc(rm->heap, sizeof(struct pbc_rmessage));
+			// m->def will be free at the end (pbc_delete).
+			m->def = malloc(sizeof(struct pbc_rmessage));
 			m->def->msg = m;
 			m->def->index = NULL;
 		}
