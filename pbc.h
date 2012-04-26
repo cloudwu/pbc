@@ -18,6 +18,7 @@
 #define PBC_BYTES 9
 #define PBC_INT64 10
 #define PBC_UINT 11
+#define PBC_UNKNOWN 12
 #define PBC_REPEATED 128
 
 typedef struct _pbc_array { char _data[PBC_ARRAY_CAP]; } pbc_array[1];
@@ -37,6 +38,23 @@ void pbc_delete(struct pbc_env *);
 int pbc_register(struct pbc_env *, struct pbc_slice * slice);
 int pbc_type(struct pbc_env *, const char * typename , const char * key , const char ** type);
 const char * pbc_error(struct pbc_env *);
+
+// callback api
+union pbc_value {
+	struct {
+		uint32_t low;
+		uint32_t hi;
+	} i;
+	double f;
+	struct pbc_slice s;
+	struct {
+		int id;
+		const char * name;
+	} e;
+};
+
+typedef void (*pbc_decoder)(void *ud, int type, const char * typename, union pbc_value *v, int id, const char *key);
+int pbc_decode(struct pbc_env * env, const char * typename , struct pbc_slice * slice, pbc_decoder f, void *ud);
 
 // message api
 
