@@ -26,9 +26,7 @@ end
 
 print(t.phone[2].type)
 
-for k,v in pairs(t.phone[2]) do
-	if type(k) == "string" then
-		print(k,v)
-	end
+for k,v in pairs(t.phone[1]) do
+	print(k,v)
 end
 

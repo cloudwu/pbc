@@ -553,12 +553,20 @@ function decode(typename, buffer, length)
 	end
 end
 
-function decode_message_mt.__index(tbl, key)
+local function expand(tbl)
 	local typename = rawget(tbl , 1)
 	local buffer = rawget(tbl , 2)
 	tbl[1] , tbl[2] = nil , nil
 	assert(c._decode(P, decode_message , tbl , typename, buffer), typename)
 	setmetatable(tbl , default_table(typename))
+end
 
+function decode_message_mt.__index(tbl, key)
+	expand(tbl)
 	return tbl[key]
+end
+
+function decode_message_mt.__pairs(tbl)
+	expand(tbl)
+	return pairs(tbl)
 end
