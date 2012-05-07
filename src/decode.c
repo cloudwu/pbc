@@ -21,7 +21,7 @@ static const char * TYPENAME[] = {
 	"uint",	// 11
 };
 
-static void
+static int
 call_unknown(pbc_decoder f, void * ud, int id, struct atom *a, uint8_t * start) {
 	union pbc_value v;
 	switch (a->wire_id) {
@@ -46,9 +46,9 @@ call_unknown(pbc_decoder f, void * ud, int id, struct atom *a, uint8_t * start) 
 		f(ud, PBC_FIXED32, TYPENAME[PBC_FIXED32], &v, id , NULL);
 		break;
 	default:
-		assert(0);
-		break;
+		return 1;
 	}
+	return 0;
 }
 
 static void
@@ -305,7 +305,10 @@ pbc_decode(struct pbc_env * env, const char * typename , struct pbc_slice * slic
 		int id = ctx->a[i].wire_id >> 3;
 		struct _field * f = _pbcM_ip_query(msg->id , id);
 		if (f==NULL) {
-			call_unknown(pd,ud,id,&ctx->a[i],start);
+			int err = call_unknown(pd,ud,id,&ctx->a[i],start);
+			if (err) {
+				return -i-1;
+			}
 		} else if (f->label == LABEL_PACKED) {
 			struct atom * a = &ctx->a[i];
 			int n = call_array(pd, ud, f , start + a->v.s.start , a->v.s.end - a->v.s.start);
