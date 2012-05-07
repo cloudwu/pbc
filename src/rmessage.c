@@ -87,14 +87,17 @@ read_value(struct heap *h, struct _field *f, struct atom * a, uint8_t *buffer) {
 
 	switch (f->type) {
 	case PTYPE_DOUBLE:
+		CHECK_BIT64(a,NULL);
 		v = _pbcH_alloc(h, SIZE_VAR);
 		v->v.var->real = read_double(a);
 		break;
 	case PTYPE_FLOAT:
+		CHECK_BIT32(a,NULL);
 		v = _pbcH_alloc(h, SIZE_VAR);
 		v->v.var->real = (double) read_float(a);
 		break;
 	case PTYPE_ENUM:
+		CHECK_VARINT(a,NULL);
 		v = _pbcH_alloc(h, SIZE_VAR);
 		v->v.var->e.id = a->v.i.low;
 		v->v.var->e.name = _pbcM_ip_query(f->type_name.e->id , a->v.i.low);
@@ -103,39 +106,47 @@ read_value(struct heap *h, struct _field *f, struct atom * a, uint8_t *buffer) {
 	case PTYPE_UINT64:
 	case PTYPE_INT32:
 	case PTYPE_UINT32:
-	case PTYPE_FIXED32:
-	case PTYPE_FIXED64:
-	case PTYPE_SFIXED32:
-	case PTYPE_SFIXED64:
 	case PTYPE_BOOL:
+		CHECK_VARINT(a,NULL);
+		v = _pbcH_alloc(h, SIZE_VAR);
+		v->v.var->integer = a->v.i;
+		break;
+	case PTYPE_FIXED32:
+	case PTYPE_SFIXED32:
+		CHECK_BIT32(a,NULL);
+		v = _pbcH_alloc(h, SIZE_VAR);
+		v->v.var->integer = a->v.i;
+		break;
+	case PTYPE_FIXED64:
+	case PTYPE_SFIXED64:
+		CHECK_BIT64(a,NULL);
 		v = _pbcH_alloc(h, SIZE_VAR);
 		v->v.var->integer = a->v.i;
 		break;
 	case PTYPE_SINT32: 
+		CHECK_VARINT(a,NULL);
 		v = _pbcH_alloc(h, SIZE_VAR);
 		v->v.var->integer = a->v.i;
 		_pbcV_dezigzag32(&(v->v.var->integer));
 		break;
 	case PTYPE_SINT64:
+		CHECK_VARINT(a,NULL);
 		v = _pbcH_alloc(h, SIZE_VAR);
 		v->v.var->integer = a->v.i;
 		_pbcV_dezigzag64(&(v->v.var->integer));
 		break;
 	case PTYPE_STRING:
-		if (!_check_wt_lend(a))
-			return NULL;
+		CHECK_LEND(a,NULL);
 		v = read_string(h,a,f,buffer);
 		break;
 	case PTYPE_BYTES:
-		if (!_check_wt_lend(a))
-			return NULL;
+		CHECK_LEND(a,NULL);
 		v = _pbcH_alloc(h, SIZE_VAR);
 		v->v.var->s.str = (const char *)(buffer + a->v.s.start);
 		v->v.var->s.len = a->v.s.end - a->v.s.start;
 		break;
 	case PTYPE_MESSAGE:
-		if (!_check_wt_lend(a))
-			return NULL;
+		CHECK_LEND(a,NULL);
 		v = _pbcH_alloc(h, SIZE_MESSAGE);
 		_pbc_rmessage_new(&(v->v.message), f->type_name.m , 
 			buffer + a->v.s.start , 
@@ -203,19 +214,16 @@ push_value_array(struct heap *h, pbc_array array, struct _field *f, struct atom 
 		_pbcV_dezigzag64(&(v->integer));
 		break;
 	case PTYPE_STRING:
-		if (!_check_wt_lend(a))
-			return;
+		CHECK_LEND(a, );
 		read_string_var(h,v,a,f,buffer);
 		break;
 	case PTYPE_BYTES:
-		if (!_check_wt_lend(a))
-			return;
+		CHECK_LEND(a, );
 		v->s.str = (const char *)(buffer + a->v.s.start);
 		v->s.len = a->v.s.end - a->v.s.start;
 		break;
 	case PTYPE_MESSAGE: {
-		if (!_check_wt_lend(a))
-			return;
+		CHECK_LEND(a, );
 		struct pbc_rmessage message;
 		_pbc_rmessage_new(&message, f->type_name.m , 
 			buffer + a->v.s.start , 

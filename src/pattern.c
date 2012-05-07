@@ -289,40 +289,47 @@ unpack_field(int ctype, int ptype, char * buffer, struct atom * a, void *out) {
 	}
 	switch(ptype) {
 	case PTYPE_DOUBLE:
+		CHECK_BIT64(a, -1);
 		return write_real(ctype, read_double(a), out);
 	case PTYPE_FLOAT:
+		CHECK_BIT32(a, -1);
 		return write_real(ctype, read_float(a), out);
 	case PTYPE_INT64:
 	case PTYPE_UINT64:
 	case PTYPE_INT32:
 	case PTYPE_UINT32:
-	case PTYPE_FIXED32:
-	case PTYPE_FIXED64:
-	case PTYPE_SFIXED32:
-	case PTYPE_SFIXED64:
 	case PTYPE_ENUM:	// enum must be integer type in pattern mode
 	case PTYPE_BOOL:
+		CHECK_VARINT(a, -1);
+		return write_integer(ctype, a , out);
+	case PTYPE_FIXED32:
+	case PTYPE_SFIXED32:
+		CHECK_BIT32(a, -1);
+		return write_integer(ctype, a , out);
+	case PTYPE_FIXED64:
+	case PTYPE_SFIXED64:
+		CHECK_BIT64(a, -1);
 		return write_integer(ctype, a , out);
 	case PTYPE_SINT32: {
+		CHECK_VARINT(a, -1);
 		struct longlong temp = a->v.i;
 		_pbcV_dezigzag32(&temp);
 		return write_longlong(ctype, &temp , out);
 	}
 	case PTYPE_SINT64: {
+		CHECK_LEND(a, -1);
 		struct longlong temp = a->v.i;
 		_pbcV_dezigzag64(&temp);
 		return write_longlong(ctype, &temp , out);
 	}
 	case PTYPE_MESSAGE: 
-		if (!_check_wt_lend(a))
-			return -1;
+		CHECK_LEND(a, -1);
 		((union _pbc_var *)out)->m.buffer = buffer + a->v.s.start;
 		((union _pbc_var *)out)->m.len = a->v.s.end - a->v.s.start;
 		return 0;
 	case PTYPE_STRING:
 	case PTYPE_BYTES:
-		if (!_check_wt_lend(a))
-			return -1;
+		CHECK_LEND(a, -1);
 		((struct pbc_slice *)out)->buffer = buffer + a->v.s.start;
 		((struct pbc_slice *)out)->len = a->v.s.end - a->v.s.start;
 		return 0;

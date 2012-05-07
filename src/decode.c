@@ -51,7 +51,7 @@ call_unknown(pbc_decoder f, void * ud, int id, struct atom *a, uint8_t * start) 
 	return 0;
 }
 
-static void
+static int
 call_type(pbc_decoder pd, void * ud, struct _field *f, struct atom *a, uint8_t * start) {
 	union pbc_value v;
 	const char * typename = NULL;
@@ -62,36 +62,51 @@ call_type(pbc_decoder pd, void * ud, struct _field *f, struct atom *a, uint8_t *
 	}
 	switch (f->type) {
 	case PTYPE_DOUBLE:
+		CHECK_BIT64(a, -1);
 		v.f = read_double(a);
 		break;
 	case PTYPE_FLOAT:
+		CHECK_BIT32(a, -1);
 		v.f = (double) read_float(a);
 		break;
 	case PTYPE_ENUM:
+		CHECK_VARINT(a, -1);
 		v.e.id = a->v.i.low;
 		v.e.name = _pbcM_ip_query(f->type_name.e->id , v.e.id);
 		break;
 	case PTYPE_INT64:
 	case PTYPE_UINT64:
+		CHECK_VARINT(a, -1);
+		v.i.low = a->v.i.low;
+		v.i.hi = a->v.i.hi;
+		break;
 	case PTYPE_FIXED64:
 	case PTYPE_SFIXED64:
+		CHECK_BIT64(a, -1);
 		v.i.low = a->v.i.low;
 		v.i.hi = a->v.i.hi;
 		break;
 	case PTYPE_INT32:
 	case PTYPE_UINT32:
+	case PTYPE_BOOL:
+		CHECK_VARINT(a, -1);
+		v.i.low = a->v.i.low;
+		v.i.hi = 0;
+		break;
 	case PTYPE_FIXED32:
 	case PTYPE_SFIXED32:
-	case PTYPE_BOOL:
+		CHECK_BIT32(a, -1);
 		v.i.low = a->v.i.low;
 		v.i.hi = 0;
 		break;
 	case PTYPE_SINT32: 
+		CHECK_VARINT(a, -1);
 		v.i.low = a->v.i.low;
 		v.i.hi = a->v.i.hi;
 		_pbcV_dezigzag32((struct longlong *)&(v.i));
 		break;
 	case PTYPE_SINT64:
+		CHECK_VARINT(a, -1);
 		v.i.low = a->v.i.low;
 		v.i.hi = a->v.i.hi;
 		_pbcV_dezigzag64((struct longlong *)&(v.i));
@@ -99,6 +114,7 @@ call_type(pbc_decoder pd, void * ud, struct _field *f, struct atom *a, uint8_t *
 	case PTYPE_STRING:
 	case PTYPE_BYTES:
 	case PTYPE_MESSAGE:
+		CHECK_LEND(a, -1);
 		v.s.buffer = start + a->v.s.start;
 		v.s.len = a->v.s.end - a->v.s.start;
 		break;
@@ -107,6 +123,7 @@ call_type(pbc_decoder pd, void * ud, struct _field *f, struct atom *a, uint8_t *
 		break;
 	}
 	pd(ud, type, typename, &v, f->id, f->name);
+	return 0;
 }
 
 static int
@@ -316,7 +333,9 @@ pbc_decode(struct pbc_env * env, const char * typename , struct pbc_slice * slic
 				return -i-1;
 			}
 		} else {
-			call_type(pd,ud,f,&ctx->a[i],start);
+			if (call_type(pd,ud,f,&ctx->a[i],start) != 0) {
+				return -i-1;
+			}
 		}
 	}
 

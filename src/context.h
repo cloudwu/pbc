@@ -71,11 +71,6 @@ int _pbcC_open(pbc_ctx , void *buffer, int size);	// <=0 failed
 int _pbcC_open_packed(pbc_ctx _ctx, int ptype, void *buffer, int size);
 void _pbcC_close(pbc_ctx);
 
-static inline int
-_check_wt_lend(struct atom *a) {
-	return (a->wire_id & 7) == WT_LEND;
-}
-
 static inline double
 read_double(struct atom * a) {
 	union {
@@ -125,5 +120,21 @@ float_encode(float v , uint8_t * buffer) {
 	buffer[2] = (uint8_t) (u.e >> 16 & 0xff);
 	buffer[3] = (uint8_t) (u.e >> 24 & 0xff);
 }
+
+#define CHECK_LEND(a,err) if ((a->wire_id & 7) != WT_LEND) return err;
+
+#if 0
+/* maybe we don't need check these wire type */
+#define CHECK_VARINT(a,err) if ((a->wire_id & 7) != WT_VARINT) return err;
+#define CHECK_BIT32(a,err) if ((a->wire_id & 7) != WT_BIT32) return err;
+#define CHECK_BIT64(a,err) if ((a->wire_id & 7) != WT_BIT64) return err;
+
+#else
+
+#define CHECK_VARINT(a,err)
+#define CHECK_BIT32(a,err)
+#define CHECK_BIT64(a,err)
+
+#endif
 
 #endif
