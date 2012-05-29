@@ -570,3 +570,7 @@ function decode_message_mt.__pairs(tbl)
 	expand(tbl)
 	return pairs(tbl)
 end
+
+function default(typename, tbl)
+	setmetatable(tbl, default_table(typename))
+end
