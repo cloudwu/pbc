@@ -539,13 +539,13 @@ end
 
 local decode_message_mt = {}
 
-local function decode_message(typename, buffer)
+local function decode_message_cb(typename, buffer)
 	return setmetatable ( { typename, buffer } , decode_message_mt)
 end
 
 function decode(typename, buffer, length)
 	local ret = {}
-	local ok = c._decode(P, decode_message , ret , typename, buffer, length)
+	local ok = c._decode(P, decode_message_cb , ret , typename, buffer, length)
 	if ok then
 		return setmetatable(ret , default_table(typename))
 	else
@@ -557,7 +557,7 @@ local function expand(tbl)
 	local typename = rawget(tbl , 1)
 	local buffer = rawget(tbl , 2)
 	tbl[1] , tbl[2] = nil , nil
-	assert(c._decode(P, decode_message , tbl , typename, buffer), typename)
+	assert(c._decode(P, decode_message_cb , tbl , typename, buffer), typename)
 	setmetatable(tbl , default_table(typename))
 end
 
@@ -571,6 +571,21 @@ function decode_message_mt.__pairs(tbl)
 	return pairs(tbl)
 end
 
-function default(typename, tbl)
-	setmetatable(tbl, default_table(typename))
+local function set_default(typename, tbl)
+	for k,v in pairs(tbl) do
+		if type(v) == "table" then
+			local t, msg = c._env_type(P, typename, k)
+			if t == 6 then
+				set_default(msg, v)
+			elseif t == 128+6 then
+				for _,v in ipairs(v) do
+					set_default(msg, v)
+				end
+			end
+		end
+	end
+	return setmetatable(tbl , default_table(typename))
 end
+
+
+default=set_default
