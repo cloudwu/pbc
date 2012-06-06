@@ -13,8 +13,20 @@ local rawget = rawget
 
 module "protobuf"
 
+local _pattern_cache = {}
+
+local function clear_pat()
+	for _,v in pairs(_pattern_cache) do
+		c._pattern_delete(v.CObj)
+	end
+end
+
 local P = c._env_new()
-setmetatable(_M , { __gc = function(t) c._env_delete(P) end })
+setmetatable(_M , {
+	__gc = function(t)
+		clear_pat()
+		c._env_delete(P)
+	end })
 
 function lasterror()
 	return c._last_error(P)
@@ -431,14 +443,6 @@ end
 
 --------- unpack ----------
 
-local _pattern_cache = {}
-
-local pat_meta = {
-	__gc = function(t)
-		c._pattern_delete(t.CObj)
-	end
-}
-
 local _pattern_type = {
 	[1] = {"%d","i"},
 	[2] = {"%F","r"},
@@ -489,13 +493,10 @@ local function _pattern_create(pattern)
 	}
 	pat.size = c._pattern_size(pat.format)
 
-	setmetatable(pat, pat_meta)
-
 	return pat
 end
 
 setmetatable(_pattern_cache, {
-	__mode = "v",
 	__index = function(t, key)
 		local v = _pattern_create(key)
 		t[key] = v
