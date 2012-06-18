@@ -37,7 +37,6 @@ pbc_new(void) {
 static void
 free_enum(void *p) {
 	struct _enum * e = p;
-
 	_pbcM_ip_delete(e->id);
 	_pbcM_si_delete(e->name);
 

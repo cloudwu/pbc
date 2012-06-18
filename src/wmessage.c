@@ -257,8 +257,9 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 				temp[len]='\0';
 				v = temp;
 			}
-			int enum_id = _pbcM_si_query(f->type_name.e->name, v);
-			if (enum_id < 0) {
+			int enum_id = 0;
+			int err = _pbcM_si_query(f->type_name.e->name, v , &enum_id);
+			if (err) {
 				// todo : error , invalid enum
 				m->type->env->lasterror = "wmessage_string packed invalid enum";
 				assert(0);
@@ -291,8 +292,9 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 			temp[len]='\0';
 			v = temp;
 		}
-		int enum_id = _pbcM_si_query(f->type_name.e->name, v);
-		if (enum_id < 0) {
+		int enum_id = 0;
+		int err = _pbcM_si_query(f->type_name.e->name, v, &enum_id);
+		if (err < 0) {
 			// todo : error , enum invalid
 			m->type->env->lasterror = "wmessage_string invalid enum";
 			assert(0);

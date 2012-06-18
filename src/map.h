@@ -13,7 +13,7 @@ struct map_kv {
 };
 
 struct map_si * _pbcM_si_new(struct map_kv * table, int size);
-int _pbcM_si_query(struct map_si *map, const char *key);
+int _pbcM_si_query(struct map_si *map, const char *key, int *result);
 void _pbcM_si_delete(struct map_si *map);
 
 struct map_ip * _pbcM_ip_new(struct map_kv * table, int size);

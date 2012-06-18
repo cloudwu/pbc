@@ -84,7 +84,7 @@ _pbcM_si_delete(struct map_si *map)
 }
 
 int
-_pbcM_si_query(struct map_si *map, const char *key) 
+_pbcM_si_query(struct map_si *map, const char *key, int *result) 
 {
 	size_t hash_full = calc_hash(key);
 	size_t hash = hash_full % map->size;
@@ -92,10 +92,11 @@ _pbcM_si_query(struct map_si *map, const char *key)
 	struct _pbcM_si_slot * slot = &map->slot[hash];
 	for (;;) {
 		if (slot->hash == hash_full && strcmp(slot->key, key) == 0) {
-			return slot->id;
+			*result = slot->id;
+			return 0;
 		}
 		if (slot->next == 0) {
-			return -1;
+			return 1;
 		}
 		slot = &map->slot[slot->next-1];
 	}
@@ -113,7 +114,7 @@ _pbcM_ip_new_hash(struct map_kv * table, int size)
 	int empty = 0;
 	int i;
 	for (i=0;i<size;i++) {
-		int hash = table[i].id % size;
+		int hash = ((unsigned)table[i].id) % size;
 		struct _pbcM_ip_slot * slot = &ret->slot[hash];
 		if (slot->pointer == NULL) {
 			slot->pointer = table[i].pointer;
@@ -137,9 +138,12 @@ _pbcM_ip_new(struct map_kv * table, int size)
 {
 	int i;
 	int max = table[0].id;
-	if (max > size * 2)
+	if (max > size * 2 || max < 0)
 		return _pbcM_ip_new_hash(table,size);
 	for (i=1;i<size;i++) {
+		if (table[i].id < 0) {
+			return _pbcM_ip_new_hash(table,size);
+		}
 		if (table[i].id > max) {
 			max = table[i].id;
 			if (max > size * 2)
@@ -213,7 +217,7 @@ _pbcM_ip_query(struct map_ip * map, int id)
 			return map->array[id];
 		return NULL;
 	}
-	int hash = id % map->hash_size;
+	int hash = (unsigned)id % map->hash_size;
 	struct _pbcM_ip_slot * slot = &map->slot[hash];
 	for (;;) {
 		if (slot->id == id) {

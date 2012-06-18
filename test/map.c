@@ -19,7 +19,8 @@ main()
 	for (i=0;i<100;i++) {
 		void *p= _pbcM_ip_query(map,i);
 		if (p) {
-			int id = _pbcM_si_query(map2,p);
+			int id = 0;
+			_pbcM_si_query(map2,p,&id);
 			printf("%d %s\n",id,(const char *)p);
 		}
 	}
