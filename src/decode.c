@@ -312,6 +312,7 @@ pbc_decode(struct pbc_env * env, const char * typename , struct pbc_slice * slic
 	int count = _pbcC_open(_ctx,slice->buffer,slice->len);
 	if (count <= 0) {
 		env->lasterror = "decode context error";
+		_pbcC_close(_ctx);
 		return count - 1;
 	}
 	struct context * ctx = (struct context *)_ctx;
@@ -324,21 +325,25 @@ pbc_decode(struct pbc_env * env, const char * typename , struct pbc_slice * slic
 		if (f==NULL) {
 			int err = call_unknown(pd,ud,id,&ctx->a[i],start);
 			if (err) {
+				_pbcC_close(_ctx);
 				return -i-1;
 			}
 		} else if (f->label == LABEL_PACKED) {
 			struct atom * a = &ctx->a[i];
 			int n = call_array(pd, ud, f , start + a->v.s.start , a->v.s.end - a->v.s.start);
 			if (n < 0) {
+				_pbcC_close(_ctx);
 				return -i-1;
 			}
 		} else {
 			if (call_type(pd,ud,f,&ctx->a[i],start) != 0) {
+				_pbcC_close(_ctx);
 				return -i-1;
 			}
 		}
 	}
 
+	_pbcC_close(_ctx);
 	return ctx->number;
 }
 
