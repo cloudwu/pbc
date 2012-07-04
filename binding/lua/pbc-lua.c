@@ -300,13 +300,26 @@ static int
 _wmessage_int64(lua_State *L) {
 	struct pbc_wmessage * m = checkuserdata(L,1);
 	const char * key = luaL_checkstring(L,2);
-	size_t len = 0;
-	const char * number = luaL_checklstring(L,3,&len);
-	if (len !=8 ) {
-		return luaL_error(L,"Need an 8 length string for int64");
+	switch (lua_type(L,3)) {
+	case LUA_TSTRING : {
+		size_t len = 0;
+		const char * number = lua_tolstring(L,3,&len);
+		if (len !=8 ) {
+			return luaL_error(L,"Need an 8 length string for int64");
+		}
+		const uint32_t * v = (const uint32_t *) number;
+		pbc_wmessage_integer(m, key, v[0] , v[1]);
+		break;
 	}
-	const uint32_t * v = (const uint32_t *) number;
-	pbc_wmessage_integer(m, key, v[0] , v[1]);
+	case LUA_TUSERDATA : {
+		void * v = lua_touserdata(L,3);
+		uint64_t v64 = (uintptr_t)v;
+		pbc_wmessage_integer(m, key, (uint32_t)v64 , (uint32_t)(v64>>32));
+		break;
+	}
+	default :
+		return luaL_error(L, "Need an int64 type");
+	}
 	return 0;
 }
 
