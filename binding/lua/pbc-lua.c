@@ -269,7 +269,10 @@ _wmessage_string(lua_State *L) {
 	const char * key = luaL_checkstring(L,2);
 	size_t len = 0;
 	const char * v = luaL_checklstring(L,3,&len);
-	pbc_wmessage_string(m, key, v, (int)len);
+	int err = pbc_wmessage_string(m, key, v, (int)len);
+	if (err) {
+		return luaL_error(L, "Invalid enum %s", v);
+	}
 
 	return 0;
 }

@@ -129,26 +129,26 @@ int32_encode(uint32_t low, uint8_t * buffer) {
 	buffer[3] = (uint8_t)(low >> 24 & 0xff);
 }
 
-void 
+int 
 pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint32_t hi) {
 	struct _field * f = _pbcM_sp_query(m->type->name,key);
 	if (f==NULL) {
 		// todo : error
 		m->type->env->lasterror = "wmessage_interger query key error";
-		return;
+		return -1;
 	}
 	if (f->label == LABEL_PACKED) {
 		_packed_integer(m , f, key , low, hi);
-		return;		
+		return 0;		
 	}
 	if (f->label == LABEL_OPTIONAL) {
 		if (f->type == PTYPE_ENUM) {
 			if (low == f->default_v->e.id)
-				return;
+				return 0;
 		} else {
 			if (low == f->default_v->integer.low &&
 				hi == f->default_v->integer.hi) {
-				return;
+				return 0;
 			}
 		}
 	}
@@ -195,24 +195,26 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 		m->ptr += _pbcV_zigzag((uint64_t)low | (uint64_t)hi << 32 , m->ptr);
 		break;
 	}
+
+	return 0;
 }
 
-void 
+int
 pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
 	struct _field * f = _pbcM_sp_query(m->type->name,key);
 	if (f == NULL) {
 		// todo : error
 		m->type->env->lasterror = "wmessage_real query key error";
-		return;
+		return -1;
 	}
 	if (f->label == LABEL_PACKED) {
 		_packed_real(m , f, key , v);
-		return;		
+		return 0;		
 	}
 
 	if (f->label == LABEL_OPTIONAL) {
 		if (v == f->default_v->real)
-			return;
+			return 0;
 	}
 	int id = f->id << 3;
 	_expand(m,18);
@@ -231,15 +233,17 @@ pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
 		m->ptr += 8;
 		break;
 	}
+
+	return 0;
 }
 
-void 
+int
 pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int len) {
 	struct _field * f = _pbcM_sp_query(m->type->name,key);
 	if (f == NULL) {
 		// todo : error
 		m->type->env->lasterror = "wmessage_string query key error";
-		return;
+		return -1;
 	}
 
 	bool varlen = false;
@@ -262,23 +266,22 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 			if (err) {
 				// todo : error , invalid enum
 				m->type->env->lasterror = "wmessage_string packed invalid enum";
-				assert(0);
-				return;
+				return -1;
 			}
 			_packed_integer(m , f, key , enum_id , 0);
 		}
-		return;	
+		return 0;	
 	}
 
 	if (f->label == LABEL_OPTIONAL) {
 		if (f->type == PTYPE_ENUM) {
 			if (strncmp(v , f->default_v->e.name, len) == 0 && f->default_v->e.name[len] =='\0') {
-				return;
+				return 0;
 			}
 		} else if (f->type == PTYPE_STRING) {
 			if (len == f->default_v->s.len &&
 				strcmp(v, f->default_v->s.str) == 0) {
-				return;
+				return 0;
 			}
 		}
 	}
@@ -294,11 +297,10 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		}
 		int enum_id = 0;
 		int err = _pbcM_si_query(f->type_name.e->name, v, &enum_id);
-		if (err < 0) {
+		if (err) {
 			// todo : error , enum invalid
 			m->type->env->lasterror = "wmessage_string invalid enum";
-			assert(0);
-			return;
+			return -1;
 		}
 		id |= WT_VARINT;
 		m->ptr += _pbcV_encode32(id, m->ptr);
@@ -315,6 +317,8 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		m->ptr += len;
 		break;
 	}
+
+	return 0;
 }
 
 struct pbc_wmessage * 
