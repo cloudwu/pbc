@@ -911,6 +911,10 @@ push_value(lua_State *L, int type, const char * typename, union pbc_value *v) {
 static void
 decode_cb(void *ud, int type, const char * typename, union pbc_value *v, int id, const char *key) {
 	lua_State *L = ud;
+	if (key == NULL) {
+		// undefined field
+		return;
+	}
 	if (type & PBC_REPEATED) {
 		push_value(L, type & ~PBC_REPEATED, typename, v);
 		new_array(L, id , key);	// func.decode table.key table.id value array
