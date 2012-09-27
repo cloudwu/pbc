@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "pbc.h"
 
@@ -115,6 +116,7 @@ _rmessage_int32(lua_State *L) {
 
 	return 1;
 }
+
 
 static int
 _rmessage_int64(lua_State *L) {
@@ -271,7 +273,7 @@ _wmessage_string(lua_State *L) {
 	const char * v = luaL_checklstring(L,3,&len);
 	int err = pbc_wmessage_string(m, key, v, (int)len);
 	if (err) {
-		return luaL_error(L, "Invalid enum %s", v);
+		return luaL_error(L, "Write string error : %s", v);
 	}
 
 	return 0;
@@ -967,6 +969,75 @@ _decode(lua_State *L) {
 	return 1;
 }
 
+struct gcobj {
+	int size_pat;
+	int cap_pat;
+	struct pbc_pattern ** pat;
+	int size_msg;
+	int cap_msg;
+	struct pbc_rmessage ** msg;
+};
+
+static int
+_clear_gcobj(lua_State *L) {
+	struct gcobj * obj = lua_touserdata(L,1);
+	int i;
+	for (i=0;i<obj->size_pat;i++) {
+		pbc_pattern_delete(obj->pat[i]);
+	}
+	for (i=0;i<obj->size_msg;i++) {
+		pbc_rmessage_delete(obj->msg[i]);
+	}
+	free(obj->pat);
+	free(obj->msg);
+	obj->pat = NULL;
+	obj->msg = NULL;
+
+	return 0;
+}
+
+static int
+_gc(lua_State *L) {
+	struct gcobj * obj = lua_newuserdata(L,sizeof(*obj));
+	obj->size_pat = 0;
+	obj->cap_pat = 4;
+	obj->size_msg = 0;
+	obj->cap_msg = 4;
+	obj->pat = malloc(obj->cap_pat * sizeof(struct pbc_pattern *));
+	obj->msg = malloc(obj->cap_msg * sizeof(struct pbc_rmessage *));
+
+	lua_createtable(L,0,1);
+	lua_pushcfunction(L, _clear_gcobj);
+	lua_setfield(L,-2,"__gc");
+	lua_setmetatable(L,-2);
+
+	return 1;
+}
+
+static int
+_add_pattern(lua_State *L) {
+	struct gcobj * obj = lua_touserdata(L,1);
+	if (obj->size_pat >= obj->cap_pat) {
+		obj->cap_pat *= 2;
+		obj->pat = realloc(obj->pat, obj->cap_pat * sizeof(struct pbc_pattern *));
+	}
+	struct pbc_pattern * pat = lua_touserdata(L,2);
+	obj->pat[obj->size_pat++] = pat;
+	return 0;
+}
+
+static int
+_add_rmessage(lua_State *L) {
+	struct gcobj * obj = lua_touserdata(L,1);
+	if (obj->size_msg >= obj->cap_msg) {
+		obj->cap_msg *= 2;
+		obj->msg = realloc(obj->msg, obj->cap_msg * sizeof(struct pbc_rmessage *));
+	}
+	struct pbc_rmessage * msg = lua_touserdata(L,2);
+	obj->msg[obj->size_msg++] = msg;
+	return 0;
+}
+
 int
 luaopen_protobuf_c(lua_State *L) {
 	luaL_Reg reg[] = {
@@ -1004,6 +1075,9 @@ luaopen_protobuf_c(lua_State *L) {
 		{"_pattern_pack", _pattern_pack },
 		{"_last_error", _last_error },
 		{"_decode", _decode },
+		{"_gc", _gc },
+		{"_add_pattern", _add_pattern },
+		{"_add_rmessage", _add_rmessage },
 		{NULL,NULL},
 	};
 
