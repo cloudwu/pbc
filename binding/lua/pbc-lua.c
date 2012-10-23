@@ -587,6 +587,7 @@ _pattern_unpack(lua_State *L) {
 			for (j=0;j<n;j++) {
 				_push_array(L,(void *)ptr, type, j);
 			}
+			ptr += sizeof(pbc_array);
 		}
 	}
 	if (array) {
