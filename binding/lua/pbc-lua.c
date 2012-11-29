@@ -43,14 +43,6 @@ _env_new(lua_State *L) {
 }
 
 static int
-_env_delete(lua_State *L) {
-	struct pbc_env * env = lua_touserdata(L,1);
-	pbc_delete(env);
-
-	return 0;
-}
-
-static int
 _env_register(lua_State *L) {
 	struct pbc_env * env = checkuserdata(L,1);
 	size_t sz = 0;
@@ -971,6 +963,7 @@ _decode(lua_State *L) {
 }
 
 struct gcobj {
+	struct pbc_env * env;
 	int size_pat;
 	int cap_pat;
 	struct pbc_pattern ** pat;
@@ -993,6 +986,8 @@ _clear_gcobj(lua_State *L) {
 	free(obj->msg);
 	obj->pat = NULL;
 	obj->msg = NULL;
+	pbc_delete(obj->env);
+	obj->env = NULL;
 
 	return 0;
 }
@@ -1000,6 +995,7 @@ _clear_gcobj(lua_State *L) {
 static int
 _gc(lua_State *L) {
 	struct gcobj * obj = lua_newuserdata(L,sizeof(*obj));
+	obj->env = lua_touserdata(L,1);
 	obj->size_pat = 0;
 	obj->cap_pat = 4;
 	obj->size_msg = 0;
@@ -1043,7 +1039,6 @@ int
 luaopen_protobuf_c(lua_State *L) {
 	luaL_Reg reg[] = {
 		{"_env_new" , _env_new },
-		{"_env_delete" , _env_delete },
 		{"_env_register" , _env_register },
 		{"_env_type", _env_type },
 		{"_rmessage_new" , _rmessage_new },

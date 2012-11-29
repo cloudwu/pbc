@@ -18,7 +18,7 @@ local _pattern_cache = {}
 
 -- skynet clear
 local P = c._env_new()
-local GC = c._gc()
+local GC = c._gc(P)
 
 function lasterror()
 	return c._last_error(P)
