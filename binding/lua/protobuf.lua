@@ -475,7 +475,7 @@ end
 
 --------------
 
-local default_cache = setmetatable({} , {__mode = "kv"})
+local default_cache = {}
 
 -- todo : clear default_cache, v._CObj
 
