@@ -141,17 +141,7 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 		_packed_integer(m , f, key , low, hi);
 		return 0;		
 	}
-	if (f->label == LABEL_OPTIONAL) {
-		if (f->type == PTYPE_ENUM) {
-			if (low == f->default_v->e.id)
-				return 0;
-		} else {
-			if (low == f->default_v->integer.low &&
-				hi == f->default_v->integer.hi) {
-				return 0;
-			}
-		}
-	}
+
 	int id = f->id << 3;
 
 	_expand(m,20);
@@ -212,10 +202,6 @@ pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
 		return 0;		
 	}
 
-	if (f->label == LABEL_OPTIONAL) {
-		if (v == f->default_v->real)
-			return 0;
-	}
 	int id = f->id << 3;
 	_expand(m,18);
 	switch (f->type) {
@@ -273,18 +259,6 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		return 0;	
 	}
 
-	if (f->label == LABEL_OPTIONAL) {
-		if (f->type == PTYPE_ENUM) {
-			if (strncmp(v , f->default_v->e.name, len) == 0 && f->default_v->e.name[len] =='\0') {
-				return 0;
-			}
-		} else if (f->type == PTYPE_STRING) {
-			if (len == f->default_v->s.len &&
-				strcmp(v, f->default_v->s.str) == 0) {
-				return 0;
-			}
-		}
-	}
 	int id = f->id << 3;
 	_expand(m,20);
 	switch (f->type) {
