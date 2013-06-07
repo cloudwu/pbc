@@ -389,6 +389,7 @@ _pack_packed_32(struct _packed *p,struct pbc_wmessage *m) {
 static void
 _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 	int n = pbc_array_size(p->data);
+
 	int offset = m->ptr - m->buffer;
 	int len = n * 2;
 	if (p->ptype == PTYPE_BOOL) {
@@ -450,6 +451,7 @@ _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 			memmove(m->buffer + offset + end_len_len , 
 				m->buffer + offset + len_len , 
 				end_len);
+			m->ptr +=  end_len_len - len_len;
 		}
 		memcpy(m->buffer + offset , temp, end_len_len);
 	}
