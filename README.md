@@ -59,7 +59,7 @@ pattern api is faster, and less memory used, and you can access data from native
 
 ## Extension
 
-PBC support extension with a simple way . It add prefix to the extension field name. 
+PBC support extension with a simple way . PBC will add a prefix to every extension field name. 
 
 ## Service
 
