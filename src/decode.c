@@ -24,7 +24,7 @@ static const char * TYPENAME[] = {
 static int
 call_unknown(pbc_decoder f, void * ud, int id, struct atom *a, uint8_t * start) {
 	union pbc_value v;
-	switch (a->wire_id) {
+	switch (a->wire_id & 7) {
 	case WT_VARINT:
 		v.i.low = a->v.i.low;
 		v.i.hi = a->v.i.hi;
