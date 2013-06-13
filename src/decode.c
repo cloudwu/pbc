@@ -325,8 +325,8 @@ pbc_decode(struct pbc_env * env, const char * typename , struct pbc_slice * slic
 		if (f==NULL) {
 			int err = call_unknown(pd,ud,id,&ctx->a[i],start);
 			if (err) {
-				_pbcC_close(_ctx);
-				return -i-1;
+                // ignore it, maybe a missing optional field.
+                ;
 			}
 		} else if (f->label == LABEL_PACKED) {
 			struct atom * a = &ctx->a[i];
