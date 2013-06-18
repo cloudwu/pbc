@@ -95,14 +95,16 @@ _set_default(struct _stringpool *pool, struct _field *f , int ptype, const char 
 	case PTYPE_INT32:
 	case PTYPE_FIXED32:
 	case PTYPE_SFIXED32:
-	case PTYPE_SINT32:
-		f->default_v->integer.low = strtol(value, NULL, 10);
-		if (f->default_v->integer.low < 0) {
+	case PTYPE_SINT32: {
+		int low = strtol(value, NULL, 10);
+		f->default_v->integer.low = low;
+		if (low < 0) {
 			f->default_v->integer.hi = -1;
 		} else {
 			f->default_v->integer.hi = 0;
 		}
 		break;
+	}
 	case PTYPE_UINT32:
 		f->default_v->integer.low = strtoul(value, NULL, 10);
 		f->default_v->integer.hi = 0;
