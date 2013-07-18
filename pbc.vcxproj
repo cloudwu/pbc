@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="pbc.h" />
     <ClInclude Include="src\alloc.h" />
     <ClInclude Include="src\array.h" />
     <ClInclude Include="src\bootstrap.h" />

@@ -36,6 +36,7 @@
     <ClInclude Include="src\varint.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="pbc.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\array.c">

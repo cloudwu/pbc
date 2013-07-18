@@ -43,8 +43,8 @@ _wmessage_new(struct heap *h, struct _message *msg) {
 }
 
 struct pbc_wmessage * 
-pbc_wmessage_new(struct pbc_env * env, const char *typename) {
-	struct _message * msg = _pbcP_get_message(env, typename);
+pbc_wmessage_new(struct pbc_env * env, const char *type_name) {
+	struct _message * msg = _pbcP_get_message(env, type_name);
 	if (msg == NULL)
 		return NULL;
 	struct heap *h = _pbcH_new(0);

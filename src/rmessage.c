@@ -308,8 +308,8 @@ _pbc_rmessage_new(struct pbc_rmessage * ret , struct _message * type , void *buf
 }
 
 struct pbc_rmessage * 
-pbc_rmessage_new(struct pbc_env * env, const char * typename ,  struct pbc_slice * slice) {
-	struct _message * msg = _pbcP_get_message(env, typename);
+pbc_rmessage_new(struct pbc_env * env, const char * type_name ,  struct pbc_slice * slice) {
+	struct _message * msg = _pbcP_get_message(env, type_name);
 	if (msg == NULL) {
 		env->lasterror = "Proto not found";
 		return NULL;

@@ -239,8 +239,8 @@ _pbcP_type(struct _field * field, const char ** type) {
 }
 
 int 
-pbc_type(struct pbc_env * p, const char * typename , const char * key , const char ** type) {
-	struct _message *m = _pbcP_get_message(p, typename);
+pbc_type(struct pbc_env * p, const char * type_name , const char * key , const char ** type) {
+	struct _message *m = _pbcP_get_message(p, type_name);
 	if (m==NULL) {
 		return 0;
 	}
