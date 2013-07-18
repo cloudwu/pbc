@@ -64,7 +64,7 @@ void
 pbc_pattern_set_default(struct pbc_pattern *pat, void *output) {
 	int i;
 	for (i=0;i<pat->count;i++) {
-		_pattern_set_default(&pat->f[i], output);
+		_pattern_set_default(&pat->f[i], (char *)output);
 	}
 }
 
@@ -284,10 +284,10 @@ _pbcP_unpack_packed(uint8_t *buffer, int size, int ptype, pbc_array array) {
 static int
 unpack_field(int ctype, int ptype, char * buffer, struct atom * a, void *out) {
 	if (ctype == CTYPE_ARRAY) {
-		return unpack_array(ptype, buffer, a , out);
+		return unpack_array(ptype, buffer, a , (_pbc_array *)out);
 	}
 	if (ctype == CTYPE_PACKED) {
-		return _pbcP_unpack_packed((uint8_t *)buffer + a->v.s.start, a->v.s.end - a->v.s.start,	ptype, out);
+		return _pbcP_unpack_packed((uint8_t *)buffer + a->v.s.start, a->v.s.end - a->v.s.start,	ptype, (_pbc_array *)out);
 	}
 	switch(ptype) {
 	case PTYPE_DOUBLE:
@@ -356,7 +356,7 @@ pbc_pattern_close_arrays(struct pbc_pattern *pat, void * data) {
 	for (i=0;i<pat->count;i++) {
 		if (pat->f[i].ctype == CTYPE_ARRAY || pat->f[i].ctype == CTYPE_PACKED) {
 			void *array = (char *)data + pat->f[i].offset;
-			_pbcA_close(array);
+			_pbcA_close((_pbc_array *)array);
 		}
 	}
 }
@@ -371,7 +371,7 @@ _pack_wiretype(uint32_t wt, struct pbc_slice *s) {
 			return -1;
 		memcpy(s->buffer, temp, len);
 	} else {
-		len = _pbcV_encode32(wt, s->buffer);
+		len = _pbcV_encode32(wt, (uint8_t *)s->buffer);
 	}
 	s->buffer = (char *)s->buffer + len;
 	s->len -= len;
@@ -388,7 +388,7 @@ _pack_varint64(uint64_t i64, struct pbc_slice *s) {
 			return -1;
 		memcpy(s->buffer, temp, len);
 	} else {
-		len = _pbcV_encode(i64, s->buffer);
+		len = _pbcV_encode(i64, (uint8_t *)s->buffer);
 	}
 	s->buffer = (char *)s->buffer + len;
 	s->len -= len;
@@ -405,7 +405,7 @@ _pack_sint32(uint32_t v, struct pbc_slice *s) {
 			return -1;
 		memcpy(s->buffer, temp, len);
 	} else {
-		len = _pbcV_zigzag32(v, s->buffer);
+		len = _pbcV_zigzag32(v, (uint8_t *)s->buffer);
 	}
 	s->buffer = (char *)s->buffer + len;
 	s->len -= len;
@@ -422,7 +422,7 @@ _pack_sint64(uint64_t v, struct pbc_slice *s) {
 			return -1;
 		memcpy(s->buffer, temp, len);
 	} else {
-		len = _pbcV_zigzag(v, s->buffer);
+		len = _pbcV_zigzag(v, (uint8_t *)s->buffer);
 	}
 	s->buffer = (char *)s->buffer + len;
 	s->len -= len;
@@ -486,21 +486,21 @@ _pack_number(int ptype , int ctype , struct pbc_slice *s, void *input) {
 	case PTYPE_SFIXED64:
 		if (s->len < 8)
 			return -1;
-		_fix64_encode(&(var->integer), s->buffer);
+		_fix64_encode(&(var->integer), (uint8_t *)s->buffer);
 		s->buffer = (char *)s->buffer + 8;
 		s->len -= 8;
 		return 8;
 	case PTYPE_DOUBLE:
 		if (s->len < 8)
 			return -1;
-		double_encode(var->real , s->buffer);
+		double_encode(var->real , (uint8_t *)s->buffer);
 		s->buffer = (char *)s->buffer + 8;
 		s->len -= 8;
 		return 8;
 	case PTYPE_FLOAT:
 		if (s->len < 4)
 			return -1;
-		float_encode((float)var->real , s->buffer);
+		float_encode((float)var->real , (uint8_t *)s->buffer);
 		s->buffer = (char *)s->buffer + 4;
 		s->len -= 4;
 		return 4;
@@ -508,7 +508,7 @@ _pack_number(int ptype , int ctype , struct pbc_slice *s, void *input) {
 	case PTYPE_SFIXED32:
 		if (s->len < 4)
 			return -1;
-		_fix32_encode(var->integer.low, s->buffer);
+		_fix32_encode(var->integer.low, (uint8_t *)s->buffer);
 		s->buffer = (char *)s->buffer + 4;
 		s->len -= 4;
 		return 4;
@@ -560,7 +560,7 @@ _pack_field(struct _pattern_field *pf , int ctype, struct pbc_slice *s, void *in
 		goto _number;
 	case PTYPE_STRING:
 		wiretype = WT_LEND;
-		input_slice = input;
+		input_slice = (struct pbc_slice *)input;
 		if (input_slice->len > 0)
 			goto _string;
 		string_slice.buffer = input_slice->buffer;
@@ -578,7 +578,7 @@ _pack_field(struct _pattern_field *pf , int ctype, struct pbc_slice *s, void *in
 
 	return 0;
 _bytes:
-	input_slice = input;
+	input_slice = (struct pbc_slice *)input;
 _string:
 	len = _pack_wiretype(pf->id << 3 | WT_LEND , s);
 	if (len < 0) {
@@ -756,13 +756,13 @@ _is_default(struct _pattern_field * pf, void * in) {
 			return *(bool *)in == false;
 	}
 	if (pf->ptype == PTYPE_STRING) {
-		struct pbc_slice *slice = in;
+		struct pbc_slice *slice = (struct pbc_slice *)in;
 		if (slice->buffer == NULL) {
 			return pf->defv->s.str[0] == '\0';
 		}
 		int len = slice->len;
 		if (len <= 0) {
-			return strcmp(pf->defv->s.str, slice->buffer) == 0;
+			return strcmp(pf->defv->s.str, (const char *)slice->buffer) == 0;
 		}
 		return len == pf->defv->s.len && memcmp(pf->defv->s.str, slice->buffer, len)==0;
 	}
@@ -788,10 +788,10 @@ pbc_pattern_pack(struct pbc_pattern *pat, void *input, struct pbc_slice * s)
 			len = _pack_field(pf, pf->ctype, &slice, in);
 			break;
 		case LABEL_REPEATED:
-			len = _pack_repeated(pf, &slice , in);
+			len = _pack_repeated(pf, &slice , (_pbc_array *)in);
 			break;
 		case LABEL_PACKED:
-			len = _pack_packed(pf, &slice , in);
+			len = _pack_packed(pf, &slice , (_pbc_array *)in);
 			break;
 		}
 		if (len < 0) {
@@ -843,7 +843,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 				for (j=0;j<pat->count;j++) {
 					if (field[j] == true && (pat->f[j].ctype == CTYPE_ARRAY || pat->f[j].ctype == CTYPE_PACKED)) {
 						void *array = (char *)output + pat->f[j].offset;
-						_pbcA_close(array);
+						_pbcA_close((_pbc_array *)array);
 					}
 				}
 				_pbcC_close(_ctx);
@@ -856,7 +856,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 	if (fc != pat->count) {
 		for (i=0;i<pat->count;i++) {
 			if (field[i] == false) {
-				_pattern_set_default(&pat->f[i], output);
+				_pattern_set_default(&pat->f[i], (char *)output);
 			}
 		}
 	}
@@ -968,8 +968,8 @@ _scan_pattern(const char * format , char * temp) {
 
 static int 
 _comp_field(const void * a, const void * b) {
-	const struct _pattern_field * fa = a;
-	const struct _pattern_field * fb = b;
+	const struct _pattern_field * fa = (const struct _pattern_field *)a;
+	const struct _pattern_field * fb = (const struct _pattern_field *)b;
 
 	return fa->id - fb->id;
 }
@@ -977,7 +977,7 @@ _comp_field(const void * a, const void * b) {
 struct pbc_pattern *
 _pbcP_new(struct pbc_env * env, int n) {
 	size_t sz = sizeof(struct pbc_pattern) + (sizeof(struct _pattern_field)) * (n-1);
-	struct pbc_pattern * ret = malloc(sz);
+	struct pbc_pattern * ret = (struct pbc_pattern *)malloc(sz);
 	memset(ret, 0 , sz);
 	ret->count = n;
 	ret->env = env;
@@ -1024,7 +1024,7 @@ _pattern_new(struct _message *m, const char *format) {
 
 	for (i=0;i<n;i++) {
 		struct _pattern_field * f = &(pat->f[i]);
-		struct _field * field = _pbcM_sp_query(m->name, ptr);
+		struct _field * field = (struct _field *)_pbcM_sp_query(m->name, ptr);
 		if (field == NULL) {
 			m->env->lasterror = "Pattern @new query none exist field";
 			goto _error;
@@ -1086,7 +1086,7 @@ pbc_pattern_new(struct pbc_env * env , const char * message, const char * format
 
 	for (i=0;i<n;i++) {
 		struct _pattern_field * f = &(pat->f[i]);
-		struct _field * field = _pbcM_sp_query(m->name, ptr);
+		struct _field * field = (struct _field *)_pbcM_sp_query(m->name, ptr);
 		if (field == NULL) {
 			env->lasterror = "Pattern new query none exist field";
 			goto _error;

@@ -74,7 +74,7 @@ struct file_t {
 
 static void
 set_enum_one(struct pbc_env *p, struct file_t *file, const char *name, int start, int sz) {
-	struct map_kv *table = malloc(sz * sizeof(struct map_kv));
+	struct map_kv *table = (struct map_kv *)malloc(sz * sizeof(struct map_kv));
 	int i;
 	for (i=0;i<sz;i++) {
 		pbc_var id;
@@ -135,10 +135,10 @@ set_msg_one(struct pbc_pattern * FIELD_T, struct pbc_env *p, struct file_t *file
 		}
 		struct _field f;
 		f.id = field.id;
-		f.name = field.name.buffer;
+		f.name = (const char *)field.name.buffer;
 		f.type = field.type;
 		f.label = field.label;
-		f.type_name.n = field.type_name.buffer;
+		f.type_name.n = (const char *)field.type_name.buffer;
 		set_default(&f, &field);
 
 		_pbcP_push_message(p,name, &f , queue);
@@ -167,17 +167,17 @@ static void
 set_field_one(struct pbc_env *p, struct _field *f) {
 	const char * type_name = f->type_name.n;
 	if (f->type == PTYPE_MESSAGE) {
-		f->type_name.m  = _pbcM_sp_query(p->msgs, type_name);
+		f->type_name.m  = (_message *)_pbcM_sp_query(p->msgs, type_name);
 //		printf("MESSAGE: %s %p\n",type_name, f->type_name.m);
 	} else if (f->type == PTYPE_ENUM) {
-		f->type_name.e = _pbcM_sp_query(p->enums, type_name);
+		f->type_name.e = (_enum *)_pbcM_sp_query(p->enums, type_name);
 //		printf("ENUM: %s %p ",type_name, f->type_name.e);
 		const char * str = f->default_v->s.str;
 		if (str && str[0]) {
 			int err = _pbcM_si_query(f->type_name.e->name, str , &(f->default_v->e.id));
 			if (err < 0)
 				goto _default;
-			f->default_v->e.name = _pbcM_ip_query(f->type_name.e->id, f->default_v->e.id);
+			f->default_v->e.name = (const char *)_pbcM_ip_query(f->type_name.e->id, f->default_v->e.id);
 //			printf("[%s %d]\n",str,f->default_v->e.id);
 		} else {
 _default:
@@ -194,7 +194,7 @@ _pbcB_register_fields(struct pbc_env *p, pbc_array queue) {
 	for (i=0;i<sz;i++) {
 		pbc_var atom;
 		_pbcA_index(queue,i,atom);
-		struct _field * f = atom->m.buffer;
+		struct _field * f = (struct _field *)atom->m.buffer;
 		set_field_one(p, f);
 	}
 }
@@ -278,7 +278,7 @@ register_internal(struct pbc_env * p, struct pbc_slice *slice) {
 		goto _return;
 	}
 
-	_pbcM_sp_insert(p->files , file.name.buffer, NULL);
+	_pbcM_sp_insert(p->files , (const char *)file.name.buffer, NULL);
 
 	pbc_array queue;
 	_pbcA_open(queue);

@@ -72,7 +72,7 @@ call_type(pbc_decoder pd, void * ud, struct _field *f, struct atom *a, uint8_t *
 	case PTYPE_ENUM:
 		CHECK_VARINT(a, -1);
 		v.e.id = a->v.i.low;
-		v.e.name = _pbcM_ip_query(f->type_name.e->id , v.e.id);
+		v.e.name = (const char *)_pbcM_ip_query(f->type_name.e->id , v.e.id);
 		break;
 	case PTYPE_INT64:
 	case PTYPE_UINT64:
@@ -241,7 +241,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 						return -1;
 				}
 				v.e.id = v.i.low;
-				v.e.name = _pbcM_ip_query(f->type_name.e->id , v.i.low);
+				v.e.name = (const char *)_pbcM_ip_query(f->type_name.e->id , v.i.low);
 				pd(ud, type , type_name, &v, f->id, f->name);
 				buffer += len;
 				size -= len;
@@ -316,12 +316,12 @@ pbc_decode(struct pbc_env * env, const char * type_name , struct pbc_slice * sli
 		return count - 1;
 	}
 	struct context * ctx = (struct context *)_ctx;
-	uint8_t * start = slice->buffer;
+	uint8_t * start = (uint8_t *)slice->buffer;
 
 	int i;
 	for (i=0;i<ctx->number;i++) {
 		int id = ctx->a[i].wire_id >> 3;
-		struct _field * f = _pbcM_ip_query(msg->id , id);
+		struct _field * f = (struct _field *)_pbcM_ip_query(msg->id , id);
 		if (f==NULL) {
 			int err = call_unknown(pd,ud,id,&ctx->a[i],start);
 			if (err) {

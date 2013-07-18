@@ -31,7 +31,7 @@ _concat_name(struct _stringpool *p , const char *prefix ,  int prefix_sz , const
 static void
 _register_enum(struct pbc_env *p, struct _stringpool *pool, struct pbc_rmessage * enum_type, const char *prefix, int prefix_sz) {
 	int field_count = pbc_rmessage_size(enum_type, "value");
-	struct map_kv *table = malloc(field_count * sizeof(struct map_kv));
+	struct map_kv *table = (struct map_kv *)malloc(field_count * sizeof(struct map_kv));
 	int i;
 	for (i=0;i<field_count;i++) {
 		struct pbc_rmessage * value = pbc_rmessage_message(enum_type, "value", i);
