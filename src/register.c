@@ -9,6 +9,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef _MSC_VER
+#define strtoll _strtoi64
+#endif
+
 static const char *
 _concat_name(struct _stringpool *p , const char *prefix ,  int prefix_sz , const char *name , int name_sz, int *sz) {
 	if (prefix_sz == 0) {
