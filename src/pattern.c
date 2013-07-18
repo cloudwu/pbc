@@ -8,7 +8,9 @@
 #include "map.h"
 
 #include <stdint.h>
+#ifndef _MSC_VER
 #include <stdbool.h>
+#endif
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>

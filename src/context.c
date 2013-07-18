@@ -6,7 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#ifndef _MSC_VER
 #include <stdbool.h>
+#endif
 
 #define INNER_ATOM ((PBC_CONTEXT_CAP - sizeof(struct context)) / sizeof(struct atom))
 
