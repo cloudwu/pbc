@@ -820,7 +820,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 
 	struct context * ctx = (struct context *)_ctx;
 	bool * field = (bool *)malloc(pat->count * sizeof(bool));
-	memset(field, 0, sizeof(field));
+	memset(field, 0, pat->count * sizeof(bool));
 
 	int i;
 	int fc = 0;
