@@ -819,7 +819,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 	}
 
 	struct context * ctx = (struct context *)_ctx;
-	bool field[pat->count];
+	bool * field = (bool *)malloc(pat->count * sizeof(bool));
 	memset(field, 0, sizeof(field));
 
 	int i;
@@ -833,7 +833,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 				field[index] = true;
 				++fc;
 				if ((f->ctype == CTYPE_ARRAY || f->ctype == CTYPE_PACKED)) {
-					struct _pbc_array *array = (struct _pbc_array *)(output + f->offset);
+					struct _pbc_array *array = (struct _pbc_array *)((char *)output + f->offset);
 					_pbcA_open(array);
 				}
 			}
@@ -848,6 +848,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 				}
 				_pbcC_close(_ctx);
 				pat->env->lasterror = "Pattern unpack field error";
+				free(field);
 				return -i-1;
 			}
 		}
@@ -860,6 +861,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 			}
 		}
 	}
+	free(field);
 	return 0;
 }
 
@@ -1013,7 +1015,7 @@ _check_ctype(struct _field * field, struct _pattern_field *f) {
 struct pbc_pattern *
 _pattern_new(struct _message *m, const char *format) {
 	int len = strlen(format);
-	char temp[len+1];
+	char * temp = (char *)malloc(len+1);
 	int n = _scan_pattern(format, temp);
 	struct pbc_pattern * pat = _pbcP_new(m->env, n);
 	int i;
@@ -1056,9 +1058,10 @@ _pattern_new(struct _message *m, const char *format) {
 	pat->count = n;
 
 	qsort(pat->f , n , sizeof(struct _pattern_field), _comp_field);
-
+	free(temp);
 	return pat;
 _error:
+	free(temp);
 	free(pat);
 	return NULL;
 }
@@ -1075,7 +1078,7 @@ pbc_pattern_new(struct pbc_env * env , const char * message, const char * format
 	}
 
 	int len = strlen(format);
-	char temp[len+1];
+	char * temp = (char *)malloc(len+1);
 	int n = _scan_pattern(format, temp);
 	struct pbc_pattern * pat = _pbcP_new(env, n);
 	int i;
@@ -1120,9 +1123,10 @@ pbc_pattern_new(struct pbc_env * env , const char * message, const char * format
 	pat->count = n;
 
 	qsort(pat->f , n , sizeof(struct _pattern_field), _comp_field);
-
+	free(temp);
 	return pat;
 _error:
+	free(temp);
 	free(pat);
 	return NULL;
 }

@@ -257,7 +257,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 	}
 	if (f->label == LABEL_PACKED) {
 		if (f->type == PTYPE_ENUM) {
-			char temp[len+1];
+			char * temp = (char *)malloc(len + 1);
 			if (!varlen || v[len] != '\0') {
 				memcpy(temp,v,len);
 				temp[len]='\0';
@@ -268,9 +268,11 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 			if (err) {
 				// todo : error , invalid enum
 				m->type->env->lasterror = "wmessage_string packed invalid enum";
+				free(temp);
 				return -1;
 			}
 			_packed_integer(m , f, key , enum_id , 0);
+			free(temp);
 		}
 		return 0;	
 	}
@@ -291,7 +293,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 	_expand(m,20);
 	switch (f->type) {
 	case PTYPE_ENUM : {
-		char temp[len+1];
+		char * temp = (char *)malloc(len+1);
 		if (!varlen || v[len] != '\0') {
 			memcpy(temp,v,len);
 			temp[len]='\0';
@@ -302,11 +304,13 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		if (err) {
 			// todo : error , enum invalid
 			m->type->env->lasterror = "wmessage_string invalid enum";
+			free(temp);
 			return -1;
 		}
 		id |= WT_VARINT;
 		m->ptr += _pbcV_encode32(id, m->ptr);
 		m->ptr += _pbcV_encode32(enum_id, m->ptr);
+		free(temp);
 		break;
 	}
 	case PTYPE_STRING:

@@ -21,7 +21,7 @@ _concat_name(struct _stringpool *p , const char *prefix ,  int prefix_sz , const
 		}
 		return _pbcS_build(p , name, name_sz);
 	}
-	char temp[name_sz + prefix_sz + 2];
+	char * temp = (char *)malloc(name_sz + prefix_sz + 2);
 	memcpy(temp,prefix,prefix_sz);
 	temp[prefix_sz] = '.';
 	memcpy(temp+prefix_sz+1,name,name_sz);
@@ -29,7 +29,9 @@ _concat_name(struct _stringpool *p , const char *prefix ,  int prefix_sz , const
 	if (sz) {
 		*sz = name_sz + prefix_sz + 1;
 	}
-	return _pbcS_build(p , temp, name_sz + prefix_sz + 1);
+	const char * ret = _pbcS_build(p , temp, name_sz + prefix_sz + 1);
+	free(temp);
+	return ret;
 }
 
 static void
@@ -309,7 +311,7 @@ pbc_register(struct pbc_env * p, struct pbc_slice *slice) {
 		return 1;
 	}
 	int n = pbc_rmessage_size(message, "file");
-	struct pbc_rmessage * files[n];
+	struct pbc_rmessage ** files = (struct pbc_rmessage **)malloc(n * sizeof(struct pbc_rmessage *));
 	int i;
 	if (n == 0) {
 		p->lasterror = "register empty";
@@ -333,9 +335,11 @@ pbc_register(struct pbc_env * p, struct pbc_slice *slice) {
 		r = rr;
 	} while (r>0);
 
+	free(files);
 	pbc_rmessage_delete(message);
 	return 0;
 _error:
+	free(files);
 	pbc_rmessage_delete(message);
 	return 1;
 }
