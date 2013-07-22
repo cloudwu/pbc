@@ -114,11 +114,11 @@ _open_packed_varint(struct context * ctx , uint8_t * buffer, int size) {
 		ctx->a = a;
 	} else {
 		int cap = 64;
-		ctx->a = (atom *)malloc(cap * sizeof(struct atom));
+		ctx->a = (struct atom *)malloc(cap * sizeof(struct atom));
 		while (size > 0) {
 			if (i >= cap) {
 				cap = cap + 64;
-				ctx->a = (atom *)realloc(ctx->a, cap * sizeof(struct atom));
+				ctx->a = (struct atom *)realloc(ctx->a, cap * sizeof(struct atom));
 				continue;
 			}
 			int len = _decode_varint(buffer, size, &a[i]);
@@ -177,7 +177,7 @@ _pbcC_open_packed(pbc_ctx _ctx, int ptype, void *buffer, int size) {
 	struct atom * a = (struct atom *)(ctx + 1);
 
 	if (ctx->number > INNER_ATOM) {
-		ctx->a = (atom *)malloc(ctx->number * sizeof(struct atom));
+		ctx->a = (struct atom *)malloc(ctx->number * sizeof(struct atom));
 		a = ctx->a;
 	} else {
 		ctx->a = a;
@@ -246,11 +246,11 @@ _pbcC_open(pbc_ctx _ctx , void *buffer, int size) {
 
 	if (size > 0) {
 		int cap = 64;
-		ctx->a = (atom *)malloc(cap * sizeof(struct atom));
+		ctx->a = (struct atom *)malloc(cap * sizeof(struct atom));
 		while (size > 0) {
 			if (i >= cap) {
 				cap = cap + 64;
-				ctx->a = (atom *)realloc(ctx->a, cap * sizeof(struct atom));
+				ctx->a = (struct atom *)realloc(ctx->a, cap * sizeof(struct atom));
 				continue;
 			}
 			char * next = wiretype_decode((uint8_t *)buffer, size , &ctx->a[i] , start);

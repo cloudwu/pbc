@@ -58,10 +58,10 @@ _pbcA_push(pbc_array _array, pbc_var var) {
 				struct heap * h = a->heap;
 				if (h) {
 					void * old = a->a;
-					a->a = (_pbc_var *)_pbcH_alloc(h, sizeof(union _pbc_var) * (size+1) * 2);
+					a->a = (union _pbc_var *)_pbcH_alloc(h, sizeof(union _pbc_var) * (size+1) * 2);
 					memcpy(a->a, old, sizeof(union _pbc_var) * size);
 				} else {
-					a->a = (_pbc_var *)_pbcM_realloc(a->a,sizeof(union _pbc_var) * (size+1) * 2);
+					a->a = (union _pbc_var *)_pbcM_realloc(a->a,sizeof(union _pbc_var) * (size+1) * 2);
 				}
 			}
 		}

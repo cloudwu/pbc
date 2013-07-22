@@ -284,10 +284,10 @@ _pbcP_unpack_packed(uint8_t *buffer, int size, int ptype, pbc_array array) {
 static int
 unpack_field(int ctype, int ptype, char * buffer, struct atom * a, void *out) {
 	if (ctype == CTYPE_ARRAY) {
-		return unpack_array(ptype, buffer, a , (_pbc_array *)out);
+		return unpack_array(ptype, buffer, a , (struct _pbc_array *)out);
 	}
 	if (ctype == CTYPE_PACKED) {
-		return _pbcP_unpack_packed((uint8_t *)buffer + a->v.s.start, a->v.s.end - a->v.s.start,	ptype, (_pbc_array *)out);
+		return _pbcP_unpack_packed((uint8_t *)buffer + a->v.s.start, a->v.s.end - a->v.s.start,	ptype, (struct _pbc_array *)out);
 	}
 	switch(ptype) {
 	case PTYPE_DOUBLE:
@@ -356,7 +356,7 @@ pbc_pattern_close_arrays(struct pbc_pattern *pat, void * data) {
 	for (i=0;i<pat->count;i++) {
 		if (pat->f[i].ctype == CTYPE_ARRAY || pat->f[i].ctype == CTYPE_PACKED) {
 			void *array = (char *)data + pat->f[i].offset;
-			_pbcA_close((_pbc_array *)array);
+			_pbcA_close((struct _pbc_array *)array);
 		}
 	}
 }
@@ -788,10 +788,10 @@ pbc_pattern_pack(struct pbc_pattern *pat, void *input, struct pbc_slice * s)
 			len = _pack_field(pf, pf->ctype, &slice, in);
 			break;
 		case LABEL_REPEATED:
-			len = _pack_repeated(pf, &slice , (_pbc_array *)in);
+			len = _pack_repeated(pf, &slice , (struct _pbc_array *)in);
 			break;
 		case LABEL_PACKED:
-			len = _pack_packed(pf, &slice , (_pbc_array *)in);
+			len = _pack_packed(pf, &slice , (struct _pbc_array *)in);
 			break;
 		}
 		if (len < 0) {
@@ -843,7 +843,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 				for (j=0;j<pat->count;j++) {
 					if (field[j] == true && (pat->f[j].ctype == CTYPE_ARRAY || pat->f[j].ctype == CTYPE_PACKED)) {
 						void *array = (char *)output + pat->f[j].offset;
-						_pbcA_close((_pbc_array *)array);
+						_pbcA_close((struct _pbc_array *)array);
 					}
 				}
 				_pbcC_close(_ctx);

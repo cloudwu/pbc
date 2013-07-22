@@ -167,10 +167,10 @@ static void
 set_field_one(struct pbc_env *p, struct _field *f) {
 	const char * type_name = f->type_name.n;
 	if (f->type == PTYPE_MESSAGE) {
-		f->type_name.m  = (_message *)_pbcM_sp_query(p->msgs, type_name);
+		f->type_name.m  = (struct _message *)_pbcM_sp_query(p->msgs, type_name);
 //		printf("MESSAGE: %s %p\n",type_name, f->type_name.m);
 	} else if (f->type == PTYPE_ENUM) {
-		f->type_name.e = (_enum *)_pbcM_sp_query(p->enums, type_name);
+		f->type_name.e = (struct _enum *)_pbcM_sp_query(p->enums, type_name);
 //		printf("ENUM: %s %p ",type_name, f->type_name.e);
 		const char * str = f->default_v->s.str;
 		if (str && str[0]) {
