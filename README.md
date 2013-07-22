@@ -80,3 +80,6 @@ See https://github.com/cloudwu/pbc/tree/master/binding/lua/README.md
 * Send me an email : http://www.codingnow.com/2000/gmail.gif
 * My Blog : http://blog.codingnow.com
 * Design : http://blog.codingnow.com/2011/12/protocol_buffers_for_c.html (in Chinese)
+* Build for Visual Studio 2012 : https://github.com/miaodadao/pbc
+
+
