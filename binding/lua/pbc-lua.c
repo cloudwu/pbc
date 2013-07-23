@@ -584,11 +584,11 @@ _pattern_unpack(lua_State *L) {
 			ptr = (char *)_push_value(L,ptr,type);
 		} else {
 			array = true;
-			int n = pbc_array_size((_pbc_array *)ptr);
+			int n = pbc_array_size((struct _pbc_array *)ptr);
 			lua_createtable(L,n,0);
 			int j;
 			for (j=0;j<n;j++) {
-				_push_array(L,(_pbc_array *)ptr, type, j);
+				_push_array(L,(struct _pbc_array *)ptr, type, j);
 			}
 			ptr += sizeof(pbc_array);
 		}
@@ -777,7 +777,7 @@ _pattern_pack(lua_State *L) {
 			int n = lua_rawlen(L,4+i);
 			for (j=0;j<n;j++) {
 				lua_rawgeti(L,4+i,j+1);
-				_get_array_value(L,(_pbc_array *)ptr,format[i]);
+				_get_array_value(L,(struct _pbc_array *)ptr,format[i]);
 				lua_pop(L,1);
 			}
 			ptr += sizeof(pbc_array);
@@ -1007,7 +1007,7 @@ _clear_gcobj(lua_State *L) {
 static int
 _gc(lua_State *L) {
 	struct gcobj * obj = (struct gcobj *)lua_newuserdata(L,sizeof(*obj));
-	obj->env = (pbc_env *)lua_touserdata(L,1);
+	obj->env = (struct pbc_env *)lua_touserdata(L,1);
 	obj->size_pat = 0;
 	obj->cap_pat = 4;
 	obj->size_msg = 0;
