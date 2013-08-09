@@ -123,7 +123,7 @@ patterns.EXTEND = Ct(
 patterns.MESSAGE = P { Ct(
 	Cg("message","type") * blanks *
 	Cg(typename,"name") * blank0 * "{" * blank0 *
-	Cg(Ct((message_field + patterns.ENUM + extensions + patterns.EXTEND + V(1)) ^ 1),"items") * "}" * blank0
+	Cg(Ct((message_field + patterns.ENUM + extensions + patterns.EXTEND + V(1)) ^ 0),"items") * "}" * blank0
 	) }
 
 patterns.OPTION = Ct(
