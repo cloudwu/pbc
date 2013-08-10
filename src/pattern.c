@@ -831,7 +831,7 @@ pbc_pattern_unpack(struct pbc_pattern *pat, struct pbc_slice *s, void * output) 
 				field[index] = true;
 				++fc;
 				if ((f->ctype == CTYPE_ARRAY || f->ctype == CTYPE_PACKED)) {
-					struct _pbc_array *array = (struct _pbc_array *)(output + f->offset);
+					struct _pbc_array *array = (struct _pbc_array *)((char*)output + f->offset);
 					_pbcA_open(array);
 				}
 			}
