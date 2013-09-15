@@ -36,7 +36,7 @@ struct pbc_wmessage;
 struct pbc_env * pbc_new(void);
 void pbc_delete(struct pbc_env *);
 int pbc_register(struct pbc_env *, struct pbc_slice * slice);
-int pbc_type(struct pbc_env *, const char * typename , const char * key , const char ** type);
+int pbc_type(struct pbc_env *, const char * type_name , const char * key , const char ** type);
 const char * pbc_error(struct pbc_env *);
 
 // callback api
@@ -53,12 +53,12 @@ union pbc_value {
 	} e;
 };
 
-typedef void (*pbc_decoder)(void *ud, int type, const char * typename, union pbc_value *v, int id, const char *key);
-int pbc_decode(struct pbc_env * env, const char * typename , struct pbc_slice * slice, pbc_decoder f, void *ud);
+typedef void (*pbc_decoder)(void *ud, int type, const char * type_name, union pbc_value *v, int id, const char *key);
+int pbc_decode(struct pbc_env * env, const char * type_name , struct pbc_slice * slice, pbc_decoder f, void *ud);
 
 // message api
 
-struct pbc_rmessage * pbc_rmessage_new(struct pbc_env * env, const char * typename , struct pbc_slice * slice);
+struct pbc_rmessage * pbc_rmessage_new(struct pbc_env * env, const char * type_name , struct pbc_slice * slice);
 void pbc_rmessage_delete(struct pbc_rmessage *);
 
 uint32_t pbc_rmessage_integer(struct pbc_rmessage * , const char *key , int index, uint32_t *hi);
@@ -68,7 +68,7 @@ struct pbc_rmessage * pbc_rmessage_message(struct pbc_rmessage *, const char *ke
 int pbc_rmessage_size(struct pbc_rmessage *, const char *key);
 int pbc_rmessage_next(struct pbc_rmessage *, const char **key);
 
-struct pbc_wmessage * pbc_wmessage_new(struct pbc_env * env, const char *typename);
+struct pbc_wmessage * pbc_wmessage_new(struct pbc_env * env, const char *type_name);
 void pbc_wmessage_delete(struct pbc_wmessage *);
 
 // for negative integer, pass -1 to hi

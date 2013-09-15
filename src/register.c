@@ -9,6 +9,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef _MSC_VER
+#define strtoll _strtoi64
+#endif
+
 static const char *
 _concat_name(struct _stringpool *p , const char *prefix ,  int prefix_sz , const char *name , int name_sz, int *sz) {
 	if (prefix_sz == 0) {
@@ -17,7 +21,7 @@ _concat_name(struct _stringpool *p , const char *prefix ,  int prefix_sz , const
 		}
 		return _pbcS_build(p , name, name_sz);
 	}
-	char temp[name_sz + prefix_sz + 2];
+	char * temp = (char *)alloca(name_sz + prefix_sz + 2);
 	memcpy(temp,prefix,prefix_sz);
 	temp[prefix_sz] = '.';
 	memcpy(temp+prefix_sz+1,name,name_sz);
@@ -25,13 +29,14 @@ _concat_name(struct _stringpool *p , const char *prefix ,  int prefix_sz , const
 	if (sz) {
 		*sz = name_sz + prefix_sz + 1;
 	}
-	return _pbcS_build(p , temp, name_sz + prefix_sz + 1);
+	const char * ret = _pbcS_build(p , temp, name_sz + prefix_sz + 1);
+	return ret;
 }
 
 static void
 _register_enum(struct pbc_env *p, struct _stringpool *pool, struct pbc_rmessage * enum_type, const char *prefix, int prefix_sz) {
 	int field_count = pbc_rmessage_size(enum_type, "value");
-	struct map_kv *table = malloc(field_count * sizeof(struct map_kv));
+	struct map_kv *table = (struct map_kv *)malloc(field_count * sizeof(struct map_kv));
 	int i;
 	for (i=0;i<field_count;i++) {
 		struct pbc_rmessage * value = pbc_rmessage_message(enum_type, "value", i);
@@ -305,7 +310,7 @@ pbc_register(struct pbc_env * p, struct pbc_slice *slice) {
 		return 1;
 	}
 	int n = pbc_rmessage_size(message, "file");
-	struct pbc_rmessage * files[n];
+	struct pbc_rmessage ** files = (struct pbc_rmessage **)alloca(n * sizeof(struct pbc_rmessage *));
 	int i;
 	if (n == 0) {
 		p->lasterror = "register empty";

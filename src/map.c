@@ -54,11 +54,11 @@ _pbcM_si_new(struct map_kv * table, int size)
 	int i;
 
 	for (i=0;i<size;i++) {
-		size_t hash_full = calc_hash(table[i].pointer);
+		size_t hash_full = calc_hash((const char *)table[i].pointer);
 		size_t hash = hash_full % size;
 		struct _pbcM_si_slot * slot = &ret->slot[hash];
 		if (slot->key == NULL) {
-			slot->key = table[i].pointer;
+			slot->key = (const char *)table[i].pointer;
 			slot->id = table[i].id;
 			slot->hash = hash_full;
 		} else {
@@ -69,7 +69,7 @@ _pbcM_si_new(struct map_kv * table, int size)
 			empty_slot->next = slot->next;
 			slot->next = empty + 1;
 			empty_slot->id = table[i].id;
-			empty_slot->key = table[i].pointer;
+			empty_slot->key = (const char *)table[i].pointer;
 			empty_slot->hash = hash_full;
 		}
 	}
@@ -109,7 +109,7 @@ _pbcM_ip_new_hash(struct map_kv * table, int size)
 	ret->array = NULL;
 	ret->array_size = 0;
 	ret->hash_size = (size_t)size;
-	ret->slot = malloc(sizeof(struct _pbcM_ip_slot) * size);
+	ret->slot = (struct _pbcM_ip_slot *)malloc(sizeof(struct _pbcM_ip_slot) * size);
 	memset(ret->slot,0,sizeof(struct _pbcM_ip_slot) * size);
 	int empty = 0;
 	int i;
@@ -198,7 +198,7 @@ struct map_ip *
 _pbcM_ip_combine(struct map_ip *a, struct map_ip *b)
 {
 	int sz = (int)(a->hash_size + b->hash_size);
-	struct map_kv * table = malloc(sz * sizeof(struct map_kv));
+	struct map_kv * table = (struct map_kv *)malloc(sz * sizeof(struct map_kv));
 	memset(table , 0 , 	sz * sizeof(struct map_kv));
 	_inject(table, a);
 	_inject(table + a->hash_size, b);

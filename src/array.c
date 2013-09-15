@@ -49,7 +49,7 @@ _pbcA_push(pbc_array _array, pbc_var var) {
 			while (cap <= a->number + 1) 
 				cap *= 2;
 			struct heap * h = a->heap;
-			union _pbc_var * outer = HMALLOC(cap * sizeof(union _pbc_var));
+			union _pbc_var * outer = (union _pbc_var *)HMALLOC(cap * sizeof(union _pbc_var));
 			memcpy(outer , a->a , INNER_FIELD * sizeof(pbc_var));
 			a->a = outer;
 		} else {
@@ -58,10 +58,10 @@ _pbcA_push(pbc_array _array, pbc_var var) {
 				struct heap * h = a->heap;
 				if (h) {
 					void * old = a->a;
-					a->a = _pbcH_alloc(h, sizeof(union _pbc_var) * (size+1) * 2);
+					a->a = (union _pbc_var *)_pbcH_alloc(h, sizeof(union _pbc_var) * (size+1) * 2);
 					memcpy(a->a, old, sizeof(union _pbc_var) * size);
 				} else {
-					a->a=_pbcM_realloc(a->a,sizeof(union _pbc_var) * (size+1) * 2);
+					a->a = (union _pbc_var *)_pbcM_realloc(a->a,sizeof(union _pbc_var) * (size+1) * 2);
 				}
 			}
 		}

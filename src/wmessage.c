@@ -8,7 +8,10 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+
+#ifndef _MSC_VER
 #include <stdbool.h>
+#endif
 
 #define WMESSAGE_SIZE 64
 
@@ -30,9 +33,9 @@ struct _packed {
 
 static struct pbc_wmessage *
 _wmessage_new(struct heap *h, struct _message *msg) {
-	struct pbc_wmessage * m = _pbcH_alloc(h, sizeof(*m));
+	struct pbc_wmessage * m = (struct pbc_wmessage *)_pbcH_alloc(h, sizeof(*m));
 	m->type = msg;
-	m->buffer = _pbcH_alloc(h, WMESSAGE_SIZE);
+	m->buffer = (uint8_t *)_pbcH_alloc(h, WMESSAGE_SIZE);
 	m->ptr = m->buffer;
 	m->endptr = m->buffer + WMESSAGE_SIZE;
 	_pbcA_open_heap(m->sub, h);
@@ -43,8 +46,8 @@ _wmessage_new(struct heap *h, struct _message *msg) {
 }
 
 struct pbc_wmessage * 
-pbc_wmessage_new(struct pbc_env * env, const char *typename) {
-	struct _message * msg = _pbcP_get_message(env, typename);
+pbc_wmessage_new(struct pbc_env * env, const char *type_name) {
+	struct _message * msg = _pbcP_get_message(env, type_name);
 	if (msg == NULL)
 		return NULL;
 	struct heap *h = _pbcH_new(0);
@@ -59,7 +62,7 @@ pbc_wmessage_delete(struct pbc_wmessage *m) {
 }
 
 static void
-_expand(struct pbc_wmessage *m, int sz) {
+_expand_message(struct pbc_wmessage *m, int sz) {
 	if (m->ptr + sz > m->endptr) {
 		int cap = m->endptr - m->buffer;
 		sz = m->ptr + sz - m->buffer;
@@ -67,7 +70,7 @@ _expand(struct pbc_wmessage *m, int sz) {
 			cap = cap * 2;
 		} while ( sz > cap ) ;
 		int old_size = m->ptr - m->buffer;
-		uint8_t * buffer = _pbcH_alloc(m->heap, cap);
+		uint8_t * buffer = (uint8_t *)_pbcH_alloc(m->heap, cap);
 		memcpy(buffer, m->buffer, old_size);
 		m->ptr = buffer + (m->ptr - m->buffer);
 		m->endptr = buffer + cap;
@@ -83,13 +86,13 @@ _get_packed(struct pbc_wmessage *m , struct _field *f , const char *key) {
 	void ** v = _pbcM_sp_query_insert(m->packed , key);
 	if (*v == NULL) {
 		*v = _pbcH_alloc(m->heap, sizeof(struct _packed));
-		struct _packed *p = *v;
+		struct _packed *p = (struct _packed *)*v;
 		p->id = f->id;
 		p->ptype = f->type;
 		_pbcA_open_heap(p->data, m->heap);
 		return p;
 	}
-	return *v;
+	return (struct _packed *)*v;
 }
 
 static void
@@ -131,7 +134,7 @@ int32_encode(uint32_t low, uint8_t * buffer) {
 
 int 
 pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint32_t hi) {
-	struct _field * f = _pbcM_sp_query(m->type->name,key);
+	struct _field * f = (struct _field *)_pbcM_sp_query(m->type->name,key);
 	if (f==NULL) {
 		// todo : error
 		m->type->env->lasterror = "wmessage_interger query key error";
@@ -154,7 +157,7 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 	}
 	int id = f->id << 3;
 
-	_expand(m,20);
+	_expand_message(m,20);
 	switch (f->type) {
 	case PTYPE_INT64:
 	case PTYPE_UINT64: 
@@ -201,7 +204,7 @@ pbc_wmessage_integer(struct pbc_wmessage *m, const char *key, uint32_t low, uint
 
 int
 pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
-	struct _field * f = _pbcM_sp_query(m->type->name,key);
+	struct _field * f = (struct _field *)_pbcM_sp_query(m->type->name,key);
 	if (f == NULL) {
 		// todo : error
 		m->type->env->lasterror = "wmessage_real query key error";
@@ -217,7 +220,7 @@ pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
 			return 0;
 	}
 	int id = f->id << 3;
-	_expand(m,18);
+	_expand_message(m,18);
 	switch (f->type) {
 	case PTYPE_FLOAT: {
 		id |= WT_BIT32;
@@ -239,7 +242,7 @@ pbc_wmessage_real(struct pbc_wmessage *m, const char *key, double v) {
 
 int
 pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int len) {
-	struct _field * f = _pbcM_sp_query(m->type->name,key);
+	struct _field * f = (struct _field *)_pbcM_sp_query(m->type->name,key);
 	if (f == NULL) {
 		// todo : error
 		m->type->env->lasterror = "wmessage_string query key error";
@@ -255,7 +258,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 	}
 	if (f->label == LABEL_PACKED) {
 		if (f->type == PTYPE_ENUM) {
-			char temp[len+1];
+			char * temp = (char *)alloca(len + 1);
 			if (!varlen || v[len] != '\0') {
 				memcpy(temp,v,len);
 				temp[len]='\0';
@@ -266,6 +269,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 			if (err) {
 				// todo : error , invalid enum
 				m->type->env->lasterror = "wmessage_string packed invalid enum";
+				free(temp);
 				return -1;
 			}
 			_packed_integer(m , f, key , enum_id , 0);
@@ -286,10 +290,10 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		}
 	}
 	int id = f->id << 3;
-	_expand(m,20);
+	_expand_message(m,20);
 	switch (f->type) {
 	case PTYPE_ENUM : {
-		char temp[len+1];
+		char * temp = (char *)malloc(len+1);
 		if (!varlen || v[len] != '\0') {
 			memcpy(temp,v,len);
 			temp[len]='\0';
@@ -300,6 +304,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		if (err) {
 			// todo : error , enum invalid
 			m->type->env->lasterror = "wmessage_string invalid enum";
+			free(temp);
 			return -1;
 		}
 		id |= WT_VARINT;
@@ -312,7 +317,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		id |= WT_LEND;
 		m->ptr += _pbcV_encode32(id, m->ptr);
 		m->ptr += _pbcV_encode32(len, m->ptr);
-		_expand(m,len);
+		_expand_message(m,len);
 		memcpy(m->ptr , v , len);
 		m->ptr += len;
 		break;
@@ -323,7 +328,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 
 struct pbc_wmessage * 
 pbc_wmessage_message(struct pbc_wmessage *m, const char *key) {
-	struct _field * f = _pbcM_sp_query(m->type->name,key);
+	struct _field * f = (struct _field *)_pbcM_sp_query(m->type->name,key);
 	if (f == NULL) {
 		// todo : error
 		m->type->env->lasterror = "wmessage_message query key error";
@@ -333,7 +338,7 @@ pbc_wmessage_message(struct pbc_wmessage *m, const char *key) {
 	var->p[0] = _wmessage_new(m->heap, f->type_name.m);
 	var->p[1] = f;
 	_pbcA_push(m->sub , var);
-	return var->p[0];
+	return (struct pbc_wmessage *)var->p[0];
 }
 
 static void
@@ -342,7 +347,7 @@ _pack_packed_64(struct _packed *p,struct pbc_wmessage *m) {
 	int len = n * 8;
 	int i;
 	pbc_var var;
-	_expand(m,10 + len);
+	_expand_message(m,10 + len);
 	m->ptr += _pbcV_encode32(len, m->ptr);
 	switch (p->ptype) {
 	case PTYPE_DOUBLE:
@@ -367,7 +372,7 @@ _pack_packed_32(struct _packed *p,struct pbc_wmessage *m) {
 	int len = n * 4;
 	int i;
 	pbc_var var;
-	_expand(m,10 + len);
+	_expand_message(m,10 + len);
 	m->ptr += _pbcV_encode32(len, m->ptr);
 	switch (p->ptype) {
 	case PTYPE_FLOAT:
@@ -397,7 +402,7 @@ _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 	}
 	int i;
 	pbc_var var;
-	_expand(m,10 + len);
+	_expand_message(m,10 + len);
 	int len_len = _pbcV_encode32(len, m->ptr);
 	m->ptr += len_len;
 
@@ -406,7 +411,7 @@ _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 	case PTYPE_UINT64:
 		for (i=0;i<n;i++) {
 			_pbcA_index(p->data, i, var);
-			_expand(m,10);
+			_expand_message(m,10);
 			m->ptr += _pbcV_encode((uint64_t)var->integer.low | (uint64_t)var->integer.hi << 32 , m->ptr);
 		}
 		break;
@@ -416,21 +421,21 @@ _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 	case PTYPE_ENUM:
 		for (i=0;i<n;i++) {
 			_pbcA_index(p->data, i, var);
-			_expand(m,10);
+			_expand_message(m,10);
 			m->ptr += _pbcV_encode32(var->integer.low , m->ptr);
 		}
 		break;
 	case PTYPE_SINT32:
 		for (i=0;i<n;i++) {
 			_pbcA_index(p->data, i, var);
-			_expand(m,10);
+			_expand_message(m,10);
 			m->ptr += _pbcV_zigzag32(var->integer.low, m->ptr);
 		}
 		break;
 	case PTYPE_SINT64:
 		for (i=0;i<n;i++) {
 			_pbcA_index(p->data, i, var);
-			_expand(m,10);
+			_expand_message(m,10);
 			m->ptr += _pbcV_zigzag((uint64_t)var->integer.low | (uint64_t)var->integer.hi << 32 , m->ptr);
 		}
 		break;
@@ -447,7 +452,7 @@ _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 		uint8_t temp[10];
 		int end_len_len = _pbcV_encode32(end_len, temp);
 		if (end_len_len != len_len) {
-			_expand(m, end_len_len);
+			_expand_message(m, end_len_len);
 			memmove(m->buffer + offset + end_len_len , 
 				m->buffer + offset + len_len , 
 				end_len);
@@ -459,10 +464,10 @@ _pack_packed_varint(struct _packed *p,struct pbc_wmessage *m) {
 
 static void
 _pack_packed(void *p, void *ud) {
-	struct _packed *packed = p;
-	struct pbc_wmessage * m = ud;
+	struct _packed *packed = (struct _packed *)p;
+	struct pbc_wmessage * m = (struct pbc_wmessage *)ud;
 	int id = packed->id << 3 | WT_LEND;
-	_expand(m,10);
+	_expand_message(m,10);
 	m->ptr += _pbcV_encode32(id, m->ptr);
 	switch(packed->ptype) {
 	case PTYPE_DOUBLE:
@@ -492,11 +497,11 @@ pbc_wmessage_buffer(struct pbc_wmessage *m, struct pbc_slice *slice) {
 		pbc_var var;
 		_pbcA_index(m->sub, i , var);
 		struct pbc_slice s;
-		pbc_wmessage_buffer(var->p[0] , &s);
+		pbc_wmessage_buffer((struct pbc_wmessage *)var->p[0] , &s);
 		if (s.buffer) {
-			struct _field * f = var->p[1];
+			struct _field * f = (struct _field *)var->p[1];
 			int id = f->id << 3 | WT_LEND;
-			_expand(m,20+s.len);
+			_expand_message(m,20+s.len);
 			m->ptr += _pbcV_encode32(id, m->ptr);
 			m->ptr += _pbcV_encode32(s.len, m->ptr);
 			memcpy(m->ptr, s.buffer, s.len);

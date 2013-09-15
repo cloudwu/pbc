@@ -22,4 +22,12 @@ void* _pbcH_alloc(struct heap *, int size);
 #define realloc _pbcM_realloc
 #define memory _pbcM_memory
 
+#include <malloc.h>
+
+#ifdef _MSC_VER
+
+#define alloca _alloca
+
+#endif
+
 #endif

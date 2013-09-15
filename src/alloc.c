@@ -39,8 +39,8 @@ _pbcH_new(int pagesize) {
 	while(cap < pagesize) {
 		cap *= 2;
 	}
-	struct heap * h = _pbcM_malloc(sizeof(struct heap));
-	h->current = _pbcM_malloc(sizeof(struct heap_page) + cap);
+	struct heap * h = (struct heap *)_pbcM_malloc(sizeof(struct heap));
+	h->current = (struct heap_page *)_pbcM_malloc(sizeof(struct heap_page) + cap);
 	h->size = cap;
 	h->used = 0;
 	h->current->next = NULL;
@@ -67,9 +67,9 @@ _pbcH_alloc(struct heap *h, int size) {
 	if (h->size - h->used < size) {
 		struct heap_page * p;
 		if (size < h->size) {
-			p = _pbcM_malloc(sizeof(struct heap_page) + h->size);
+			p = (struct heap_page *)_pbcM_malloc(sizeof(struct heap_page) + h->size);
 		} else {
-			p = _pbcM_malloc(sizeof(struct heap_page) + size);
+			p = (struct heap_page *)_pbcM_malloc(sizeof(struct heap_page) + size);
 		}
 		p->next = h->current;
 		h->current = p;

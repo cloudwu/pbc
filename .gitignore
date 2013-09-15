@@ -1,0 +1,10 @@
+*.suo
+*.sdf
+*.opensdf
+*.d
+*.o
+Debug
+Release
+build
+.DS_Store
+

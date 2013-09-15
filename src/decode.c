@@ -54,11 +54,11 @@ call_unknown(pbc_decoder f, void * ud, int id, struct atom *a, uint8_t * start) 
 static int
 call_type(pbc_decoder pd, void * ud, struct _field *f, struct atom *a, uint8_t * start) {
 	union pbc_value v;
-	const char * typename = NULL;
-	int type = _pbcP_type(f, &typename);
+	const char * type_name = NULL;
+	int type = _pbcP_type(f, &type_name);
 	assert(type != 0);
-	if (typename == NULL) {
-		typename = TYPENAME[type & ~PBC_REPEATED];
+	if (type_name == NULL) {
+		type_name = TYPENAME[type & ~PBC_REPEATED];
 	}
 	switch (f->type) {
 	case PTYPE_DOUBLE:
@@ -72,7 +72,7 @@ call_type(pbc_decoder pd, void * ud, struct _field *f, struct atom *a, uint8_t *
 	case PTYPE_ENUM:
 		CHECK_VARINT(a, -1);
 		v.e.id = a->v.i.low;
-		v.e.name = _pbcM_ip_query(f->type_name.e->id , v.e.id);
+		v.e.name = (const char *)_pbcM_ip_query(f->type_name.e->id , v.e.id);
 		break;
 	case PTYPE_INT64:
 	case PTYPE_UINT64:
@@ -122,18 +122,18 @@ call_type(pbc_decoder pd, void * ud, struct _field *f, struct atom *a, uint8_t *
 		assert(0);
 		break;
 	}
-	pd(ud, type, typename, &v, f->id, f->name);
+	pd(ud, type, type_name, &v, f->id, f->name);
 	return 0;
 }
 
 static int
 call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int size) {
 	union pbc_value v;
-	const char * typename = NULL;
-	int type = _pbcP_type(f, &typename);
+	const char * type_name = NULL;
+	int type = _pbcP_type(f, &type_name);
 	assert(type != 0);
-	if (typename == NULL) {
-		typename = TYPENAME[type & ~PBC_REPEATED];
+	if (type_name == NULL) {
+		type_name = TYPENAME[type & ~PBC_REPEATED];
 	}
 	v.i.hi = 0;
 	int i;
@@ -156,7 +156,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 					(uint64_t)buffer[i+6] << 48 |
 					(uint64_t)buffer[i+7] << 56;
 				v.f = u.d;
-				pd(ud, type , typename, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->name);
 			}
 			return size/8;
 		case PTYPE_FLOAT:
@@ -172,7 +172,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 					(uint32_t)buffer[i+2] << 16 |
 					(uint32_t)buffer[i+3] << 24;
 				v.f = (double)u.f;
-				pd(ud, type , typename, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->name);
 			}
 			return size/4;
 		case PTYPE_FIXED32:
@@ -184,7 +184,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 					(uint32_t)buffer[i+1] << 8 |
 					(uint32_t)buffer[i+2] << 16 |
 					(uint32_t)buffer[i+3] << 24;
-				pd(ud, type , typename, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->name);
 			}
 			return size/4;
 		case PTYPE_FIXED64:
@@ -200,7 +200,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 					(uint32_t)buffer[i+5] << 8 |
 					(uint32_t)buffer[i+6] << 16 |
 					(uint32_t)buffer[i+7] << 24;
-				pd(ud, type , typename, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->name);
 			}
 			return size/8;
 		case PTYPE_INT64:
@@ -220,7 +220,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 					if (len > size)
 						return -1;
 				}
-				pd(ud, type , typename, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->name);
 				buffer += len;
 				size -= len;
 				++n;
@@ -241,8 +241,8 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 						return -1;
 				}
 				v.e.id = v.i.low;
-				v.e.name = _pbcM_ip_query(f->type_name.e->id , v.i.low);
-				pd(ud, type , typename, &v, f->id, f->name);
+				v.e.name = (const char *)_pbcM_ip_query(f->type_name.e->id , v.i.low);
+				pd(ud, type , type_name, &v, f->id, f->name);
 				buffer += len;
 				size -= len;
 				++n;
@@ -264,7 +264,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 						return -1;
 					_pbcV_dezigzag32((struct longlong *)&(v.i));
 				}
-				pd(ud, type , typename, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->name);
 				buffer += len;
 				size -= len;
 				++n;
@@ -286,7 +286,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 						return -1;
 					_pbcV_dezigzag64((struct longlong *)&(v.i));
 				}
-				pd(ud, type , typename, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->name);
 				buffer += len;
 				size -= len;
 				++n;
@@ -299,8 +299,8 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 }
 
 int
-pbc_decode(struct pbc_env * env, const char * typename , struct pbc_slice * slice, pbc_decoder pd, void *ud) {
-	struct _message * msg = _pbcP_get_message(env, typename);
+pbc_decode(struct pbc_env * env, const char * type_name , struct pbc_slice * slice, pbc_decoder pd, void *ud) {
+	struct _message * msg = _pbcP_get_message(env, type_name);
 	if (msg == NULL) {
 		env->lasterror = "Proto not found";
 		return -1;
@@ -316,12 +316,12 @@ pbc_decode(struct pbc_env * env, const char * typename , struct pbc_slice * slic
 		return count - 1;
 	}
 	struct context * ctx = (struct context *)_ctx;
-	uint8_t * start = slice->buffer;
+	uint8_t * start = (uint8_t *)slice->buffer;
 
 	int i;
 	for (i=0;i<ctx->number;i++) {
 		int id = ctx->a[i].wire_id >> 3;
-		struct _field * f = _pbcM_ip_query(msg->id , id);
+		struct _field * f = (struct _field *)_pbcM_ip_query(msg->id , id);
 		if (f==NULL) {
 			int err = call_unknown(pd,ud,id,&ctx->a[i],start);
 			if (err) {

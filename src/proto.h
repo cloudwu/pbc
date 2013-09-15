@@ -4,8 +4,9 @@
 #include "pbc.h"
 #include "map.h"
 #include "array.h"
-
+#ifndef _MSC_VER
 #include <stdbool.h>
+#endif
 #include <stddef.h>
 
 struct map_ip;
