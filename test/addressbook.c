@@ -90,7 +90,7 @@ test_wmessage(struct pbc_env * env)
 
 	phone = pbc_wmessage_message(msg , "phone");
 	pbc_wmessage_string(phone , "number", "13901234567" , -1);
-	pbc_wmessage_string(phone , "type" , "MOBILE" , 0);
+	pbc_wmessage_string(phone , "type" , "MOBILE" , -1);
 
 	pbc_wmessage_integer(msg, "test", -123,0);
 	pbc_wmessage_integer(msg, "test", 12345,0);

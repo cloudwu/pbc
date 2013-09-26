@@ -560,7 +560,7 @@ _pack_field(struct _pattern_field *pf , int ctype, struct pbc_slice *s, void *in
 	case PTYPE_STRING:
 		wiretype = WT_LEND;
 		input_slice = (struct pbc_slice *)input;
-		if (input_slice->len > 0)
+		if (input_slice->len >= 0)
 			goto _string;
 		string_slice.buffer = input_slice->buffer;
 		string_slice.len = strlen((const char *)string_slice.buffer) - input_slice->len;

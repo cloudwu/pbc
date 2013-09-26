@@ -34,7 +34,7 @@ test(struct pbc_env *env) {
 			sl.buffer = buffer, sl.len = 1024;
 			pbc_wmessage_integer(w_msg, "aa", 123, 0);
 			pbc_wmessage_integer(w_msg, "bb", 456, 0);
-			pbc_wmessage_string(w_msg, "cc", "test string!", 0);
+			pbc_wmessage_string(w_msg, "cc", "test string!", -1);
 			pbc_wmessage_buffer(w_msg, &sl);
 					
 			r_msg = pbc_rmessage_new(env, "at", &sl);
