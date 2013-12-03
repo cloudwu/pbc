@@ -66,7 +66,7 @@ _pbcV_decode(uint8_t buffer[10], struct longlong *result) {
 	}
 	uint64_t lr = 0;
 	for (i=4;i<10;i++) {
-		lr |= ((buffer[i] & 0x7f) << (7*(i-4)));
+		lr |= ((uint64_t)(buffer[i] & 0x7f) << (7*(i-4)));
 		if (!(buffer[i] & 0x80)) {
 			result->hi = (uint32_t)(lr >> 4);
 			result->low = r | (((uint32_t)lr & 0xf) << 28);
