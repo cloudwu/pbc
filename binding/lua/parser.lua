@@ -67,7 +67,7 @@ local str = P"\"" * C(str_c^0) * "\""
 local dotname = ("." * alpha * alnum ^ 0) ^ 0
 local typename = C(alpha * alnum ^ 0 * dotname)
 local name = C(alpha * alnum ^ 0)
-local filename = C((alnum + "/" + "." + "-")^1)
+local filename = P"\"" * C((alnum + "/" + "." + "-")^1) * "\""
 local id = R"09" ^ 1 / tonumber + "max" * Cc(-1)
 local bool = "true" * Cc(true) + "false" * Cc(false)
 local value = str + bool + name + id
@@ -132,7 +132,7 @@ patterns.OPTION = Ct(
 	Cg(value, "value")
 	) * blank0 * ";" * blank0
 
-patterns.IMPORT = Ct( Cg("import" , "type") * blanks * Cg(filename, "name") ) * blank0
+patterns.IMPORT = Ct( Cg("import" , "type") * blanks * Cg(filename, "name") ) * blank0 * ";" * blank0
 
 patterns.PACKAGE = Ct( Cg("package", "type") * blanks * Cg(typename, "name") ) * blank0 * ";" * blank0
 
