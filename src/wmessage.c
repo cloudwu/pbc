@@ -269,7 +269,6 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 			if (err) {
 				// todo : error , invalid enum
 				m->type->env->lasterror = "wmessage_string packed invalid enum";
-				free(temp);
 				return -1;
 			}
 			_packed_integer(m , f, key , enum_id , 0);
@@ -293,7 +292,7 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 	_expand_message(m,20);
 	switch (f->type) {
 	case PTYPE_ENUM : {
-		char * temp = (char *)malloc(len+1);
+		char * temp = (char *)alloca(len+1);
 		if (!varlen || v[len] != '\0') {
 			memcpy(temp,v,len);
 			temp[len]='\0';
@@ -304,7 +303,6 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 		if (err) {
 			// todo : error , enum invalid
 			m->type->env->lasterror = "wmessage_string invalid enum";
-			free(temp);
 			return -1;
 		}
 		id |= WT_VARINT;
