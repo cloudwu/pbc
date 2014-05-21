@@ -12,7 +12,7 @@ local io = io
 local tinsert = table.insert
 local rawget = rawget
 
-module "protobuf"
+local _protobuf = {}
 
 local _pattern_cache = {}
 
@@ -20,7 +20,7 @@ local _pattern_cache = {}
 local P = c._env_new()
 local GC = c._gc(P)
 
-function lasterror()
+function _protobuf.lasterror()
 	return c._last_error(P)
 end
 
@@ -375,7 +375,7 @@ setmetatable(encode_type_cache , {
 	end
 })
 
-function encode( message, t , func , ...)
+function _protobuf.encode( message, t , func , ...)
 	local encoder = c._wmessage_new(P, message)
 	assert(encoder ,  message)
 	encode_message(encoder, message, t)
@@ -455,17 +455,17 @@ setmetatable(_pattern_cache, {
 	end
 })
 
-function unpack(pattern, buffer, length)
+function _protobuf.unpack(pattern, buffer, length)
 	local pat = _pattern_cache[pattern]
 	return c._pattern_unpack(pat.CObj , pat.format, pat.size, buffer, length)
 end
 
-function pack(pattern, ...)
+function _protobuf.pack(pattern, ...)
 	local pat = _pattern_cache[pattern]
 	return c._pattern_pack(pat.CObj, pat.format, pat.size , ...)
 end
 
-function check(typename , field)
+function _protobuf.check(typename , field)
 	if field == nil then
 		return c._env_type(P,typename)
 	else
@@ -497,7 +497,7 @@ local function decode_message_cb(typename, buffer)
 	return setmetatable ( { typename, buffer } , decode_message_mt)
 end
 
-function decode(typename, buffer, length)
+function _protobuf.decode(typename, buffer, length)
 	local ret = {}
 	local ok = c._decode(P, decode_message_cb , ret , typename, buffer, length)
 	if ok then
@@ -541,15 +541,17 @@ local function set_default(typename, tbl)
 	return setmetatable(tbl , default_table(typename))
 end
 
-function register( buffer)
+function _protobuf.register( buffer)
 	c._env_register(P, buffer)
 end
 
-function register_file(filename)
+function _protobuf.register_file(filename)
 	local f = assert(io.open(filename , "rb"))
 	local buffer = f:read "*a"
 	c._env_register(P, buffer)
 	f:close()
 end
 
-default=set_default
+_protobuf.default=set_default
+
+return _protobuf
