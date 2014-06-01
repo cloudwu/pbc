@@ -1,5 +1,6 @@
 *.suo
 *.sdf
+*.user
 *.opensdf
 *.d
 *.o
@@ -8,3 +9,5 @@ Release
 build
 .DS_Store
 
+#cmake
+bld

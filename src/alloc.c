@@ -36,10 +36,11 @@ struct heap {
 struct heap * 
 _pbcH_new(int pagesize) {
 	int cap = 1024;
+	struct heap * h;
 	while(cap < pagesize) {
 		cap *= 2;
 	}
-	struct heap * h = (struct heap *)_pbcM_malloc(sizeof(struct heap));
+	h = (struct heap *)_pbcM_malloc(sizeof(struct heap));
 	h->current = (struct heap_page *)_pbcM_malloc(sizeof(struct heap_page) + cap);
 	h->size = cap;
 	h->used = 0;
