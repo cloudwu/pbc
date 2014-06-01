@@ -46,10 +46,12 @@ _pbcA_push(pbc_array _array, pbc_var var) {
 	} else if (a->number >= INNER_FIELD) {
 		if (a->number == INNER_FIELD) {
 			int cap = 1;
+			struct heap * h = a->heap;
+			union _pbc_var * outer;
 			while (cap <= a->number + 1) 
 				cap *= 2;
-			struct heap * h = a->heap;
-			union _pbc_var * outer = (union _pbc_var *)HMALLOC(cap * sizeof(union _pbc_var));
+			
+			outer = (union _pbc_var *)HMALLOC(cap * sizeof(union _pbc_var));
 			memcpy(outer , a->a , INNER_FIELD * sizeof(pbc_var));
 			a->a = outer;
 		} else {
