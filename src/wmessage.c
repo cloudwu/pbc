@@ -286,6 +286,10 @@ pbc_wmessage_string(struct pbc_wmessage *m, const char *key, const char * v, int
 				strcmp(v, f->default_v->s.str) == 0) {
 				return 0;
 			}
+		} else if (f->type == PTYPE_BYTES) {
+			if (len == 0) {
+				return 0;
+			}
 		}
 	}
 	int id = f->id << 3;

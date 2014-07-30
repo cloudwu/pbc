@@ -764,6 +764,10 @@ _is_default(struct _pattern_field * pf, void * in) {
 			return strcmp(pf->defv->s.str, (const char *)slice->buffer) == 0;
 		}
 		return len == pf->defv->s.len && memcmp(pf->defv->s.str, slice->buffer, len)==0;
+	} else if (pf->ptype == PTYPE_BYTES) {
+		struct pbc_slice *slice = (struct pbc_slice *)in;
+		if (slice->buffer == NULL)
+			return true;
 	}
 
 	return false;
