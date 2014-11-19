@@ -20,8 +20,6 @@ read_file (const char *filename , struct pbc_slice *slice) {
 	fclose(f);
 }
 
-//		printf("%s : %d\n", key, t);
-
 static void dump_message(struct pbc_rmessage *m, int level);
 
 static void
@@ -76,7 +74,7 @@ dump_value(struct pbc_rmessage *m, const char *key, int type, int idx, int level
 		printf("0x%x",low);
 		break;
 	default:
-		printf("unkown");
+		printf("unknown");
 		break;
 	}
 
@@ -115,7 +113,7 @@ dump(const char *proto, const char * message, struct pbc_slice *data) {
 	}
 	struct pbc_rmessage * m = pbc_rmessage_new(env , message , data);
 	if (m == NULL) {
-		fprintf(stderr, "Decode message %s fail\n",message);
+		fprintf(stderr, "Decoding message '%s' failed\n",message);
 		exit(1);
 	}
 	dump_message(m,0);
@@ -205,3 +203,4 @@ main(int argc , char * argv[])
 
 	return 0;
 }
+
