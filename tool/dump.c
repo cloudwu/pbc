@@ -6,7 +6,7 @@
 #include "pbc.h"
 
 static void
-read_file (const char *filename , struct pbc_slice *slice) {
+read_file(const char *filename , struct pbc_slice *slice) {
 	FILE *f = fopen(filename, "rb");
 	if (f == NULL) {
 		fprintf(stderr, "Can't open file %s\n", filename);
@@ -18,6 +18,16 @@ read_file (const char *filename , struct pbc_slice *slice) {
 	slice->buffer = malloc(slice->len);
 	fread(slice->buffer, 1 , slice->len , f);
 	fclose(f);
+}
+
+static void
+dump_bytes(const char *data, size_t len) {
+	size_t i;
+	for (i = 0; i < len; i++)
+		if (i == 0)
+			fprintf(stdout, "%02x", 0xff & data[i]);
+		else
+			fprintf(stdout, " %02x", 0xff & data[i]);
 }
 
 static void dump_message(struct pbc_rmessage *m, int level);
@@ -33,12 +43,13 @@ dump_value(struct pbc_rmessage *m, const char *key, int type, int idx, int level
 		printf("[%d]",idx);
 		type -= PBC_REPEATED;
 	}
-	printf(" : ");
+	printf(": ");
 
 	uint32_t low;
 	uint32_t hi;
 	double real;
 	const char *str;
+	int         str_len;
 
 	switch(type) {
 	case PBC_INT:
@@ -72,6 +83,10 @@ dump_value(struct pbc_rmessage *m, const char *key, int type, int idx, int level
 	case PBC_FIXED32:
 		low = pbc_rmessage_integer(m, key, i, NULL);
 		printf("0x%x",low);
+		break;
+	case PBC_BYTES:
+		str = pbc_rmessage_string(m, key, i, &str_len);
+		dump_bytes(str, str_len);
 		break;
 	default:
 		printf("unknown");
