@@ -47,19 +47,19 @@ pbc_rmessage_delete(m);
 
 You can use *wmessage* for encoding , and *rmessage* for decoding.
 
-See test/addressbook.c for detail.
+See test/addressbook.c for details.
 
 ## Pattern API
 
-If you need higher performance , you can use pbc_pattern_xxx api .
+If you need better performance , you can use pbc_pattern_xxx api .
 
-See test/pattern.c for detail.
+See test/pattern.c for details.
 
-pattern api is faster, and less memory used, and you can access data from native C struct . 
+Pattern api is faster and less memory used because it can access data in native C struct.
 
 ## Extension
 
-PBC support extension with a simple way . PBC will add a prefix to every extension field name. 
+PBC support extension in a very simple way . PBC add a specific prefix to every extension field name. 
 
 ## Service
 
@@ -67,7 +67,7 @@ Not supported
 
 ## Enum
 
-With message API , you can use both string and integer as the enum type , and with pattern api it must be integer. 
+With message API , you can use both string and integer as enum type . They must be integer in Pattern API. 
 
 ## Lua bindings
 
@@ -77,7 +77,7 @@ See https://github.com/cloudwu/pbc/tree/master/binding/lua/README.md
 
 ## Question ?
 
-* Send me an email : http://www.codingnow.com/2000/gmail.gif
+* Send me email : http://www.codingnow.com/2000/gmail.gif
 * My Blog : http://blog.codingnow.com
 * Design : http://blog.codingnow.com/2011/12/protocol_buffers_for_c.html (in Chinese)
 * Build for Visual Studio 2012 : https://github.com/miaodadao/pbc
