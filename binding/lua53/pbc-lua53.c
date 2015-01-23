@@ -808,7 +808,9 @@ _clear_gcobj(lua_State *L) {
 
 static int
 _gc(lua_State *L) {
-	struct gcobj * obj = (struct gcobj *)lua_newuserdata(L,sizeof(*obj));
+	struct gcobj * obj;
+	lua_settop(L,1);
+	obj	= (struct gcobj *)lua_newuserdata(L,sizeof(*obj));
 	obj->env = (struct pbc_env *)lua_touserdata(L,1);
 	obj->size_pat = 0;
 	obj->cap_pat = 4;
