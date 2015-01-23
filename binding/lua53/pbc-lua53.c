@@ -218,7 +218,13 @@ static int
 _wmessage_int(lua_State *L) {
 	struct pbc_wmessage * m = (struct pbc_wmessage *)checkuserdata(L,1);
 	const char * key = luaL_checkstring(L,2);
-	int64_t number = (int64_t)(luaL_checkinteger(L,3));
+	int64_t number;
+	// compat float for some historical reasons.
+	if (lua_isinteger(L, 3)) {
+		number = lua_tointeger(L,3);
+	} else {
+		number = (int64_t)lua_tonumber(L,3);
+	}
 	uint32_t hi = (uint32_t)(number >> 32);
 	pbc_wmessage_integer(m, key, (uint32_t)number, hi);
 
