@@ -6,21 +6,7 @@
 
 #define COUNT 1000000
 
-static void
-read_file (const char *filename , struct pbc_slice *slice) {
-	FILE *f = fopen(filename, "rb");
-	if (f == NULL) {
-		slice->buffer = NULL;
-		slice->len = 0;
-		return;
-	}
-	fseek(f,0,SEEK_END);
-	slice->len = ftell(f);
-	fseek(f,0,SEEK_SET);
-	slice->buffer = malloc(slice->len);
-	fread(slice->buffer, 1 , slice->len , f);
-	fclose(f);
-}
+#include "readfile.h"
 
 static void
 test(struct pbc_env *env) {
@@ -45,7 +31,6 @@ test(struct pbc_env *env) {
 
 int
 main() {
-	_pbcM_memory();
 	struct pbc_env * env = pbc_new();
 	struct pbc_slice slice;
 	read_file("test.pb", &slice);
@@ -53,7 +38,6 @@ main() {
 	assert(ret == 0);
 	test(env);
 	pbc_delete(env);
-	_pbcM_memory();
 
 	return 0;
 }
