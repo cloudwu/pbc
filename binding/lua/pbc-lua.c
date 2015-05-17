@@ -73,6 +73,25 @@ _env_register(lua_State *L) {
 }
 
 static int
+_env_enum_id(lua_State *L) {
+    struct pbc_env * env = (struct pbc_env *)checkuserdata(L,1);
+    size_t sz = 0;
+    const char* enum_type = luaL_checklstring(L, 2, &sz);
+    struct _enum *enum_map = (struct _enum *)_pbcM_sp_query(env->enums, enum_type);
+    if(!enum_map) {
+        return 0;
+    }
+    const char* enum_name = luaL_checklstring(L, 3, &sz);
+    int32_t enum_id = 0;
+    int err = _pbcM_si_query(enum_map->name, enum_name, &enum_id);
+    if(err) {
+        return 0;
+    }
+    lua_pushinteger(L, enum_id);
+    return 1;
+}
+
+static int
 _rmessage_new(lua_State *L) {
 	struct pbc_env * env = (struct pbc_env *)checkuserdata(L,1);
 	const char * type_name = luaL_checkstring(L,2);
@@ -1088,6 +1107,7 @@ luaopen_protobuf_c(lua_State *L) {
 		{"_gc", _gc },
 		{"_add_pattern", _add_pattern },
 		{"_add_rmessage", _add_rmessage },
+		{"_env_enum_id", _env_enum_id},
 		{NULL,NULL},
 	};
 
