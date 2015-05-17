@@ -1107,6 +1107,7 @@ luaopen_protobuf_c(lua_State *L) {
 		{"_gc", _gc },
 		{"_add_pattern", _add_pattern },
 		{"_add_rmessage", _add_rmessage },
+		{"_env_enum_id", _env_enum_id},
 		{NULL,NULL},
 	};
 
