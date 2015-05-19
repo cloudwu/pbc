@@ -250,3 +250,17 @@ pbc_type(struct pbc_env * p, const char * type_name , const char * key , const c
 	struct _field * field = (struct _field *)_pbcM_sp_query(m->name, key);
 	return _pbcP_type(field, type);
 }
+
+int
+pbc_enum_id(struct pbc_env *env, const char *enum_type, const char *enum_name) {
+	struct _enum *enum_map = (struct _enum *)_pbcM_sp_query(env->enums, enum_type);
+	if(!enum_map) {
+		return -1;
+	}
+	int32_t enum_id = 0;
+	int err = _pbcM_si_query(enum_map->name, enum_name, &enum_id);
+	if(err) {
+		return -1;
+	}
+	return enum_id;
+}
