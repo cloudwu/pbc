@@ -1,11 +1,14 @@
-.PHONY : all 51 clean
+CC = gcc
+CFLAGS = -O2 -fPIC -Wall
+LUADIR = /usr/local/include
+TARGET = protobuf.so
 
-all :
-	gcc -O2 -Wall --shared -o protobuf.dll -I../.. -I/usr/local/include -L/usr/local/bin -L../../build pbc-lua.c -lpbc -llua52
+.PHONY : all clean
 
-51 :
-#	gcc -O2 -Wall --shared -o protobuf.dll -I../.. -I/d/project/luajit-2.0/src -L/usr/local/bin -L../../build pbc-lua.c -lpbc -llua51
-	gcc -O2 -Wall --shared -o protobuf.dll -I../.. -I/d/project/lua-5.1.4/src -L/usr/local/bin -L../../build pbc-lua.c -lpbc -llua51
+all : $(TARGET)
+
+$(TARGET) : pbc-lua.c
+	$(CC) $(CFLAGS) -shared -o $@ -I../.. -I$(LUADIR) -L../../build $^ -lpbc
 
 clean :
-	rm protobuf.dll
+	rm -f $(TARGET)
