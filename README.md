@@ -1,6 +1,6 @@
 ## PBC
 
-[![travis-ci status](https://travis-ci.org/CheyiLin/pbc.svg?branch=dev)](https://travis-ci.org/CheyiLin/pbc)
+[![travis-ci status](https://travis-ci.org/cloudwu/pbc.svg?branch=master)](https://travis-ci.org/cloudwu/pbc)
 
 PBC is a google protocol buffers library for C without code generation.
 
