@@ -494,6 +494,10 @@ function M.register_file(filename)
 	f:close()
 end
 
+function enum_id(enum_type, enum_name)
+	return c._env_enum_id(P, enum_type, enum_name)
+end
+
 M.default=set_default
 
 return M
