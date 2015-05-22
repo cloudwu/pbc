@@ -5,14 +5,14 @@ language: erlang
 env:
     global:
         - DEPS_BUILD_DIR=$TRAVIS_BUILD_DIR/deps
-        - DEPS_PREFIX=/usr/local
         - LJ_REPO="http://luajit.org/git/luajit-2.0.git"
+        - INC_DIR=/usr/local/include
     matrix:
-        - LUA=lua-5.1    LUA_TYPE=lua    LUA_BIN=lua     LUA_DIST=lua-5.1.5
-        - LUA=lua-5.2    LUA_TYPE=lua    LUA_BIN=lua     LUA_DIST=lua-5.2.4
-        - LUA=lua-5.3    LUA_TYPE=lua    LUA_BIN=lua     LUA_DIST=lua-5.3.0
-        - LUA=luajit-2.0 LUA_TYPE=luajit LUA_BIN=luajit             LJ_BR=master
-        - LUA=luajit-2.1 LUA_TYPE=luajit LUA_BIN=luajit-2.1.0-alpha LJ_BR=v2.1
+        - LUA=lua-5.1    LUA_TYPE=lua    LUA_BIN=lua     LUA_DIST=lua-5.1.5      LUA_BD=lua    LUA_INC=$INC_DIR
+        - LUA=lua-5.2    LUA_TYPE=lua    LUA_BIN=lua     LUA_DIST=lua-5.2.4      LUA_BD=lua    LUA_INC=$INC_DIR
+        - LUA=lua-5.3    LUA_TYPE=lua    LUA_BIN=lua     LUA_DIST=lua-5.3.0      LUA_BD=lua53  LUA_INC=$INC_DIR
+        - LUA=luajit-2.0 LUA_TYPE=luajit LUA_BIN=luajit             LJ_BR=master LUA_BD=lua    LUA_INC=$INC_DIR/$LUA
+        - LUA=luajit-2.1 LUA_TYPE=luajit LUA_BIN=luajit-2.1.0-alpha LJ_BR=v2.1   LUA_BD=lua    LUA_INC=$INC_DIR/$LUA
 
 before_install:
     - mkdir -p $DEPS_BUILD_DIR
@@ -23,7 +23,7 @@ install:
     # install Lua/LuaJIT
     - cd $DEPS_BUILD_DIR
     - if [ "$LUA_TYPE" == "luajit" ]; then
-          git clone -b $LJ_BR $LJ_REPO luajit2.git && cd luajit2.git && sudo make PREFIX=$DEPS_PREFIX XCFLAGS+="-DLUAJIT_ENABLE_LUA52COMPAT" install;
+          git clone -b $LJ_BR $LJ_REPO luajit2.git && cd luajit2.git && sudo make install;
       fi
     - if [ "$LUA_TYPE" == "lua" ]; then
           wget "http://www.lua.org/ftp/$LUA_DIST.tar.gz" && tar xzf $LUA_DIST.tar.gz && cd $LUA_DIST && sudo make linux test install;
@@ -31,6 +31,8 @@ install:
     # build lib
     - cd $TRAVIS_BUILD_DIR
     - make
+    # build lib bindings
+    - make -C binding/$LUA_BD LUADIR=$LUA_INC
 
 before_script:
     # back to home directory
@@ -39,7 +41,8 @@ before_script:
     - which $LUA_BIN 2>/dev/null && $LUA_BIN -v
 
 script:
-    - $LUA_BIN -v
+    - cd $TRAVIS_BUILD_DIR/binding/$LUA_BD
+    - $LUA_BIN test.lua
 
 notifications:
     email:
