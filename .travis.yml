@@ -17,6 +17,7 @@ env:
 before_install:
     - mkdir -p $DEPS_BUILD_DIR
     - sudo apt-get update -qq
+    - sudo apt-get install libprotobuf-dev protobuf-compiler
 
 install:
     # install Lua/LuaJIT
