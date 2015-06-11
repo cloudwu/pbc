@@ -49,43 +49,43 @@ dump_value(struct pbc_rmessage *m, const char *key, int type, int idx, int level
 	uint32_t hi;
 	double real;
 	const char *str;
-	int         str_len;
+	int str_len;
 
 	switch(type) {
 	case PBC_INT:
-		low = pbc_rmessage_integer(m, key, i, NULL);
+		low = pbc_rmessage_integer(m, key, idx, NULL);
 		printf("%d", (int) low);
 		break;
 	case PBC_REAL:
-		real = pbc_rmessage_real(m, key , i);
+		real = pbc_rmessage_real(m, key , idx);
 		printf("%lf", real);
 		break;
 	case PBC_BOOL:
-		low = pbc_rmessage_integer(m, key, i, NULL);
+		low = pbc_rmessage_integer(m, key, idx, NULL);
 		printf("%s", low ? "true" : "false");
 		break;
 	case PBC_ENUM:
-		str = pbc_rmessage_string(m, key , i , NULL);
+		str = pbc_rmessage_string(m, key , idx , NULL);
 		printf("[%s]", str);
 		break;
 	case PBC_STRING:
-		str = pbc_rmessage_string(m, key , i , NULL);
+		str = pbc_rmessage_string(m, key , idx , NULL);
 		printf("'%s'", str);
 		break;
 	case PBC_MESSAGE:
 		printf("\n");
-		dump_message(pbc_rmessage_message(m, key, i),level+1);
+		dump_message(pbc_rmessage_message(m, key, idx),level+1);
 		return;
 	case PBC_FIXED64:
-		low = pbc_rmessage_integer(m, key, i, &hi);
+		low = pbc_rmessage_integer(m, key, idx, &hi);
 		printf("0x%8x%8x",hi,low);
 		break;
 	case PBC_FIXED32:
-		low = pbc_rmessage_integer(m, key, i, NULL);
+		low = pbc_rmessage_integer(m, key, idx, NULL);
 		printf("0x%x",low);
 		break;
 	case PBC_BYTES:
-		str = pbc_rmessage_string(m, key, i, &str_len);
+		str = pbc_rmessage_string(m, key, idx, &str_len);
 		dump_bytes(str, str_len);
 		break;
 	default:
