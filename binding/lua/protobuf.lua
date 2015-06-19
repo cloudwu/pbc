@@ -556,4 +556,20 @@ function enum_id(enum_type, enum_name)
 	return c._env_enum_id(P, enum_type, enum_name)
 end
 
+function extract(tbl)
+    local typename = rawget(tbl , 1)
+    local buffer = rawget(tbl , 2)
+    if type(typename) == "string" and type(buffer) == "string" then
+        if check(typename) then
+            expand(tbl)
+        end
+    end
+
+    for k, v in pairs(tbl) do
+        if type(v) == "table" then
+            extract(v)
+        end
+    end
+end
+
 default=set_default
