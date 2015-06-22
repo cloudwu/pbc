@@ -4,6 +4,9 @@ extern "C" {
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+
+#include "pbc.h"
+
 #ifdef __cplusplus
 }
 #endif
@@ -20,8 +23,6 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-
-#include "pbc.h"
 
 #if LUA_VERSION_NUM == 501
 
