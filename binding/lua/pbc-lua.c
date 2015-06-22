@@ -41,6 +41,9 @@ extern "C" {
 
 #endif
 
+static inline void 
+unused_var(luaL_Buffer* var){}
+
 static inline void *
 checkuserdata(lua_State *L, int index) {
 	void * ud = lua_touserdata(L,index);
@@ -802,6 +805,7 @@ _pattern_pack(lua_State *L) {
 	}
 
 	luaL_Buffer b;
+    unused_var(&b);
 	luaL_buffinit(L, &b);
 
 	int cap = 128;
