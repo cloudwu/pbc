@@ -8,10 +8,11 @@ extern "C" {
 }
 #endif
 
+#include <stdbool.h>
 #include <malloc.h>
 
 #ifndef _MSC_VER
-#include <stdbool.h>
+#include <alloca.h>
 #else
 #define alloca _alloca
 #endif
@@ -592,15 +593,15 @@ _pattern_unpack(lua_State *L) {
 		return 0;
 	}
 	lua_checkstack(L, format_sz + 3);
-	int i;
+	size_t i;
 	char * ptr = temp;
-	bool array = false;
+	bool is_array = false;
 	for (i=0;i<format_sz;i++) {
 		char type = format[i];
 		if (type >= 'a' && type <='z') {
 			ptr = (char *)_push_value(L,ptr,type);
 		} else {
-			array = true;
+			is_array = true;
 			int n = pbc_array_size((struct _pbc_array *)ptr);
 			lua_createtable(L,n,0);
 			int j;
@@ -610,7 +611,7 @@ _pattern_unpack(lua_State *L) {
 			ptr += sizeof(pbc_array);
 		}
 	}
-	if (array) {
+	if (is_array) {
 		pbc_pattern_close_arrays(pat, temp);
 	}
 	return format_sz;
@@ -780,7 +781,7 @@ _pattern_pack(lua_State *L) {
 
 	char * ptr = data;
 
-	int i;
+    size_t i;
 
 	for (i=0;i<format_sz;i++) {
 		if (format[i] >= 'a' && format[i] <='z') {
@@ -832,7 +833,7 @@ static int
 _pattern_size(lua_State *L) {
 	size_t sz =0;
 	const char *format = luaL_checklstring(L,1,&sz);
-	int i;
+	size_t i;
 	int size = 0;
 	for (i=0;i<sz;i++) {
 		switch(format[i]) {
@@ -1062,6 +1063,10 @@ _add_rmessage(lua_State *L) {
 	return 0;
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int
 luaopen_protobuf_c(lua_State *L) {
 	luaL_Reg reg[] = {
@@ -1110,3 +1115,7 @@ luaopen_protobuf_c(lua_State *L) {
 
 	return 1;
 }
+
+#ifdef __cplusplus
+}
+#endif
