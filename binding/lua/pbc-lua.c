@@ -12,7 +12,12 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include <malloc.h>
+#if defined(__APPLE__)
+    #include <malloc/malloc.h>
+#else
+    #include <malloc.h>
+#endif
+
 
 #ifndef _MSC_VER
 #include <alloca.h>
