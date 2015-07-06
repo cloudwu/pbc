@@ -10,7 +10,7 @@ env:
     matrix:
         - LUA=lua-5.1    LUA_TYPE=lua    LUA_BIN=lua     LUA_DIST=lua-5.1.5      LUA_BD=lua    LUA_INC=$INC_DIR
         - LUA=lua-5.2    LUA_TYPE=lua    LUA_BIN=lua     LUA_DIST=lua-5.2.4      LUA_BD=lua    LUA_INC=$INC_DIR
-        - LUA=lua-5.3    LUA_TYPE=lua    LUA_BIN=lua     LUA_DIST=lua-5.3.0      LUA_BD=lua53  LUA_INC=$INC_DIR
+        - LUA=lua-5.3    LUA_TYPE=lua    LUA_BIN=lua     LUA_DIST=lua-5.3.1      LUA_BD=lua53  LUA_INC=$INC_DIR
         - LUA=luajit-2.0 LUA_TYPE=luajit LUA_BIN=luajit             LJ_BR=master LUA_BD=lua    LUA_INC=$INC_DIR/$LUA
         - LUA=luajit-2.1 LUA_TYPE=luajit LUA_BIN=luajit-2.1.0-alpha LJ_BR=v2.1   LUA_BD=lua    LUA_INC=$INC_DIR/$LUA
 
