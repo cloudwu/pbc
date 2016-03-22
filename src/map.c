@@ -90,6 +90,9 @@ _pbcM_si_query(struct map_si *map, const char *key, int *result)
 	size_t hash = hash_full % map->size;
 
 	struct _pbcM_si_slot * slot = &map->slot[hash];
+	if (slot->key == NULL) {
+		return 1;
+	}
 	for (;;) {
 		if (slot->hash == hash_full && strcmp(slot->key, key) == 0) {
 			*result = slot->id;
@@ -436,6 +439,8 @@ _find_next(struct map_sp *map, const char *key)
 	size_t hash = hash_full & (map->cap -1);
 
 	struct _pbcM_sp_slot * slot = &map->slot[hash];
+	if (slot->key == NULL)
+		return -1;
 	for (;;) {
 		if (slot->hash == hash_full && strcmp(slot->key, key) == 0) {
 			int i = slot - map->slot + 1;
