@@ -20,7 +20,7 @@ extern "C" {
 
 
 #ifndef _MSC_VER
-#include <alloca.h>
+#include <stdbool.h>
 #else
 #define alloca _alloca
 #endif
