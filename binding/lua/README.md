@@ -39,7 +39,7 @@ parser.lua use Lpeg (http://www.inf.puc-rio.br/~roberto/lpeg/) to parser .proto 
 ```Lua
 pb = require "protobuf"
 
-pb.register "addressbook.pb"
+pb.register_file "addressbook.pb"
 
 stringbuffer = pb.encode("tutorial.Person", 
   {
