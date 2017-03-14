@@ -388,6 +388,9 @@ _pbcM_sp_query(struct map_sp *map, const char *key)
 	if (slot->key == NULL)
 		return NULL;
 	for (;;) {
+		if (!slot->key) {
+			return NULL;
+		}
 		if (slot->hash == hash_full && strcmp(slot->key, key) == 0) {
 			return slot->pointer;
 		}
