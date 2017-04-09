@@ -1,7 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.1.0)
 cmake_policy(SET CMP0054 NEW)
 
-enable_testing()
 project(pbc C)
 
 #####################################################################
@@ -37,19 +36,20 @@ if( ${CMAKE_C_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_C_COMPILER_ID} STREQUAL "Cl
 endif()
 
 # Compile flags
-if ( NOT MSVC )
-    list(APPEND CMAKE_C_FLAGS_DEBUG -ggdb -O0)
-    #list(APPEND CMAKE_C_FLAGS_RELEASE)
-    list(APPEND CMAKE_C_FLAGS_RELWITHDEBINFO -ggdb)
-    #list(APPEND CMAKE_C_FLAGS_MINSIZEREL)
-else()
+if (MSVC)
     if(NOT CMAKE_MSVC_RUNTIME)
         set(CMAKE_MSVC_RUNTIME "MD")
     endif()
-    list(APPEND CMAKE_C_FLAGS_DEBUG /Od /${CMAKE_MSVC_RUNTIME}d)
-    list(APPEND CMAKE_C_FLAGS_RELEASE /O2 /${CMAKE_MSVC_RUNTIME} /D NDEBUG)
-    list(APPEND CMAKE_C_FLAGS_RELWITHDEBINFO /O2 /${CMAKE_MSVC_RUNTIME}d)
-    list(APPEND CMAKE_C_FLAGS_MINSIZEREL /Ox /${CMAKE_MSVC_RUNTIME} /D NDEBUG)
+    list(APPEND CMAKE_C_FLAGS /TP) # force using c++ compiler
+    list(APPEND CMAKE_C_FLAGS_DEBUG /${CMAKE_MSVC_RUNTIME}d)
+    list(APPEND CMAKE_C_FLAGS_RELEASE /${CMAKE_MSVC_RUNTIME} /D NDEBUG)
+    list(APPEND CMAKE_C_FLAGS_RELWITHDEBINFO /${CMAKE_MSVC_RUNTIME}d)
+    list(APPEND CMAKE_C_FLAGS_MINSIZEREL /${CMAKE_MSVC_RUNTIME} /D NDEBUG)
+else()
+    list(APPEND CMAKE_C_FLAGS_DEBUG -ggdb)
+    #list(APPEND CMAKE_C_FLAGS_RELEASE)
+    list(APPEND CMAKE_C_FLAGS_RELWITHDEBINFO -ggdb)
+    #list(APPEND CMAKE_C_FLAGS_MINSIZEREL)
 endif()
 
 # add custom define
@@ -69,6 +69,18 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
 
+# convert list to parameters
+string(REPLACE ";" " " CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+string(REPLACE ";" " " CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+string(REPLACE ";" " " CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+string(REPLACE ";" " " CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL}")
+string(REPLACE ";" " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+string(REPLACE ";" " " CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+string(REPLACE ";" " " CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+string(REPLACE ";" " " CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+string(REPLACE ";" " " CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL}")
+string(REPLACE ";" " " CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+
 ########################################################################
 ##
 ## archives and executable files
@@ -84,7 +96,10 @@ add_subdirectory(src)
 add_custom_target(lib ALL DEPENDS ${LIBNAME})
 
 ## tool
-add_subdirectory(tool)
+if(CYGWIN OR MINGW OR UNIX)
+    # it use getopt which is only available in UNIX like environment
+    add_subdirectory(tool)
+endif()
 
 ## test
 find_package(Protobuf)
