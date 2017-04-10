@@ -67,34 +67,23 @@ if [ ! -e "$SOURCE_DIR/CMakeLists.txt" ]; then
 fi
 SOURCE_DIR="$(cd "$SOURCE_DIR" && pwd)";
 
-mkdir -p "$WORKING_DIR/lib";
-
 for ARCH in ${ARCHS}; do
     echo "================== Compling $ARCH ==================";
-    echo "Building mbedtls for android-$ANDROID_NATIVE_API_LEVEL ${ARCH}"
+    echo "Building pbc for android-$ANDROID_NATIVE_API_LEVEL ${ARCH}"
     
     # sed -i.bak '4d' Makefile;
     echo "Please stand by..."
-    if [ -e "$WORKING_DIR/build/$ARCH" ]; then
-        rm -rf "$WORKING_DIR/build/$ARCH";
+    if [ -e "$WORKING_DIR/build-$ARCH" ]; then
+        rm -rf "$WORKING_DIR/build-$ARCH";
     fi
-    mkdir -p "$WORKING_DIR/build/$ARCH";
-    cd "$WORKING_DIR/build/$ARCH";
+    mkdir -p "$WORKING_DIR/build-$ARCH";
+    cd "$WORKING_DIR/build-$ARCH";
     
-    mkdir -p "$WORKING_DIR/lib/$ARCH";
+    mkdir -p "$WORKING_DIR/prebuilt/$ARCH";
 
-    cmake "$SOURCE_DIR" -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" -DCMAKE_TOOLCHAIN_FILE="$NDK_ROOT/build/cmake/android.toolchain.cmake" -DANDROID_NDK="$NDK_ROOT" -DANDROID_NATIVE_API_LEVEL=$ANDROID_NATIVE_API_LEVEL -DANDROID_TOOLCHAIN=$ANDROID_TOOLCHAIN -DANDROID_ABI=$ARCH -DANDROID_STL=$ANDROID_STL -DANDROID_PIE=YES $@;
+    cmake "$SOURCE_DIR" -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/prebuilt/$ARCH" -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" -DCMAKE_TOOLCHAIN_FILE="$NDK_ROOT/build/cmake/android.toolchain.cmake" -DANDROID_NDK="$NDK_ROOT" -DANDROID_NATIVE_API_LEVEL=$ANDROID_NATIVE_API_LEVEL -DANDROID_TOOLCHAIN=$ANDROID_TOOLCHAIN -DANDROID_ABI=$ARCH -DANDROID_STL=$ANDROID_STL -DANDROID_PIE=YES $@;
     make -j4;
+    make install;
 done
 
-cd "$WORKING_DIR";
-echo "Copying include files...";
-
-if [ "$WORKING_DIR" != "$SOURCE_DIR" ]; then
-    if [ -e "$WORKING_DIR/include" ]; then
-        rm -rf "$WORKING_DIR/include";
-    fi
-
-    cp -rf "$SOURCE_DIR/include" "$WORKING_DIR/include";
-fi
 echo "Building done.";

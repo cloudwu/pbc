@@ -112,8 +112,14 @@ endif()
 ## Lua - binding
 find_package(Lua)
 if (LUA_FOUND)
-    message(STATUS "Lua: ${LUA_VERSION_STRING} found.INC=${LUA_INCLUDE_DIR},EXE=${LUA_LIBRARIES}")
+    message(STATUS "Lua: ${LUA_VERSION_STRING} found.INC=${LUA_INCLUDE_DIR},LIB=${LUA_LIBRARIES}")
+
+    ## Lua 5.3
+    if ("5.2" VERSION_LESS ${LUA_VERSION_STRING})
+        message(STATUS "Lua Binding: using binding/lua53 for lua-binding")
+        add_subdirectory(binding/lua53)
+    else() ## Lua 5.1 or LuaJIT
+        message(STATUS "Lua Binding: using binding/lua for lua-binding")
+        add_subdirectory(binding/lua)
+    endif()
 endif()
-## Lua 5.1
-## LuaJIT
-## Lua 5.3
