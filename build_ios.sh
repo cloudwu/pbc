@@ -34,7 +34,7 @@ while getopts "a:d:hr:s:-" OPTION; do
             exit 0;
         ;;
         r)
-            SOURCE_DIR="$(cd "$OPTARG" && pwd)";
+            SOURCE_DIR="$OPTARG";
         ;;
         s)
             SDKVERSION="$SDKVERSION";
@@ -51,6 +51,12 @@ while getopts "a:d:hr:s:-" OPTION; do
 done
 
 shift $(($OPTIND-1));
+
+if [ ! -e "$SOURCE_DIR/CMakeLists.txt" ]; then
+    echo "$SOURCE_DIR/CMakeLists.txt not found";
+    exit -2;
+fi
+SOURCE_DIR="$(cd "$SOURCE_DIR" && pwd)";
 
 echo "Ready to build for ios";
 echo "WORKING_DIR=${WORKING_DIR}";
