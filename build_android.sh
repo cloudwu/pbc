@@ -4,8 +4,7 @@
 ###########################################################################
 #
 # Don't change anything here
-WORKING_DIR="$(cd $(dirname $0))";
-cd "$WORKING_DIR";
+WORKING_DIR="$PWD";
 
 ARCHS="x86 x86_64 armeabi armeabi-v7a arm64-v8a";
 NDK_ROOT=$NDK_ROOT;
@@ -39,7 +38,7 @@ while getopts "a:c:n:hl:m:o:r:t:-" OPTION; do
             exit 0;
         ;;
         r)
-            SOURCE_DIR="$OPTARG";
+            SOURCE_DIR="$(cd "$OPTARG" && pwd)";
         ;;
         t)
             ANDROID_TOOLCHAIN="$OPTARG";

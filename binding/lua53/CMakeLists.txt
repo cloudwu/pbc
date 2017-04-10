@@ -1,14 +1,18 @@
-﻿aux_source_directory(${CMAKE_CURRENT_LIST_DIR} LIBSRCS)
+﻿include_directories(${LUA_INCLUDE_DIR})
 
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
-set(CMAKE_STATIC_LIBRARY_PREFIX "")
-if(CMAKE_OSX_ARCHITECTURES AND NOT ${CMAKE_OSX_ARCHITECTURES} STREQUAL ${CMAKE_HOST_SYSTEM_PROCESSOR})
+aux_source_directory(${CMAKE_CURRENT_LIST_DIR} LIBSRCS)
+
+if(CMAKE_OSX_ARCHITECTURES AND NOT LUA_LIBRARIES)
     add_library(protobuf STATIC ${LIBSRCS})
     target_link_libraries(protobuf ${LIBNAME})
 else()
+    set(CMAKE_SHARED_LIBRARY_PREFIX "")
+    set(CMAKE_STATIC_LIBRARY_PREFIX "")
     add_library(protobuf SHARED ${LIBSRCS})
     target_link_libraries(protobuf ${LIBNAME} ${LUA_LIBRARIES})
 endif()
+
+add_dependencies(lib protobuf)
 
 file(GLOB LUA_CODE_LIST *.lua)
 ### install header

@@ -110,7 +110,12 @@ endif()
 
 
 ## Lua - binding
-find_package(Lua)
+if (LUA_INCLUDE_DIR AND LUA_VERSION_STRING AND (CMAKE_OSX_SYSROOT OR LUA_LIBRARIES))
+    set(LUA_FOUND YES)
+else ()
+    find_package(Lua)
+endif()
+
 if (LUA_FOUND)
     message(STATUS "Lua: ${LUA_VERSION_STRING} found.INC=${LUA_INCLUDE_DIR},LIB=${LUA_LIBRARIES}")
 
