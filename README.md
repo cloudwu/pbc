@@ -105,10 +105,10 @@ Just run build_ios.sh in macOS
 **CMAKE_INSTALL_PREFIX** can not be set here
 
 ```bash
-./build_ios.sh 
+mkdir -p build && cd build && ./build_ios.sh -r ..
 
 # add LUA_INCLUDE_DIR and LUA_VERSION_STRING for build lua binding
-./build_ios.sh -- -DLUA_INCLUDE_DIR=<where has lua.h> -DLUA_VERSION_STRING=<5.1 or 5.3>
+mkdir -p build && cd build && ./build_ios.sh -r .. -- -DLUA_INCLUDE_DIR=<where has lua.h> -DLUA_VERSION_STRING=<5.1 or 5.3>
 ```
 
 All prebuilt static library files and lua file will be generated at $PWD/prebuilt
@@ -120,13 +120,13 @@ Just run build_android.sh in Unix like system. We do not support MSYS or MinGW s
 
 You must at least specify NDK_ROOT
 ```bash
-./build_android.sh -n <ndk_root>
+mkdir -p build && cd build && ./build_android.sh -r .. -n <ndk_root>
 
 # add -i and -b options to build lua binding
-./build_android.sh -n <ndk_root> -i <where has lua.h or ARCHITECTURE/lua.h> -b <where ARCHITECTURE/[library pattern] in it>
+mkdir -p build && cd build && ./build_android.sh -r .. -n <ndk_root> -i <where has lua.h or ARCHITECTURE/lua.h> -b <where ARCHITECTURE/[library pattern] in it>
 
 # for example, if we install NDK in /home/prebuilt/android/ndk/android-ndk-r13b, and lua.h in /home/prebuilt/lua/luajit/include/luajit-2.0/ and armeabi-v7a/libluajit-5.1.[a|so] x86/libluajit-5.1.[a|so] x86_64/libluajit-5.1.[a|so] arm64-v8a/libluajit-5.1.[a|so] .. in /home/prebuilt/lua/luajit/include/lib, we can use the command below
-./build_android.sh -n /home/prebuilt/android/ndk/android-ndk-r13b -i /home/prebuilt/lua/luajit/include/luajit-2.0 -b /home/prebuilt/lua/luajit/include/lib
+mkdir -p build && cd build && ./build_android.sh -r .. -n /home/prebuilt/android/ndk/android-ndk-r13b -i /home/prebuilt/lua/luajit/include/luajit-2.0 -b /home/prebuilt/lua/luajit/include/lib
 ```
 
 All prebuilt library files and lua file will be generated at $PWD/prebuilt. And library in difference architecture will be placed in $PWD/prebuilt/ARCHITECTURE
