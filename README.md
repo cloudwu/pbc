@@ -77,6 +77,61 @@ cd bindings/lua && make
 
 See https://github.com/cloudwu/pbc/tree/master/binding/lua/README.md
 
+## Build with cmake
+### Build for native library
+```bash
+cd REPO
+mkdir build
+cd build
+cmake .. 
+# You may also add -G "Visual Studio 15 2017 Win64" for Visual Studio 2017 and win64 or -G "MSYS Makefils" for MinGW
+# Or add -DCMAKE_INSTALL_PREFIX=<install dir> to specify where to install when run make install
+
+# Then build
+make -j4 # Using gcc/clang and make
+MSBuild pbc.sln /verbosity:minimal /target:ALL_BUILD /p:Configuration=RelWithDebInfo /p:Platform=x64 # Using Visual Studio, usually in C:\Program Files (x86)\MSBuild\15.0 or C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\
+
+# At last, install it
+make install # Using gcc/clang and make
+MSBuild pbc.sln /verbosity:minimal /target:INSTALL /p:Configuration=RelWithDebInfo /p:Platform=x64 # Using Visual Studio
+```
+
+### Build lua-binding
+Just add lua include directory and library directory to cmake standard search directory. If we can find available lua, we will build lua binding for the right version.
+
+### Cross-Compile for iOS
+Just run build_ios.sh in macOS
+
+**CMAKE_INSTALL_PREFIX** can not be set here
+
+```bash
+./build_ios.sh 
+
+# add LUA_INCLUDE_DIR and LUA_VERSION_STRING for build lua binding
+./build_ios.sh -- -DLUA_INCLUDE_DIR=<where has lua.h> -DLUA_VERSION_STRING=<5.1 or 5.3>
+```
+
+All prebuilt static library files and lua file will be generated at $PWD/prebuilt
+
+### Cross-Compile for Android
+Just run build_android.sh in Unix like system. We do not support MSYS or MinGW shell now.
+
+**CMAKE_INSTALL_PREFIX** can not be set here
+
+You must at least specify NDK_ROOT
+```bash
+./build_android.sh -n <ndk_root>
+
+# add -i and -b options to build lua binding
+./build_android.sh -n <ndk_root> -i <where has lua.h or ARCHITECTURE/lua.h> -b <where ARCHITECTURE/[library pattern] in it>
+
+# for example, if we install NDK in /home/prebuilt/android/ndk/android-ndk-r13b, and lua.h in /home/prebuilt/lua/luajit/include/luajit-2.0/ and armeabi-v7a/libluajit-5.1.[a|so] x86/libluajit-5.1.[a|so] x86_64/libluajit-5.1.[a|so] arm64-v8a/libluajit-5.1.[a|so] .. in /home/prebuilt/lua/luajit/include/lib, we can use the command below
+./build_android.sh -n /home/prebuilt/android/ndk/android-ndk-r13b -i /home/prebuilt/lua/luajit/include/luajit-2.0 -b /home/prebuilt/lua/luajit/include/lib
+```
+
+All prebuilt library files and lua file will be generated at $PWD/prebuilt. And library in difference architecture will be placed in $PWD/prebuilt/ARCHITECTURE
+
+
 ## Question ?
 
 * Send me email : http://www.codingnow.com/2000/gmail.gif
