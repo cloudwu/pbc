@@ -112,7 +112,8 @@ for ARCH in ${ARCHS}; do
         elif [ -e "$LUAINCDIR/lua.h" ]; then
             ARCH_LUAINCDIR="$LUAINCDIR";
         else
-            echo -e "\033[34m Lua header not found in $LUAINCDIR or $LUAINCDIR/$ARCH, we will skip build lua binding for $ARCH \033[0m";
+            echo -e "\033[34mLua header not found in $LUAINCDIR or $LUAINCDIR/$ARCH, we will skip build lua binding for $ARCH \033[0m";
+            ARCH_LUAINCDIR="";
         fi
         
         for SEARCH_PATTERN in ${LUALIBNAME[@]}; do
@@ -126,11 +127,12 @@ for ARCH in ${ARCHS}; do
         done
 
         if [ -z "$ARCH_LUALIBPATH" ]; then
-            echo -e "\033[34m Lua library not found in $LUALIBDIR/$ARCH with pattern=${LUALIBNAME[@]}, we will skip build lua binding for $ARCH \033[0m";
+            echo -e "\033[34mLua library not found in $LUALIBDIR/$ARCH with pattern=${LUALIBNAME[@]}, we will skip build lua binding for $ARCH \033[0m";
+            ARCH_LUALIBPATH=""
         fi
     fi
 
-    if [ ! -z "$ARCH_LUAINCDIR" ]; then
+    if [ ! -z "$ARCH_LUAINCDIR" ] && [ ! -z "$ARCH_LUALIBPATH" ]; then
         ARCH_LUAVER=$(grep LUA_VERSION_NUM $ARCH_LUAINCDIR/lua.h | awk '{print $3}');
         if [ $ARCH_LUAVER -ge 503 ]; then
             ARCH_LUAVER="5.3";
@@ -139,12 +141,35 @@ for ARCH in ${ARCHS}; do
         fi
     fi
 
+    # 64 bits must at least using android-21
+    # @see $NDK_ROOT/build/cmake/android.toolchain.cmake
+    echo $ARCH | grep -E '64(-v8a)?$' ;
+    if [ $? -eq 0 ] && [ $ANDROID_NATIVE_API_LEVEL -lt 21 ]; then
+        ANDROID_NATIVE_API_LEVEL=21 ;
+    fi
+
     if [ ! -z "$ARCH_LUAINCDIR" ] && [ ! -z "$ARCH_LUALIBPATH" ]; then
         echo -e "\033[32m Build pbc and protobuf binding($ARCH_LUAINCDIR, $ARCH_LUALIBPATH, version=$ARCH_LUAVER) \033[0m";
-        cmake "$SOURCE_DIR" -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/prebuilt/$ARCH" -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" -DCMAKE_TOOLCHAIN_FILE="$NDK_ROOT/build/cmake/android.toolchain.cmake" -DANDROID_NDK="$NDK_ROOT" -DANDROID_NATIVE_API_LEVEL=$ANDROID_NATIVE_API_LEVEL -DANDROID_TOOLCHAIN=$ANDROID_TOOLCHAIN -DANDROID_ABI=$ARCH -DANDROID_STL=$ANDROID_STL -DANDROID_PIE=YES -DLUA_INCLUDE_DIR="$ARCH_LUAINCDIR" -DLUA_VERSION_STRING=$ARCH_LUAVER -DLUA_LIBRARIES="$ARCH_LUALIBPATH" "$@";
+        cmake "$SOURCE_DIR" -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/prebuilt/$ARCH" \
+            -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" \
+            -DCMAKE_TOOLCHAIN_FILE="$NDK_ROOT/build/cmake/android.toolchain.cmake" \
+            -DANDROID_NDK="$NDK_ROOT" -DCMAKE_ANDROID_NDK="$NDK_ROOT" \
+            -DANDROID_NATIVE_API_LEVEL=$ANDROID_NATIVE_API_LEVEL -DCMAKE_ANDROID_API=$ANDROID_NATIVE_API_LEVEL \
+            -DANDROID_TOOLCHAIN=$ANDROID_TOOLCHAIN -DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=$ANDROID_TOOLCHAIN \
+            -DANDROID_ABI=$ARCH -DCMAKE_ANDROID_ARCH_ABI=$ARCH \
+            -DANDROID_STL=$ANDROID_STL -DCMAKE_ANDROID_STL_TYPE=$ANDROID_STL \
+            -DANDROID_PIE=YES -DLUA_INCLUDE_DIR="$ARCH_LUAINCDIR" -DLUA_VERSION_STRING=$ARCH_LUAVER -DLUA_LIBRARIES="$ARCH_LUALIBPATH" "$@";
     else
         echo -e "\033[32m Build pbc \033[0m";
-        cmake "$SOURCE_DIR" -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/prebuilt/$ARCH" -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" -DCMAKE_TOOLCHAIN_FILE="$NDK_ROOT/build/cmake/android.toolchain.cmake" -DANDROID_NDK="$NDK_ROOT" -DANDROID_NATIVE_API_LEVEL=$ANDROID_NATIVE_API_LEVEL -DANDROID_TOOLCHAIN=$ANDROID_TOOLCHAIN -DANDROID_ABI=$ARCH -DANDROID_STL=$ANDROID_STL -DANDROID_PIE=YES "$@";
+        cmake "$SOURCE_DIR" -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/prebuilt/$ARCH" \
+            -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" \
+            -DCMAKE_TOOLCHAIN_FILE="$NDK_ROOT/build/cmake/android.toolchain.cmake" \
+            -DANDROID_NDK="$NDK_ROOT" -DCMAKE_ANDROID_NDK="$NDK_ROOT" \
+            -DANDROID_NATIVE_API_LEVEL=$ANDROID_NATIVE_API_LEVEL -DCMAKE_ANDROID_API=$ANDROID_NATIVE_API_LEVEL \
+            -DANDROID_TOOLCHAIN=$ANDROID_TOOLCHAIN -DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=$ANDROID_TOOLCHAIN \
+            -DANDROID_ABI=$ARCH -DCMAKE_ANDROID_ARCH_ABI=$ARCH \
+            -DANDROID_STL=$ANDROID_STL -DCMAKE_ANDROID_STL_TYPE=$ANDROID_STL \
+            -DANDROID_PIE=YES "$@";
     fi
     cmake --build . --target install
 done
