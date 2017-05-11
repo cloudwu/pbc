@@ -93,7 +93,8 @@ for ARCH in ${ARCHS}; do
     cd "$WORKING_DIR/build-$ARCH";
 
     cmake "$SOURCE_DIR" -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/build-$ARCH" -DCMAKE_OSX_SYSROOT=$SDKROOT -DCMAKE_SYSROOT=$SDKROOT -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_C_FLAGS="-fPIC" "$@";
-    make lib -j4 install;
+    cmake --build . --target lib
+    cmake --build . --target install
 done
 
 cd "$WORKING_DIR";
