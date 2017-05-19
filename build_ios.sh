@@ -13,9 +13,10 @@ WORKING_DIR="$PWD";
 ARCHS="i386 x86_64 armv7 armv7s arm64";
 DEVELOPER_ROOT=$(xcode-select -print-path);
 SOURCE_DIR="$PWD";
+BUILD_TYPE="RelWithDebInfo" ;
 
 # ======================= options ======================= 
-while getopts "a:d:hr:s:-" OPTION; do
+while getopts "a:b:d:hr:s:-" OPTION; do
     case $OPTION in
         a)
             ARCHS="$OPTARG";
@@ -27,6 +28,7 @@ while getopts "a:d:hr:s:-" OPTION; do
             echo "usage: $0 [options] [-- [make options]]";
             echo "options:";
             echo "-a [archs]                    which arch need to built, multiple values must be split by space(default: $ARCHS)";
+            echo "-b [build type]               build type(default: $BUILD_TYPE, available: Debug, Release, RelWithDebInfo, MinSizeRel)";
             echo "-d [developer root directory] developer root directory, we use xcode-select -print-path to find default value.(default: $DEVELOPER_ROOT)";
             echo "-s [sdk version]              sdk version, we use xcrun -sdk iphoneos --show-sdk-version to find default value.(default: $SDKVERSION)";
             echo "-r [source dir]               root directory of this library";
@@ -92,7 +94,7 @@ for ARCH in ${ARCHS}; do
     mkdir -p "$WORKING_DIR/build-$ARCH";
     cd "$WORKING_DIR/build-$ARCH";
 
-    cmake "$SOURCE_DIR" -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/build-$ARCH" -DCMAKE_OSX_SYSROOT=$SDKROOT -DCMAKE_SYSROOT=$SDKROOT -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_C_FLAGS="-fPIC" "$@";
+    cmake "$SOURCE_DIR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/build-$ARCH" -DCMAKE_OSX_SYSROOT=$SDKROOT -DCMAKE_SYSROOT=$SDKROOT -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_C_FLAGS="-fPIC" "$@";
     cmake --build . --target lib
     cmake --build . --target install
 done

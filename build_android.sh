@@ -15,9 +15,10 @@ ANDROID_STL= ; #
 LUAINCDIR= ;
 LUALIBDIR= ;
 LUALIBNAME=("libluajit-*.so" "liblua.a" "liblua.so" "liblua.so.*" "libtolua.so" "libtolua.so.*");
+BUILD_TYPE="RelWithDebInfo" ;
 
 # ======================= options ======================= 
-while getopts "a:c:n:hl:r:t:i:b:f:-" OPTION; do
+while getopts "a:b:c:f:hi:l:n:r:t:u:-" OPTION; do
     case $OPTION in
         a)
             ARCHS="$OPTARG";
@@ -32,14 +33,15 @@ while getopts "a:c:n:hl:r:t:i:b:f:-" OPTION; do
             echo "usage: $0 [options] -n NDK_ROOT -r SOURCE_DIR [-- [cmake options]]";
             echo "options:";
             echo "-a [archs]                    which arch need to built, multiple values must be split by space(default: $ARCHS)";
+            echo "-b [build type]               build type(default: $BUILD_TYPE, available: Debug, Release, RelWithDebInfo, MinSizeRel)";
             echo "-c [android stl]              stl used by ndk(default: $ANDROID_STL, available: system, stlport_static, stlport_shared, gnustl_static, gnustl_shared, c++_static, c++_shared, none)";
             echo "-n [ndk root directory]       ndk root directory.(default: $DEVELOPER_ROOT)";
             echo "-l [api level]                API level, see $NDK_ROOT/platforms for detail.(default: $ANDROID_NATIVE_API_LEVEL)";
             echo "-r [source dir]               root directory of this library";
-            echo "-t [toolchain]                ANDROID_TOOLCHAIN.(gcc/clang, default: $ANDROID_TOOLCHAIN)";
+            echo "-t [toolchain]                ANDROID_TOOLCHAIN.(gcc version/clang, default: $ANDROID_TOOLCHAIN, @see CMAKE_ANDROID_NDK_TOOLCHAIN_VERSION in cmake)";
             echo "-i [lua include dir]          Lua include dir, which should has [$ARCHS/]include directory in it.";
-            echo "-b [lua library dir]          Lua library dir, which should has [$ARCHS] which we can find a lua lib in it.";
             echo "-f [lua library file pattern] Lua library search pattern for lua library file, which will be linked into protobuf.so.";
+            echo "-u [lua library dir]          Lua library dir, which should has [$ARCHS] which we can find a lua lib in it.";
             echo "-h                            help message.";
             exit 0;
         ;;
@@ -55,7 +57,7 @@ while getopts "a:c:n:hl:r:t:i:b:f:-" OPTION; do
         i)
             LUAINCDIR="$OPTARG";
         ;;
-        b)
+        u)
             LUALIBDIR="$OPTARG";
         ;;
         f)
@@ -88,6 +90,11 @@ fi
 NDK_ROOT="$(cd "$NDK_ROOT" && pwd)";
 LUAINCDIR="$(cd "$LUAINCDIR" && pwd)";
 LUALIBDIR="$(cd "$LUALIBDIR" && pwd)";
+
+CMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=$ANDROID_TOOLCHAIN;
+if [ "${ANDROID_TOOLCHAIN:0:5}" != "clang" ]; then
+    ANDROID_TOOLCHAIN="gcc";
+fi
 
 for ARCH in ${ARCHS}; do
     echo "================== Compling $ARCH ==================";
@@ -150,23 +157,23 @@ for ARCH in ${ARCHS}; do
 
     if [ ! -z "$ARCH_LUAINCDIR" ] && [ ! -z "$ARCH_LUALIBPATH" ]; then
         echo -e "\033[32m Build pbc and protobuf binding($ARCH_LUAINCDIR, $ARCH_LUALIBPATH, version=$ARCH_LUAVER) \033[0m";
-        cmake "$SOURCE_DIR" -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/prebuilt/$ARCH" \
+        cmake "$SOURCE_DIR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/prebuilt/$ARCH" \
             -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" \
             -DCMAKE_TOOLCHAIN_FILE="$NDK_ROOT/build/cmake/android.toolchain.cmake" \
             -DANDROID_NDK="$NDK_ROOT" -DCMAKE_ANDROID_NDK="$NDK_ROOT" \
             -DANDROID_NATIVE_API_LEVEL=$ANDROID_NATIVE_API_LEVEL -DCMAKE_ANDROID_API=$ANDROID_NATIVE_API_LEVEL \
-            -DANDROID_TOOLCHAIN=$ANDROID_TOOLCHAIN -DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=$ANDROID_TOOLCHAIN \
+            -DANDROID_TOOLCHAIN=$ANDROID_TOOLCHAIN -DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=$CMAKE_ANDROID_NDK_TOOLCHAIN_VERSION \
             -DANDROID_ABI=$ARCH -DCMAKE_ANDROID_ARCH_ABI=$ARCH \
             -DANDROID_STL=$ANDROID_STL -DCMAKE_ANDROID_STL_TYPE=$ANDROID_STL \
             -DANDROID_PIE=YES -DLUA_INCLUDE_DIR="$ARCH_LUAINCDIR" -DLUA_VERSION_STRING=$ARCH_LUAVER -DLUA_LIBRARIES="$ARCH_LUALIBPATH" "$@";
     else
         echo -e "\033[32m Build pbc \033[0m";
-        cmake "$SOURCE_DIR" -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/prebuilt/$ARCH" \
+        cmake "$SOURCE_DIR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/prebuilt/$ARCH" \
             -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$WORKING_DIR/lib/$ARCH" \
             -DCMAKE_TOOLCHAIN_FILE="$NDK_ROOT/build/cmake/android.toolchain.cmake" \
             -DANDROID_NDK="$NDK_ROOT" -DCMAKE_ANDROID_NDK="$NDK_ROOT" \
             -DANDROID_NATIVE_API_LEVEL=$ANDROID_NATIVE_API_LEVEL -DCMAKE_ANDROID_API=$ANDROID_NATIVE_API_LEVEL \
-            -DANDROID_TOOLCHAIN=$ANDROID_TOOLCHAIN -DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=$ANDROID_TOOLCHAIN \
+            -DANDROID_TOOLCHAIN=$ANDROID_TOOLCHAIN -DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=$CMAKE_ANDROID_NDK_TOOLCHAIN_VERSION \
             -DANDROID_ABI=$ARCH -DCMAKE_ANDROID_ARCH_ABI=$ARCH \
             -DANDROID_STL=$ANDROID_STL -DCMAKE_ANDROID_STL_TYPE=$ANDROID_STL \
             -DANDROID_PIE=YES "$@";

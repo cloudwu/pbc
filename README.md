@@ -122,11 +122,11 @@ You must at least specify NDK_ROOT
 ```bash
 mkdir -p build && cd build && ./build_android.sh -r .. -n <ndk_root>
 
-# add -i and -b options to build lua binding
-mkdir -p build && cd build && ./build_android.sh -r .. -n <ndk_root> -i <where has lua.h or ARCHITECTURE/lua.h> -b <where ARCHITECTURE/[library pattern] in it>
+# add -i and -u options to build lua binding
+mkdir -p build && cd build && ./build_android.sh -r .. -n <ndk_root> -i <where has lua.h or ARCHITECTURE/lua.h> -u <where ARCHITECTURE/[library pattern] in it>
 
 # for example, if we install NDK in /home/prebuilt/android/ndk/android-ndk-r13b, and lua.h in /home/prebuilt/lua/luajit/include/luajit-2.0/ and armeabi-v7a/libluajit-5.1.[a|so] x86/libluajit-5.1.[a|so] x86_64/libluajit-5.1.[a|so] arm64-v8a/libluajit-5.1.[a|so] .. in /home/prebuilt/lua/luajit/include/lib, we can use the command below
-mkdir -p build && cd build && ./build_android.sh -r .. -n /home/prebuilt/android/ndk/android-ndk-r13b -i /home/prebuilt/lua/luajit/include/luajit-2.0 -b /home/prebuilt/lua/luajit/include/lib
+mkdir -p build && cd build && ./build_android.sh -r .. -n /home/prebuilt/android/ndk/android-ndk-r13b -i /home/prebuilt/lua/luajit/include/luajit-2.0 -u /home/prebuilt/lua/luajit/include/lib
 ```
 
 All prebuilt library files and lua file will be generated at $PWD/prebuilt. And library in difference architecture will be placed in $PWD/prebuilt/ARCHITECTURE
