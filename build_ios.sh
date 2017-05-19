@@ -21,6 +21,9 @@ while getopts "a:b:d:hr:s:-" OPTION; do
         a)
             ARCHS="$OPTARG";
         ;;
+        b)
+            BUILD_TYPE="$OPTARG";
+        ;;
         d)
             DEVELOPER_ROOT="$OPTARG";
         ;;
