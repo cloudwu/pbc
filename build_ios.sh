@@ -17,7 +17,7 @@ BUILD_TYPE="RelWithDebInfo" ;
 OTHER_CFLAGS="-fPIC" ;
 
 # ======================= options ======================= 
-while getopts "a:b:d:hr:s:-" OPTION; do
+while getopts "a:b:d:hi:r:s:-" OPTION; do
     case $OPTION in
         a)
             ARCHS="$OPTARG";
