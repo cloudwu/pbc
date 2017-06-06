@@ -14,6 +14,7 @@ ARCHS="i386 x86_64 armv7 armv7s arm64";
 DEVELOPER_ROOT=$(xcode-select -print-path);
 SOURCE_DIR="$PWD";
 BUILD_TYPE="RelWithDebInfo" ;
+OTHER_CFLAGS="-fPIC" ;
 
 # ======================= options ======================= 
 while getopts "a:b:d:hr:s:-" OPTION; do
@@ -33,10 +34,18 @@ while getopts "a:b:d:hr:s:-" OPTION; do
             echo "-a [archs]                    which arch need to built, multiple values must be split by space(default: $ARCHS)";
             echo "-b [build type]               build type(default: $BUILD_TYPE, available: Debug, Release, RelWithDebInfo, MinSizeRel)";
             echo "-d [developer root directory] developer root directory, we use xcode-select -print-path to find default value.(default: $DEVELOPER_ROOT)";
+            echo "-h                            help message.";
+            echo "-i [option]                   enable bitcode support(available: off, all, bitcode, marker)";
             echo "-s [sdk version]              sdk version, we use xcrun -sdk iphoneos --show-sdk-version to find default value.(default: $SDKVERSION)";
             echo "-r [source dir]               root directory of this library";
-            echo "-h                            help message.";
             exit 0;
+        ;;
+        i)
+            if [ ! -z "$OPTARG" ]; then
+                OTHER_CFLAGS="$OTHER_CFLAGS -fembed-bitcode=$OPTARG";
+            else
+                OTHER_CFLAGS="$OTHER_CFLAGS -fembed-bitcode";
+            fi
         ;;
         r)
             SOURCE_DIR="$OPTARG";
@@ -97,7 +106,7 @@ for ARCH in ${ARCHS}; do
     mkdir -p "$WORKING_DIR/build-$ARCH";
     cd "$WORKING_DIR/build-$ARCH";
 
-    cmake "$SOURCE_DIR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/build-$ARCH" -DCMAKE_OSX_SYSROOT=$SDKROOT -DCMAKE_SYSROOT=$SDKROOT -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_C_FLAGS="-fPIC" "$@";
+    cmake "$SOURCE_DIR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX="$WORKING_DIR/build-$ARCH" -DCMAKE_OSX_SYSROOT=$SDKROOT -DCMAKE_SYSROOT=$SDKROOT -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_C_FLAGS="$OTHER_CFLAGS" "$@";
     cmake --build . --target lib
     cmake --build . --target install
 done
