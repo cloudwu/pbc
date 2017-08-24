@@ -526,6 +526,10 @@ function M.extract(tbl)
     end
 end
 
+function clear_gc_manual(  )
+	c._clear_gcobj_manual(GC)
+end
+
 M.default=set_default
 
 return M

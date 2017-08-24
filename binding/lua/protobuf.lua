@@ -584,4 +584,8 @@ function extract(tbl)
     end
 end
 
+function clear_gc_manual(  )
+	c._clear_gcobj_manual(GC)
+end
+
 default=set_default
