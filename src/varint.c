@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-inline int
+int
 _pbcV_encode32(uint32_t number, uint8_t buffer[10])
 {
 	if (number < 0x80) {
