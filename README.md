@@ -73,7 +73,9 @@ With message API , you can use both string and integer as enum type . They must 
 
 ## Lua bindings
 
-cd bindings/lua && make
+cd binding/lua && make
+or
+cd binding/lua53 && make
 
 See https://github.com/cloudwu/pbc/tree/master/binding/lua/README.md
 
