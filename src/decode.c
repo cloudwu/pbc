@@ -328,7 +328,7 @@ pbc_decode(struct pbc_env * env, const char * type_name , struct pbc_slice * sli
 				_pbcC_close(_ctx);
 				return -i-1;
 			}
-		} else if (f->label == LABEL_PACKED) {
+		} else if (f->label == LABEL_PACKED || f->label == LABEL_REPEATED) {
 			struct atom * a = &ctx->a[i];
 			int n = call_array(pd, ud, f , start + a->v.s.start , a->v.s.end - a->v.s.start);
 			if (n < 0) {
