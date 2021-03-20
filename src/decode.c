@@ -328,12 +328,29 @@ pbc_decode(struct pbc_env * env, const char * type_name , struct pbc_slice * sli
 				_pbcC_close(_ctx);
 				return -i-1;
 			}
-		} else if (f->label == LABEL_PACKED || f->label == LABEL_REPEATED) {
-			struct atom * a = &ctx->a[i];
-			int n = call_array(pd, ud, f , start + a->v.s.start , a->v.s.end - a->v.s.start);
+		} else if (f->label == LABEL_PACKED) {
+			struct atom* a = &ctx->a[i];
+			int n = call_array(pd, ud, f, start + a->v.s.start, a->v.s.end - a->v.s.start);
 			if (n < 0) {
 				_pbcC_close(_ctx);
-				return -i-1;
+				return -i - 1;
+			}
+		}
+		else if (f->label == LABEL_REPEATED) {
+			if ((f->type == PTYPE_STRING) ||
+			    (f->type == PTYPE_BYTES) ||
+			    (f->type == PTYPE_MESSAGE)) {
+				if (call_type(pd, ud, f, &ctx->a[i], start) != 0) {
+					_pbcC_close(_ctx);
+					return -i - 1;
+				}
+			} else {
+				struct atom* a = &ctx->a[i];
+				int n = call_array(pd, ud, f, start + a->v.s.start, a->v.s.end - a->v.s.start);
+				if (n < 0) {
+					_pbcC_close(_ctx);
+					return -i - 1;
+				}
 			}
 		} else {
 			if (call_type(pd,ud,f,&ctx->a[i],start) != 0) {
