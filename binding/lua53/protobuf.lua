@@ -420,6 +420,24 @@ end
 
 local default_cache = {}
 
+
+
+local function readonly_index_func (default_inst)
+	return function (tb , key)
+		local ret = default_inst[key]
+		if 'table' ~= type(ret) then
+			return ret
+		end 
+		if ret._CType then
+			ret = setmetatable({}, { __index = readonly_index_func(ret)})
+		else
+			ret = {} -- default repeated array is awarys empty
+		end
+		rawset(tb, key, ret)
+		return ret
+	end
+end
+
 -- todo : clear default_cache, v._CObj
 
 local function default_table(typename)
@@ -430,15 +448,7 @@ local function default_table(typename)
 
 	local default_inst = assert(decode_message(typename , ""))
 	v = { 
-		__index = function(tb, key)
-			local ret = default_inst[key]
-			if 'table' ~= type(ret) then
-				return ret
-			end 
-			ret = setmetatable({}, { __index = ret })
-			rawset(tb, key, ret)
-			return ret
-		end
+		__index = readonly_index_func(default_inst)
 	}
 
 	default_cache[typename]  = v
