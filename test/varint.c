@@ -3,6 +3,11 @@
 #include "varint.h"
 #include "pbc.h"
 
+#define varint_encode(n, b) _pbcV_encode(n, b)
+#define varint_decode(n, r) _pbcV_decode(n, r)
+#define varint_zigzag(n, b) _pbcV_zigzag(n, b)
+#define varint_dezigzag64(r) _pbcV_dezigzag64(r)
+
 static void 
 dump(uint8_t buffer[10], int s)
 {
@@ -31,7 +36,7 @@ decode(uint8_t buffer[10])
 static void
 zigzag(int64_t n)
 {
-	printf("%llx\n",n);
+	printf("%x%x\n", (int32_t)(n >> 32), (int32_t)(n & 0xFFFFFFFF));
 	uint8_t zigzag[10];
 	dump(zigzag, varint_zigzag(n,zigzag));
 

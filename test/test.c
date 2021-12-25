@@ -39,5 +39,5 @@ main() {
 	test(env);
 	pbc_delete(env);
 
-	return 0;
+	return ret;
 }
