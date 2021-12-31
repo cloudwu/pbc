@@ -71,7 +71,7 @@ const char * pbc_rmessage_string(struct pbc_rmessage * , const char *key , int i
 struct pbc_rmessage * pbc_rmessage_message(struct pbc_rmessage *, const char *key, int index);
 int pbc_rmessage_size(struct pbc_rmessage *, const char *key);
 int pbc_rmessage_next(struct pbc_rmessage *, const char **key);
-
+// 新建pbc_wmessage
 struct pbc_wmessage * pbc_wmessage_new(struct pbc_env * env, const char *type_name);
 void pbc_wmessage_delete(struct pbc_wmessage *);
 
