@@ -79,6 +79,18 @@ cd binding/lua53 && make
 
 See https://github.com/cloudwu/pbc/tree/master/binding/lua/README.md
 
+## Building pbc - Using vcpkg
+
+You can download and install pbc using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
+
+    git clone https://github.com/Microsoft/vcpkg.git
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    ./vcpkg integrate install
+    ./vcpkg install pbc
+
+The pbc port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+
 ## Question ?
 
 * Send me email : http://www.codingnow.com/2000/gmail.gif
