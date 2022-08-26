@@ -215,7 +215,9 @@ local function encode_message(CObj, message_type, t)
 	local type = encode_type_cache[message_type]
 	for k,v in pairs(t) do
 		local func = type[k]
-		func(CObj, k , v)
+		if func then
+			func(CObj, k , v)
+		end
 	end
 end
 
@@ -305,8 +307,11 @@ local _encode_type_meta = {}
 
 function _encode_type_meta:__index(key)
 	local t, msg = c._env_type(P, self._CType, key)
-	local func = assert(_writer[t],key)(msg)
-	self[key] = func
+	local func = _writer[t]
+	if func then
+		func = func(msg)
+		self[key] = func
+	end
 	return func
 end
 

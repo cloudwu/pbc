@@ -14,15 +14,15 @@
 #endif
 
 #define WMESSAGE_SIZE 64
-
+// pbc编码结构体
 struct pbc_wmessage {
-	struct _message *type;
-	uint8_t * buffer;
-	uint8_t * ptr;
-	uint8_t * endptr;
-	pbc_array sub;
-	struct map_sp *packed;
-	struct heap * heap;
+	struct _message *type; // 
+	uint8_t * buffer;      //
+	uint8_t * ptr;         //
+	uint8_t * endptr;      //
+	pbc_array sub;         //
+	struct map_sp *packed; //
+	struct heap * heap;    //
 };
 
 struct _packed {
@@ -30,7 +30,7 @@ struct _packed {
 	int ptype;
 	pbc_array data;
 };
-
+// 新建pbc_wmessage
 static struct pbc_wmessage *
 _wmessage_new(struct heap *h, struct _message *msg) {
 	struct pbc_wmessage * m = (struct pbc_wmessage *)_pbcH_alloc(h, sizeof(*m));

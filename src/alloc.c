@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 static int _g = 0;
-
+// 分配内存，并记录到_g
 void * _pbcM_malloc(size_t sz) {
 	++ _g;
 	return malloc(sz);
@@ -60,11 +60,11 @@ _pbcH_delete(struct heap *h) {
 	}
 	_pbcM_free(h);
 }
-
+// 创建一个堆；h：全局堆， size：堆大小
 void* 
 _pbcH_alloc(struct heap *h, int size) {
 	size = (size + 3) & ~3;
-	if (h->size - h->used < size) {
+	if (h->size - h->used < size) { // 内存不够
 		struct heap_page * p;
 		if (size < h->size) {
 			p = (struct heap_page *)_pbcM_malloc(sizeof(struct heap_page) + h->size);
