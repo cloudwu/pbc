@@ -868,6 +868,13 @@ _add_rmessage(lua_State *L) {
 	return 0;
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__CODEGEARC__)
+__declspec(dllexport)
+#endif
 int
 luaopen_protobuf_c(lua_State *L) {
 	luaL_Reg reg[] = {
@@ -908,3 +915,7 @@ luaopen_protobuf_c(lua_State *L) {
 
 	return 1;
 }
+
+#ifdef __cplusplus
+}
+#endif
