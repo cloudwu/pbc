@@ -823,6 +823,31 @@ _clear_gcobj(lua_State *L) {
 	return 0;
 }
 
+//kibernet
+//手动调用该方法清除userdata的内存
+static int
+_clear_gcobj_manual(lua_State *L) {
+    struct gcobj * obj = (struct gcobj *)lua_touserdata(L,1);
+    int i;
+    for (i=0;i<obj->size_pat;i++) {
+        pbc_pattern_delete(obj->pat[i]);
+    }
+    for (i=0;i<obj->size_msg;i++) {
+        pbc_rmessage_delete(obj->msg[i]);
+    }
+    free(obj->pat);
+    free(obj->msg);
+    
+    obj->size_pat = 0;
+    obj->cap_pat = 4;
+    obj->size_msg = 0;
+    obj->cap_msg = 4;
+    obj->pat = (struct pbc_pattern **)malloc(obj->cap_pat * sizeof(struct pbc_pattern *));
+    obj->msg = (struct pbc_rmessage **)malloc(obj->cap_msg * sizeof(struct pbc_rmessage *));
+    
+    return 0;
+}
+
 static int
 _gc(lua_State *L) {
 	struct gcobj * obj;
@@ -897,6 +922,7 @@ luaopen_protobuf_c(lua_State *L) {
 		{"_last_error", _last_error },
 		{"_decode", _decode },
 		{"_gc", _gc },
+        {"_clear_gcobj_manual", _clear_gcobj_manual },
 		{"_add_pattern", _add_pattern },
 		{"_add_rmessage", _add_rmessage },
 		{"_env_enum_id", _env_enum_id},
