@@ -311,7 +311,7 @@ pbc_register(struct pbc_env * p, struct pbc_slice *slice) {
 	}
 	int n = pbc_rmessage_size(message, "file");
 	struct pbc_rmessage ** files = (struct pbc_rmessage **)alloca(n * sizeof(struct pbc_rmessage *));
-	int i;
+	int i, r;
 	if (n == 0) {
 		p->lasterror = "register empty";
 		goto _error;
@@ -324,7 +324,7 @@ pbc_register(struct pbc_env * p, struct pbc_slice *slice) {
 		}
 	}
 
-	int r = n;
+	r = n;
 	do {
 		int rr = _register_no_dependency(p,files , n);
 		if (rr == r) {
