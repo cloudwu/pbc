@@ -40,10 +40,14 @@ _pbcH_new(int pagesize) {
 		cap *= 2;
 	}
 	struct heap * h = (struct heap *)_pbcM_malloc(sizeof(struct heap));
-	h->current = (struct heap_page *)_pbcM_malloc(sizeof(struct heap_page) + cap);
-	h->size = cap;
-	h->used = 0;
-	h->current->next = NULL;
+	if (h) {
+		h->current = (struct heap_page *)_pbcM_malloc(sizeof(struct heap_page) + cap);
+		h->size = cap;
+		h->used = 0;
+		if (h->current) {
+			h->current->next = NULL;
+		}
+	}
 	return h;
 }
 
