@@ -75,7 +75,7 @@ read_string_var(struct heap *h, pbc_var var,struct atom *a,struct _field *f,uint
 		memcpy(temp2, temp, len);
 		temp2[len]='\0';
 		var->s.str = temp2;
-		var->s.len = -len;
+		var->s.len = len;
 	}
 }
 
